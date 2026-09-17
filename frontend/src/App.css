@@ -1,0 +1,2595 @@
+.app {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  /* 행 하나를 뷰포트 높이에 고정한다. 없으면 긴 대화가 행을 늘려 페이지 전체가 스크롤된다 */
+  grid-template-rows: minmax(0, 1fr);
+  height: 100vh;
+  color: #1a1a1a;
+  background: #f7f7f8;
+}
+
+.sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px 18px;
+  background: #fff;
+  border-right: 1px solid #e4e4e7;
+  overflow-y: auto;
+  /* 내용이 뷰포트보다 길어 세로 스크롤바가 실제로 나타나는 페이지(예: 대화
+     목록이 쌓인 일반 대화)와, 내용이 짧아 스크롤바가 없는 페이지(결과 비교
+     등) 사이에서 콘텐츠 폭이 달라 보이는 문제 — 클래식 스크롤바는 폭을
+     콘텐츠 영역에서 깎아 먹는다. 스크롤바 유무와 무관하게 그 자리를 항상
+     예약해서, 페이지마다 사이드바 폭이 실제로 같아 보이게 한다. */
+  scrollbar-gutter: stable;
+}
+
+.sidebar h1 {
+  font-size: 16px;
+  margin: 0 0 4px;
+}
+
+/* 페이지 전환 */
+.nav-tabs {
+  display: flex;
+  gap: 4px;
+  margin: -8px 0 4px;
+}
+
+.nav-tab {
+  flex: 1;
+  text-align: center;
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #71717a;
+  text-decoration: none;
+}
+
+.nav-tab.active {
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #52525b;
+}
+
+.field textarea,
+.field select {
+  font: inherit;
+  font-weight: 400;
+  padding: 8px;
+  border: 1px solid #d4d4d8;
+  border-radius: 6px;
+  background: #fff;
+  color: #1a1a1a;
+  resize: vertical;
+}
+
+.field input[type='range'] {
+  width: 100%;
+}
+
+.field-inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.field-inline input[type='checkbox'] {
+  width: 15px;
+  height: 15px;
+  accent-color: #2563eb;
+}
+
+/* 대화 저장/이어하기 */
+.conv-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.conv-item {
+  display: flex;
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 6px;
+}
+
+.conv-item.selected {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.conv-select {
+  flex: 1;
+  min-width: 0;
+  display: block;
+  text-align: left;
+  background: transparent;
+  color: #1a1a1a;
+  font-weight: 400;
+  font-size: 12px;
+  padding: 6px 8px;
+}
+
+.conv-title {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.conv-delete {
+  flex: none;
+  background: transparent;
+  color: #a1a1aa;
+  font-weight: 700;
+  font-size: 14px;
+  line-height: 1;
+  padding: 6px 8px;
+}
+
+.conv-delete:hover {
+  color: #dc2626;
+}
+
+.conv-error {
+  font-size: 12px;
+  font-weight: 400;
+  color: #b91c1c;
+}
+
+/* 모델 선택 패널 */
+.model-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.model-item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  grid-template-areas: 'radio name' 'radio meta';
+  gap: 0 8px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid #d4d4d8;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 400;
+}
+
+.model-item.selected {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.model-item input {
+  grid-area: radio;
+}
+
+.model-name {
+  grid-area: name;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+  overflow-wrap: anywhere;
+}
+
+.model-meta {
+  grid-area: meta;
+  font-size: 11px;
+  color: #71717a;
+}
+
+.model-empty {
+  font-size: 13px;
+  font-weight: 400;
+  color: #a1a1aa;
+  padding: 4px 0;
+}
+
+/* 모델 카드 */
+.model-card {
+  margin-top: 4px;
+  padding: 10px 12px;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  background: #fafafa;
+  font-weight: 400;
+}
+
+.model-card-caps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-bottom: 8px;
+}
+
+.cap {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #e4e4e7;
+  color: #52525b;
+}
+
+.cap-tools {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.model-card-rows {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.model-card-row {
+  display: grid;
+  grid-template-columns: 68px 1fr;
+  font-size: 12px;
+}
+
+.model-card-row dt {
+  color: #a1a1aa;
+}
+
+.model-card-row dd {
+  margin: 0;
+  color: #3f3f46;
+  overflow-wrap: anywhere;
+}
+
+button {
+  font: inherit;
+  font-weight: 600;
+  padding: 9px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #fff;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+button.ghost {
+  background: #fff;
+  color: #52525b;
+  border: 1px solid #d4d4d8;
+}
+
+button.stop {
+  background: #dc2626;
+}
+
+.chat {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0; /* 내용보다 줄어들 수 있어야 .messages 안에서만 스크롤된다 */
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.empty {
+  margin: auto;
+  color: #a1a1aa;
+}
+
+.msg {
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+.msg .role {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #a1a1aa;
+  margin-bottom: 4px;
+}
+
+/* 응답 소요 시간 */
+.elapsed {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: #a1a1aa;
+}
+
+.elapsed.live {
+  color: #2563eb;
+}
+
+.msg .content {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #e4e4e7;
+}
+
+.msg.user .content {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+}
+
+/* 응답 별점 */
+.rating {
+  margin-top: 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rating-stars {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.star {
+  background: none;
+  border: none;
+  padding: 2px;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  color: #d4d4d8;
+}
+
+.star:disabled {
+  cursor: default;
+}
+
+.star.filled {
+  color: #f59e0b;
+}
+
+.rating-note-toggle {
+  background: none;
+  border: none;
+  padding: 2px 4px;
+  margin-left: 4px;
+  font-size: 11px;
+  color: #a1a1aa;
+  cursor: pointer;
+}
+
+.rating-note-toggle:hover {
+  color: #71717a;
+}
+
+.rating-note {
+  font-size: 12px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  border: 1px solid #e4e4e7;
+  max-width: 320px;
+}
+
+.rating-error {
+  font-size: 11px;
+  color: #b91c1c;
+}
+
+.error {
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #b91c1c;
+  font-size: 13px;
+}
+
+/* 요약 압축 적용 표시 */
+.compress-notice {
+  max-width: 760px;
+  width: 100%;
+  margin: -4px auto 12px;
+  padding: 0 4px;
+  color: #a1a1aa;
+  font-size: 11px;
+}
+
+/* 성능 테스트 진행 중 경고 */
+.test-warning {
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto 12px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 13px;
+}
+
+/* 성능 테스트 페이지 */
+.bench-main {
+  min-width: 0;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.bench-main h2 {
+  font-size: 14px;
+  margin: 0 0 8px;
+}
+
+.run-progress,
+.run-results,
+.run-detail {
+  max-width: 640px;
+  width: 100%;
+}
+
+.run-progress {
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+}
+
+.run-progress p {
+  margin: 0;
+  font-size: 13px;
+  color: #1d4ed8;
+}
+
+.run-items {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  font-size: 12px;
+  color: #3f3f46;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.result-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.result-select {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  background: #fff;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.result-model {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.result-meta {
+  font-size: 11px;
+  font-weight: 400;
+  color: #71717a;
+}
+
+.run-detail {
+  padding: 14px 16px;
+  border-radius: 8px;
+  background: #fafafa;
+  border: 1px solid #e4e4e7;
+  font-size: 13px;
+}
+
+.result-list li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.item-error {
+  color: #b91c1c;
+}
+
+/* 지표 나열. 정규화·점수화 없이 측정값 그대로 보여준다. */
+.metrics-list {
+  margin: 12px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 12px;
+}
+
+.metrics-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.metrics-row dt {
+  color: #71717a;
+}
+
+.metrics-row dd {
+  margin: 0;
+  font-weight: 600;
+  color: #18181b;
+  text-align: right;
+}
+
+.stage-table {
+  margin-top: 12px;
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.stage-table th,
+.stage-table td {
+  text-align: left;
+  padding: 4px 8px;
+  border-bottom: 1px solid #e4e4e7;
+}
+
+/* 여러 실행 결과를 나란히 놓는 비교 표 — 원래 측정값 그대로 나열한다 */
+.compare-table-wrap {
+  max-width: 960px;
+  width: 100%;
+}
+
+.compare-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.compare-header h2 {
+  margin: 0;
+}
+
+.compare-header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.compare-scroll {
+  overflow-x: auto;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+}
+
+.compare-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.compare-table th,
+.compare-table td {
+  padding: 6px 12px;
+  border-bottom: 1px solid #e4e4e7;
+  text-align: left;
+}
+
+.compare-table thead th {
+  color: #71717a;
+  font-weight: 600;
+  background: #fafafa;
+}
+
+.compare-table td:first-child,
+.compare-table th:first-child {
+  position: sticky;
+  left: 0;
+  background: #fff;
+  font-weight: 500;
+}
+
+.metrics-heading {
+  margin: 16px 0 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #71717a;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* 품질 지표 문항별 답변 드릴다운 (QualityDetail) */
+.quality-detail {
+  margin-top: 16px;
+}
+
+.quality-detail h3 {
+  font-size: 13px;
+  margin: 0 0 8px;
+  color: #71717a;
+}
+
+.quality-section {
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  margin-bottom: 6px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.quality-section summary {
+  cursor: pointer;
+  padding: 10px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+  list-style: none;
+  font-size: 12.5px;
+}
+
+.quality-section summary::-webkit-details-marker {
+  display: none;
+}
+
+.qs-title {
+  font-weight: 600;
+}
+
+.qs-score {
+  font-size: 11.5px;
+  color: #71717a;
+  white-space: nowrap;
+}
+
+.qs-body {
+  padding: 4px 12px 12px;
+  border-top: 1px solid #e4e4e7;
+}
+
+.qs-note {
+  font-size: 11px;
+  color: #71717a;
+  font-style: italic;
+  margin: 8px 0 10px;
+}
+
+.qa-row {
+  padding: 8px 0;
+  border-bottom: 1px solid #ececec;
+  font-size: 12.5px;
+}
+
+.qa-row:last-child {
+  border-bottom: none;
+}
+
+.qa-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 4px;
+}
+
+.qid {
+  font-weight: 600;
+  color: #2563eb;
+}
+
+.qa-q {
+  color: #52525b;
+  margin-bottom: 4px;
+}
+
+.qa-a {
+  background: #fafafa;
+  border: 1px solid #ececec;
+  border-radius: 6px;
+  padding: 6px 8px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.qtag {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 100px;
+  background: #eef2ff;
+  color: #4338ca;
+}
+
+.qbadge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 1px 7px;
+  border-radius: 100px;
+}
+
+.qbadge-pass {
+  background: #e6f4ed;
+  color: #1f8a5f;
+}
+
+.qbadge-fail {
+  background: #fbe9e0;
+  color: #c2410c;
+}
+
+.qbadge-mid {
+  background: #f7eed9;
+  color: #a3791f;
+}
+
+.qbadge-invalid {
+  background: #eeece5;
+  color: #8c8577;
+}
+
+.repeat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.repeat-item {
+  background: #fafafa;
+  border: 1px solid #ececec;
+  border-radius: 6px;
+  padding: 6px 8px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.repeat-no {
+  font-weight: 600;
+  color: #2563eb;
+  margin-right: 4px;
+}
+
+.composer {
+  display: flex;
+  gap: 10px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid #e4e4e7;
+  background: #fff;
+}
+
+.composer textarea {
+  flex: 1;
+  font: inherit;
+  padding: 10px;
+  border: 1px solid #d4d4d8;
+  border-radius: 8px;
+  resize: none;
+}
+
+.composer button {
+  align-self: stretch;
+  padding-inline: 22px;
+}
+
+/* 도구 목록 화면 */
+.tools-main {
+  min-width: 0;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.tools-main h2 {
+  font-size: 14px;
+  margin: 0 0 8px;
+}
+
+.tools-sidebar-note,
+.tools-section-note {
+  font-size: 12px;
+  color: #71717a;
+  line-height: 1.5;
+  margin: 0 0 12px;
+}
+
+.tool-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.tool-card {
+  background: #fff;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tool-card-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tool-name {
+  font-size: 13px;
+  font-weight: 700;
+  background: #f4f4f5;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.tool-badge {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: #e4e4e7;
+  color: #52525b;
+}
+
+.tool-badge-ready {
+  background: #dcfce7;
+  color: #15803d;
+}
+
+.tool-badge-missing_key {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.tool-badge-disabled {
+  background: #e4e4e7;
+  color: #52525b;
+}
+
+.tool-badge-scope {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.tool-badge-destructive {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.tool-desc {
+  font-size: 13px;
+  color: #3f3f46;
+  margin: 0;
+}
+
+.tool-params {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.tool-params th,
+.tool-params td {
+  text-align: left;
+  padding: 4px 6px;
+  border-bottom: 1px solid #f4f4f5;
+  vertical-align: top;
+}
+
+.tool-no-params,
+.tool-returns,
+.tool-dep {
+  font-size: 12px;
+  color: #52525b;
+  margin: 0;
+}
+
+.tool-invoke {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #f4f4f5;
+}
+
+.tool-invoke-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.tool-invoke-field {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+}
+
+.tool-invoke-field input {
+  padding: 6px 8px;
+  border: 1px solid #d4d4d8;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.tool-invoke-error {
+  font-size: 12px;
+  color: #b91c1c;
+}
+
+.tool-invoke-result {
+  background: #fafafa;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 11px;
+  max-height: 200px;
+  overflow: auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.tool-invoke-blocked {
+  font-size: 12px;
+  color: #a1a1aa;
+  margin: 0;
+  padding-top: 8px;
+  border-top: 1px solid #f4f4f5;
+}
+
+/* 도구 호출 메시지 요약 (화면에는 요약해 보여준다) */
+.msg.tool-call .content {
+  background: #fefce8;
+  border-color: #fde68a;
+  font-size: 13px;
+}
+
+.tool-call-summary {
+  margin: 0;
+}
+
+.tool-call-status {
+  display: inline-block;
+  margin-left: 6px;
+  font-size: 11px;
+  color: #71717a;
+}
+
+.tool-confirm {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tool-confirm p {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #92400e;
+}
+
+.tool-confirm-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.tool-confirm-approve {
+  background: #16a34a;
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.tool-confirm-decline {
+  background: #fff;
+  color: #52525b;
+  border: 1px solid #d4d4d8;
+  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+/* 좌측 사이드바 — "기준선" 항목 + 선택 모델의 지난 실행 이력 */
+.bench-baseline-entry {
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid #e4e4e7;
+}
+
+.bench-baseline-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid #d4d4d8;
+  border-radius: 6px;
+  background: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  color: #52525b;
+}
+
+.bench-baseline-btn.selected {
+  border-color: #2563eb;
+  background: #eff6ff;
+  color: #1d4ed8;
+}
+
+.baseline-stale-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #d97706;
+}
+
+.bench-history {
+  border-top: 1px solid #e4e4e7;
+  padding-top: 12px;
+}
+
+.bench-history .result-select {
+  padding: 6px 10px;
+}
+
+.bench-history .result-select.selected {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+/* 실행 전 확인 패널 */
+.run-summary-panel {
+  max-width: 640px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.prompt-body {
+  margin: 0 0 8px;
+  padding: 10px 12px;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  background: #fafafa;
+  font-size: 12.5px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.run-summary-items {
+  margin: 0 0 8px;
+  padding-left: 18px;
+  font-size: 12px;
+  color: #3f3f46;
+  columns: 2;
+}
+
+.run-diff-note,
+.run-estimate-note {
+  font-size: 12px;
+  color: #71717a;
+  margin: 4px 0 0;
+}
+
+.bench-busy-note {
+  font-size: 12px;
+  color: #b45309;
+  margin: 4px 0 0;
+}
+
+.metrics-baseline {
+  color: #71717a;
+  font-weight: 400;
+}
+
+/* 기준선 전용 우측 패널 */
+.baseline-panel {
+  max-width: 640px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.baseline-meta {
+  font-size: 12px;
+  color: #71717a;
+  margin: 0;
+}
+
+.baseline-stale {
+  color: #b45309;
+}
+
+/* 정규화·가중치 비교 */
+.compare-radar {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e4e4e7;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.compare-radar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.preset-buttons {
+  display: flex;
+  gap: 6px;
+}
+
+.preset-buttons button.preset-active {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
+}
+
+.baseline-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.baseline-stale-banner {
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 12px;
+}
+
+.category-sliders {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+}
+
+.category-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+}
+
+/* 점 그래프 — 지표 비교의 기본형. 레이더는 아래 .radar-secondary로 접힌다. */
+.dotplot-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.dot-plot {
+  width: 100%;
+  max-width: 560px;
+  flex-shrink: 0;
+}
+
+.dotplot-label {
+  font-size: 10px;
+  fill: #52525b;
+}
+
+.dotplot-axis {
+  stroke: #e4e4e7;
+  stroke-width: 1;
+}
+
+.dotplot-baseline-tick {
+  stroke: #71717a;
+  stroke-width: 2;
+}
+
+.dotplot-swatch-baseline {
+  display: inline-block;
+  width: 2px;
+  height: 10px;
+  background: #71717a;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.radar-secondary {
+  margin-top: 4px;
+}
+
+.radar-secondary summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: #71717a;
+}
+
+.radar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+
+.radar-chart {
+  width: 280px;
+  height: 280px;
+  flex-shrink: 0;
+}
+
+.radar-ring {
+  fill: none;
+  stroke: #e4e4e7;
+  stroke-width: 1;
+}
+
+.radar-axis {
+  stroke: #e4e4e7;
+  stroke-width: 1;
+}
+
+.radar-axis-label {
+  font-size: 9px;
+  fill: #71717a;
+}
+
+.radar-series {
+  stroke-width: 1.5;
+}
+
+.radar-baseline {
+  fill: none;
+  stroke: #71717a;
+  stroke-width: 1.5;
+  stroke-dasharray: 4 3;
+}
+
+.radar-legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.radar-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  margin-right: 6px;
+}
+
+.radar-swatch-baseline {
+  background: #71717a;
+}
+
+.score-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.score-table th,
+.score-table td {
+  text-align: left;
+  padding: 6px 8px;
+  border-bottom: 1px solid #f4f4f5;
+}
+
+.score-note {
+  font-size: 11px;
+  color: #a1a1aa;
+  margin: 0;
+}
+
+/* 비교 노트 — 후보 모델이 비교 표를 직접 분석해 쓰는 노트 */
+.compare-notes {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e4e4e7;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.compare-notes-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.compare-notes-head h2 {
+  margin: 0;
+}
+
+.compare-notes-order-note {
+  margin: 0;
+  font-size: 11px;
+  color: #a1a1aa;
+}
+
+.compare-notes-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.compare-note-card {
+  padding: 10px 12px;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  background: #fafafa;
+}
+
+.compare-note-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.compare-note-model {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.compare-note-score {
+  font-size: 11px;
+  color: #71717a;
+  white-space: nowrap;
+}
+
+.compare-note-text {
+  margin: 0 0 6px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* 일관성 대표 쌍 판정 — 칸 목록 + 두 답 나란히 */
+.judgment-panel {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid #e4e4e7;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.judgment-note {
+  margin: 0;
+  font-size: 12px;
+  color: #71717a;
+}
+
+.judgment-body {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+}
+
+.judgment-cells {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.judgment-cell {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  text-align: left;
+  background: #fff;
+  color: #3f3f46;
+  border: 1px solid #e4e4e7;
+}
+
+.judgment-cell.done {
+  background: #f4f4f5;
+}
+
+.judgment-cell.selected {
+  border-color: #2563eb;
+  box-shadow: inset 0 0 0 1px #2563eb;
+}
+
+.judgment-cell-verdict {
+  color: #71717a;
+  white-space: nowrap;
+}
+
+.judgment-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.judgment-question {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.judgment-meta {
+  margin: 0;
+  font-size: 12px;
+  color: #92400e;
+}
+
+.judgment-reason {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  font: inherit;
+  font-size: 12px;
+  border: 1px solid #d4d4d8;
+  border-radius: 6px;
+}
+
+.judgment-verdicts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.judgment-verdicts button.verdict-active {
+  background: #2563eb;
+}
+
+.judgment-answers {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.judgment-answer {
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  background: #fafafa;
+  min-width: 0;
+}
+
+.judgment-answer-head {
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border-bottom: 1px solid #e4e4e7;
+}
+
+.judgment-answer-text {
+  padding: 8px 10px;
+  max-height: 70vh;
+  overflow-y: auto;
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.judgment-held h3 {
+  margin: 0 0 4px;
+  font-size: 13px;
+}
+
+.judgment-held ul {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 12px;
+}
+
+@media (max-width: 900px) {
+  .judgment-body,
+  .judgment-answers {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* 프리셋 설명·오르내림 목록 */
+.preset-description {
+  margin: 0;
+  font-size: 12px;
+  color: #71717a;
+}
+
+.preset-directions {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  font-size: 12px;
+  color: #3f3f46;
+}
+
+.preset-dir-up {
+  font-weight: 600;
+  color: #15803d;
+}
+
+.preset-dir-down {
+  font-weight: 600;
+  color: #b91c1c;
+}
+
+.score-rank-note {
+  margin: 0;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+}
+
+.score-rank-agree {
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.score-rank-differ {
+  background: #fffbeb;
+  color: #92400e;
+}
+
+/* 일관성 사람 판정 게이트 — 순위 제외 여부와 채점기 감시 부재 */
+.consistency-gate {
+  margin: 10px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.consistency-gate p {
+  margin: 0;
+  font-size: 12px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #f4f4f5;
+  color: #3f3f46;
+}
+
+.consistency-gate .consistency-gate-demoted,
+.consistency-gate .consistency-gate-watcher {
+  background: #fffbeb;
+  color: #92400e;
+  font-weight: 600;
+}
+
+.score-tie {
+  font-size: 11px;
+  color: #92400e;
+}
+
+/* 결과 비교 페이지 — 저장된 실행 목록 */
+.compare-sidebar-note {
+  font-size: 12px;
+  color: #71717a;
+  margin: 0;
+}
+
+.compare-list-wrap {
+  max-width: 960px;
+  width: 100%;
+}
+
+.compare-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.compare-list-header h2 {
+  margin: 0;
+}
+
+/* 모델별 그룹 카드 — 비교 단위는 실행이 아니라 모델이다 */
+.compare-model-groups {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.compare-model-group {
+  background: #fff;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+}
+
+.compare-model-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+}
+
+/* 펼치기/접기 전용 — 체크박스(선택 전용)와 조작을 분리한다. 이름 줄과
+   요약 줄을 나눠서, 이름이 길어도(hf.co/... 같은) 요약이 뭉개지지 않게 한다. */
+.compare-model-toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+}
+
+.compare-model-toggle-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.compare-model-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.compare-model-badge {
+  flex-shrink: 0;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  white-space: nowrap;
+}
+
+.compare-model-summary {
+  font-size: 11px;
+  color: #71717a;
+}
+
+.compare-model-arrow {
+  flex-shrink: 0;
+  margin-left: auto;
+  font-size: 10px;
+  color: #a1a1aa;
+}
+
+.compare-run-list {
+  list-style: none;
+  margin: 0;
+  padding: 6px 12px 10px 34px;
+  border-top: 1px solid #f4f4f5;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.compare-run-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.compare-row-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.compare-run-badge {
+  align-self: flex-start;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #f4f4f5;
+  color: #52525b;
+}
+
+.compare-warning {
+  padding: 8px 12px;
+  border-radius: 6px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 12px;
+}
+
+.compare-warning ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+
+/* 채점기 버전 상태 — 재채점하면 풀리는 낡음과, 재채점하면 안 되는 앞선 버전. 경고 칸과 같은 색으로 둔다 */
+.rescore-notice {
+  margin: 0;
+  padding: 8px 12px 8px 28px;
+  border-radius: 6px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  color: #92400e;
+  font-size: 12px;
+}
+
+.rescore-run {
+  margin: 0 0 8px;
+}
+
+.rescore-run ul {
+  margin: 4px 0 0;
+  padding-left: 18px;
+}
+
+/* 한 실행 안의 조건 섞임 중 경고가 아닌 것 — 설계로 둔 차이라 흐린 사실로만 적는다 */
+.compare-condition-facts {
+  margin: 4px 0 0;
+  padding-left: 18px;
+  font-size: 12px;
+  color: #71717a;
+}
+
+/* 지표 저장 상태. 실행 실패는 재측정하라는 신호라
+   가장 눈에 띄어야 하고, 품질·tool-calling 항목은 그 자리에서 지표만 다시 잴 수 있다. */
+.run-item-failed {
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.run-item-rerun {
+  margin-left: 8px;
+  padding: 1px 8px;
+  font-size: 11px;
+}
+
+.run-item-source,
+.run-mixed-note {
+  color: #71717a;
+  font-size: 12px;
+}
+
+/* 보조 모델(임베딩 등)을 실제로 부른 항목 표시 */
+.run-item-aux {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border: 1px solid #c4b5fd;
+  border-radius: 999px;
+  background: #f5f3ff;
+  color: #5b21b6;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.baseline-stale-reasons {
+  margin: 4px 0 8px;
+  padding-left: 18px;
+  font-size: 12px;
+  color: #b45309;
+}
+
+/* 리포트 내보내기의 노트 생성 확인 — 숨은 부작용이 되지 않게 먼저 알린다 */
+.export-confirm {
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  color: #1e3a8a;
+  font-size: 13px;
+}
+
+.export-confirm p {
+  margin: 0 0 8px;
+}
+
+.export-confirm-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.judgment-rebuild-actions {
+  margin-top: 8px;
+}
+
+/* 리포트 확인하기 — 내보낸 PDF를 페이지 안에서 본다 */
+.report-viewer {
+  margin: 8px 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.report-viewer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  font-size: 12px;
+}
+
+.report-viewer-name {
+  color: #52525b;
+  overflow-wrap: anywhere;
+}
+
+.report-viewer-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.report-viewer-note {
+  color: #71717a;
+}
+
+.report-viewer-frame {
+  width: 100%;
+  height: 80vh;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.export-stage {
+  margin: 0;
+  font-size: 12px;
+  color: #52525b;
+}
+
+/* 시스템 프롬프트 고르기·편집. 일반 대화에서는 .chat 안의
+   고정 높이 자식이라 flex: none — 편집 칸은 높이를 제한하고 그 안에서만 스크롤한다
+   (verify-layout 예외 2: 높이가 제한된 작은 스크롤 영역). */
+.prompt-picker {
+  flex: none;
+  max-width: 760px;
+  width: 100%;
+  margin: 0 auto 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.prompt-picker-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.prompt-picker-label {
+  font-size: 12px;
+  color: #52525b;
+}
+
+.prompt-picker select {
+  flex: 1;
+  min-width: 0;
+}
+
+.prompt-editor {
+  max-height: 40vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.prompt-editor textarea {
+  width: 100%;
+  box-sizing: border-box;
+  resize: vertical;
+}
+
+.prompt-editor-actions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.prompt-editor-actions input {
+  flex: 1;
+  min-width: 140px;
+}
+
+.prompt-dirty-note,
+.prompt-status {
+  margin: 0;
+  font-size: 12px;
+  color: #b45309;
+}
+
+.prompt-status {
+  color: #52525b;
+}
+
+/* 실행 종류 — 선정 / 프롬프트 실험 */
+.run-type-control {
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.run-type-control legend {
+  font-size: 12px;
+  color: #52525b;
+  padding: 0 4px;
+}
+
+.run-type-note {
+  flex-basis: 100%;
+  margin: 0;
+  font-size: 12px;
+  color: #71717a;
+}
+
+.run-type-badge,
+.compare-run-badge.experiment {
+  margin-left: 6px;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+.compare-th-full {
+  display: block;
+  font-size: 10px;
+  font-weight: 400;
+  color: #71717a;
+  overflow-wrap: anywhere;
+}
+
+.compare-direction {
+  color: #a1a1aa;
+  font-size: 11px;
+}
+
+/* 비교 노트 인용 검증 — 실패한 불릿도 빼지 않고 옆에 표식을 단다 */
+.note-line {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.note-verify-summary {
+  margin: 0 0 4px;
+  font-size: 11px;
+  color: #71717a;
+}
+
+.note-verify {
+  margin-left: 6px;
+  font-size: 10px;
+  padding: 0 6px;
+  border-radius: 999px;
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+.note-verify.verified {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.note-verify.mismatch {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.note-verify.direction {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.note-verify.unverifiable {
+  background: #f4f4f5;
+  color: #52525b;
+}
+
+@media (prefers-color-scheme: dark) {
+  .app {
+    color: #e4e4e7;
+    background: #18181b;
+  }
+  .sidebar,
+  .composer {
+    background: #1f1f23;
+    border-color: #2e2e33;
+  }
+  .sidebar {
+    border-right-color: #2e2e33;
+  }
+  .field textarea,
+  .field select,
+  .composer textarea {
+    background: #27272a;
+    border-color: #3f3f46;
+    color: #e4e4e7;
+  }
+  .nav-tab {
+    color: #a1a1aa;
+  }
+  .nav-tab.active {
+    background: #1e293b;
+    color: #93c5fd;
+  }
+  .msg .content {
+    background: #27272a;
+    border-color: #3f3f46;
+  }
+  .msg.user .content {
+    background: #1e293b;
+    border-color: #334155;
+  }
+  .star {
+    color: #52525b;
+  }
+  .star.filled {
+    color: #fbbf24;
+  }
+  .rating-note-toggle {
+    color: #71717a;
+  }
+  .rating-note {
+    background: #27272a;
+    border-color: #3f3f46;
+    color: #e4e4e7;
+  }
+  .rating-error {
+    color: #fca5a5;
+  }
+  button.ghost {
+    background: #27272a;
+    color: #d4d4d8;
+    border-color: #3f3f46;
+  }
+  .error {
+    background: #2a1414;
+    border-color: #5f2120;
+    color: #fca5a5;
+  }
+  .model-item {
+    border-color: #3f3f46;
+  }
+  .model-item.selected {
+    border-color: #3b82f6;
+    background: #1e293b;
+  }
+  .model-name {
+    color: #e4e4e7;
+  }
+  .model-meta {
+    color: #a1a1aa;
+  }
+  .model-card {
+    background: #202024;
+    border-color: #3f3f46;
+  }
+  .cap {
+    background: #3f3f46;
+    color: #d4d4d8;
+  }
+  .cap-tools {
+    background: #1e3a8a;
+    color: #bfdbfe;
+  }
+  .model-card-row dd {
+    color: #d4d4d8;
+  }
+  .conv-item.selected {
+    border-color: #3b82f6;
+    background: #1e293b;
+  }
+  .conv-select {
+    color: #e4e4e7;
+  }
+  .conv-delete {
+    color: #71717a;
+  }
+  .conv-delete:hover {
+    color: #fca5a5;
+  }
+  .compress-notice {
+    color: #71717a;
+  }
+  .test-warning {
+    background: #2a2410;
+    border-color: #57460f;
+    color: #fcd34d;
+  }
+  .run-progress {
+    background: #1e293b;
+    border-color: #334155;
+  }
+  .run-progress p {
+    color: #93c5fd;
+  }
+  .run-items {
+    color: #d4d4d8;
+  }
+  .result-select {
+    background: #27272a;
+    border-color: #3f3f46;
+  }
+  .result-model {
+    color: #e4e4e7;
+  }
+  .result-meta {
+    color: #a1a1aa;
+  }
+  .run-detail {
+    background: #202024;
+    border-color: #3f3f46;
+    color: #d4d4d8;
+  }
+  .item-error {
+    color: #fca5a5;
+  }
+  .metrics-row dt {
+    color: #a1a1aa;
+  }
+  .metrics-row dd {
+    color: #f4f4f5;
+  }
+  .stage-table th,
+  .stage-table td,
+  .compare-table th,
+  .compare-table td {
+    border-color: #3f3f46;
+  }
+  .compare-scroll {
+    border-color: #3f3f46;
+  }
+  .compare-table thead th {
+    background: #27272a;
+    color: #a1a1aa;
+  }
+  .compare-table td:first-child,
+  .compare-table th:first-child {
+    background: #202024;
+  }
+  .metrics-heading {
+    color: #a1a1aa;
+  }
+  .quality-detail h3 {
+    color: #a1a1aa;
+  }
+  .quality-section {
+    background: #202024;
+    border-color: #3f3f46;
+  }
+  .qs-score,
+  .qs-note {
+    color: #a1a1aa;
+  }
+  .qs-body {
+    border-color: #3f3f46;
+  }
+  .qa-row {
+    border-color: #3f3f46;
+  }
+  .qid {
+    color: #93c5fd;
+  }
+  .qa-q {
+    color: #a1a1aa;
+  }
+  .qa-a,
+  .repeat-item {
+    background: #27272a;
+    border-color: #3f3f46;
+  }
+  .qtag {
+    background: #1e293b;
+    color: #93c5fd;
+  }
+  .qbadge-pass {
+    background: #17332a;
+    color: #3fcf8e;
+  }
+  .qbadge-fail {
+    background: #3a2318;
+    color: #ea7a4d;
+  }
+  .qbadge-mid {
+    background: #362d16;
+    color: #dcb24a;
+  }
+  .qbadge-invalid {
+    background: #2a2822;
+    color: #948d7d;
+  }
+  .repeat-no {
+    color: #93c5fd;
+  }
+  .tool-card {
+    background: #202024;
+    border-color: #3f3f46;
+  }
+  .tool-name {
+    background: #27272a;
+    color: #e4e4e7;
+  }
+  .tool-desc {
+    color: #d4d4d8;
+  }
+  .tool-params th,
+  .tool-params td {
+    border-bottom-color: #3f3f46;
+  }
+  .tool-no-params,
+  .tool-returns,
+  .tool-dep,
+  .tools-sidebar-note,
+  .tools-section-note {
+    color: #a1a1aa;
+  }
+  .tool-invoke {
+    border-top-color: #3f3f46;
+  }
+  .tool-invoke-field input {
+    background: #27272a;
+    border-color: #3f3f46;
+    color: #e4e4e7;
+  }
+  .tool-invoke-result {
+    background: #18181b;
+    border-color: #3f3f46;
+    color: #d4d4d8;
+  }
+  .tool-invoke-blocked {
+    border-top-color: #3f3f46;
+  }
+  .msg.tool-call .content {
+    background: #362d16;
+    border-color: #4d3d16;
+  }
+  .tool-confirm-decline {
+    background: #27272a;
+    color: #d4d4d8;
+    border-color: #3f3f46;
+  }
+  .bench-baseline-entry {
+    border-top-color: #3f3f46;
+  }
+  .bench-baseline-btn {
+    background: #27272a;
+    border-color: #3f3f46;
+    color: #d4d4d8;
+  }
+  .bench-baseline-btn.selected {
+    border-color: #3b82f6;
+    background: #1e293b;
+    color: #93c5fd;
+  }
+  .bench-history {
+    border-top-color: #3f3f46;
+  }
+  .bench-history .result-select.selected {
+    border-color: #3b82f6;
+    background: #1e293b;
+  }
+  .prompt-body {
+    background: #202024;
+    border-color: #3f3f46;
+    color: #d4d4d8;
+  }
+  .run-summary-items {
+    color: #d4d4d8;
+  }
+  .run-diff-note,
+  .run-estimate-note {
+    color: #a1a1aa;
+  }
+  .metrics-baseline {
+    color: #a1a1aa;
+  }
+  .baseline-meta {
+    color: #a1a1aa;
+  }
+  .baseline-stale,
+  .bench-busy-note {
+    color: #fcd34d;
+  }
+  .compare-radar {
+    border-top-color: #3f3f46;
+  }
+  .compare-notes {
+    border-top-color: #3f3f46;
+  }
+  .compare-notes-order-note {
+    color: #a1a1aa;
+  }
+  .compare-note-card {
+    background: #202024;
+    border-color: #3f3f46;
+  }
+  .compare-note-model {
+    color: #e4e4e7;
+  }
+  .compare-note-score {
+    color: #a1a1aa;
+  }
+  .judgment-panel {
+    border-top-color: #3f3f46;
+  }
+  .judgment-note,
+  .judgment-cell-verdict {
+    color: #a1a1aa;
+  }
+  .judgment-cell {
+    background: #202024;
+    color: #d4d4d8;
+    border-color: #3f3f46;
+  }
+  .judgment-cell.done {
+    background: #27272a;
+  }
+  .judgment-meta {
+    color: #fcd34d;
+  }
+  .judgment-answer {
+    background: #202024;
+    border-color: #3f3f46;
+  }
+  .judgment-answer-head {
+    border-bottom-color: #3f3f46;
+  }
+  .judgment-reason {
+    background: #202024;
+    color: #e4e4e7;
+    border-color: #3f3f46;
+  }
+  .preset-buttons button.preset-active {
+    background: #3b82f6;
+    border-color: #3b82f6;
+  }
+  .radar-ring,
+  .radar-axis {
+    stroke: #3f3f46;
+  }
+  .radar-axis-label {
+    fill: #a1a1aa;
+  }
+  .radar-baseline {
+    stroke: #a1a1aa;
+  }
+  .radar-swatch-baseline {
+    background: #a1a1aa;
+  }
+  .dotplot-label {
+    fill: #d4d4d8;
+  }
+  .dotplot-axis {
+    stroke: #3f3f46;
+  }
+  .dotplot-baseline-tick {
+    stroke: #a1a1aa;
+  }
+  .dotplot-swatch-baseline {
+    background: #a1a1aa;
+  }
+  .radar-secondary summary {
+    color: #a1a1aa;
+  }
+  .score-table th,
+  .score-table td {
+    border-bottom-color: #3f3f46;
+  }
+  .preset-description {
+    color: #a1a1aa;
+  }
+  .preset-directions {
+    color: #d4d4d8;
+  }
+  .preset-dir-up {
+    color: #4ade80;
+  }
+  .preset-dir-down {
+    color: #f87171;
+  }
+  .score-rank-agree {
+    background: #10231a;
+    color: #4ade80;
+  }
+  .score-rank-differ {
+    background: #2a2410;
+    color: #fcd34d;
+  }
+  .consistency-gate p {
+    background: #27272a;
+    color: #d4d4d8;
+  }
+  .consistency-gate .consistency-gate-demoted,
+  .consistency-gate .consistency-gate-watcher {
+    background: #2a2410;
+    color: #fcd34d;
+  }
+  .score-tie {
+    color: #fcd34d;
+  }
+  .compare-sidebar-note {
+    color: #a1a1aa;
+  }
+  .compare-model-group {
+    background: #27272a;
+    border-color: #3f3f46;
+  }
+  .compare-model-name {
+    color: #e4e4e7;
+  }
+  .compare-model-badge {
+    background: #1e293b;
+    color: #93c5fd;
+  }
+  .compare-model-summary {
+    color: #a1a1aa;
+  }
+  .compare-model-arrow {
+    color: #71717a;
+  }
+  .compare-run-list {
+    border-top-color: #3f3f46;
+  }
+  .compare-run-badge {
+    background: #3f3f46;
+    color: #d4d4d8;
+  }
+  .compare-warning,
+  .rescore-notice {
+    background: #2a2410;
+    border-color: #57460f;
+    color: #fcd34d;
+  }
+  .baseline-stale-banner {
+    background: #2a2410;
+    border-color: #57460f;
+    color: #fcd34d;
+  }
+  .run-item-failed {
+    color: #fca5a5;
+  }
+  .baseline-stale-reasons {
+    color: #fcd34d;
+  }
+  .export-confirm {
+    background: #172554;
+    border-color: #1e3a8a;
+    color: #bfdbfe;
+  }
+  .export-stage {
+    color: #a1a1aa;
+  }
+  .report-viewer-name,
+  .report-viewer-note {
+    color: #a1a1aa;
+  }
+  .report-viewer-frame {
+    border-color: #3f3f46;
+  }
+  .prompt-picker-label,
+  .prompt-status,
+  .run-type-control legend {
+    color: #a1a1aa;
+  }
+  .prompt-dirty-note {
+    color: #fcd34d;
+  }
+  .run-type-control {
+    border-color: #3f3f46;
+  }
+  .run-type-badge,
+  .compare-run-badge.experiment {
+    background: #2e1065;
+    color: #ddd6fe;
+  }
+  .note-verify.verified {
+    background: #14532d;
+    color: #bbf7d0;
+  }
+  .note-verify.mismatch {
+    background: #450a0a;
+    color: #fecaca;
+  }
+  .note-verify.direction {
+    background: #451a03;
+    color: #fde68a;
+  }
+  .note-verify.unverifiable {
+    background: #3f3f46;
+    color: #d4d4d8;
+  }
+  .run-item-aux {
+    border-color: #5b21b6;
+    background: #2e1065;
+    color: #ddd6fe;
+  }
+}

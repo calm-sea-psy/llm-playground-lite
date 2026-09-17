@@ -1,0 +1,26 @@
+# Python
+backend/.venv/
+__pycache__/
+*.pyc
+.env
+
+# 대화 저장 파일·성능 테스트 결과 (개인 데이터, 로컬 전용)
+backend/conversations/
+backend/test-results/
+
+# 질문 세트·문서 — 자기 세트를 만들면 정답·채점 기준이 그대로 들어가므로 커밋하지 않는다.
+# 예외 둘: probe.json(속도 측정용 채움 텍스트)과 sample/(공개 샘플 세트)
+backend/testsets/*
+!backend/testsets/probe.json
+!backend/testsets/sample/
+
+# Node
+node_modules/
+dist/
+
+# Editor / OS
+.DS_Store
+.vscode/
+
+# 내보낸 리포트
+report/

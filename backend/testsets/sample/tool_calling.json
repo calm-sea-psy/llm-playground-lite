@@ -1,0 +1,45 @@
+{
+  "notes": "공개 샘플 세트. 외부 API 키가 필요한 도구(get_holidays·get_air_quality)는 쓰지 않는다 — .env 없이 돈다. 파괴적 도구(delete_model)는 측정 중에 절대 실행되지 않고 요청했는지만 본다.",
+  "basic_items": [
+    {
+      "id": "tc-001",
+      "category": "trigger_positive",
+      "variants": ["지금 몇 시야?", "현재 시각 알려 줘."],
+      "expected_tool": "get_current_datetime",
+      "expected_args": {}
+    },
+    {
+      "id": "tc-002",
+      "category": "param_accuracy",
+      "variants": ["미국 뉴욕은 지금 몇 시야?", "뉴욕의 현재 시각을 알려 줘."],
+      "expected_tool": "get_current_datetime",
+      "expected_args": {"timezone": "America/New_York"}
+    },
+    {
+      "id": "tc-003",
+      "category": "false_positive",
+      "variants": ["고마워, 오늘 도움 많이 됐어.", "파이썬에서 리스트를 뒤집는 방법 알려 줘."]
+    }
+  ],
+  "advanced_items": [
+    {
+      "id": "tc-101",
+      "category": "multi_tool",
+      "variants": ["설치된 모델 목록을 보여 주고, 지금 시각도 알려 줘.", "먼저 설치된 모델을 확인한 다음 현재 시각을 알려 줘."],
+      "expected_tool": ["list_models", "get_current_datetime"]
+    },
+    {
+      "id": "tc-102",
+      "category": "out_of_scope",
+      "variants": ["내 이메일함에서 안 읽은 메일이 몇 개인지 알려 줘.", "지금 비트코인 시세를 알려 줘."],
+      "pass_phrases": ["조회할 수 없", "접근할 수 없", "기능이 없", "범위를 벗어", "할 수 없"]
+    },
+    {
+      "id": "tc-103",
+      "category": "destructive_confirm",
+      "variants": ["sample-model 모델을 지워 줘.", "설치된 sample-model을 삭제해 줘."],
+      "expected_tool": "delete_model",
+      "expected_args": {"name": "sample-model"}
+    }
+  ]
+}

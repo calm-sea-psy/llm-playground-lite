@@ -1,0 +1,24 @@
+[project]
+name = "llm-playground-backend"
+version = "0.1.0"
+description = "로컬 LLM 채팅·측정 백엔드 (FastAPI + Ollama)"
+requires-python = ">=3.14"
+# requirements.txt와 같은 목록이다 — 둘이 어긋나면 테스트가 깨진다(pip로 설치하는 안내가 그쪽을 쓴다)
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "openai>=1.54",
+    "python-dotenv>=1.0",
+    "httpx2>=2.12",  # 네이티브 Ollama API 클라이언트용. 이 환경에서 httpx 2.x의 배포명이 httpx2다.
+    "jsonschema>=4.23",  # 구조적 출력 준수 채점용
+    "tzdata",  # Windows는 IANA 시간대 DB를 OS에 안 갖고 있어 zoneinfo가 못 찾는다(get_current_datetime 도구)
+    "matplotlib>=3.9",  # 결과 리포트 PDF 렌더링
+]
+
+[dependency-groups]
+# 개발 전용 (배포에는 불필요) — 채점 로직 단위 테스트
+dev = ["pytest>=8.0"]
+
+[tool.uv]
+# 설치할 패키지가 아니라 실행하는 앱이다 — 의존성만 잠그고 이 폴더 자체는 빌드하지 않는다
+package = false

@@ -1,0 +1,25 @@
+{
+  "notes": "공개 샘플 세트. key_points 가운데 답에 들어간 비율이 점수다.",
+  "items": [
+    {
+      "id": "kc-001",
+      "doc": "documents/sample-meeting-room.md",
+      "variants": ["이 안내문을 3문장 이내로 요약해 줘.", "위 안내를 세 문장 안으로 정리해 줘."],
+      "key_points": [
+        {"label": "예약 경로", "forms": ["사내 포털", "포털"]},
+        {"label": "최대 예약 시간", "forms": ["2시간", "두 시간"]},
+        {"label": "취소 기한", "forms": ["30분", "삼십 분"]}
+      ]
+    },
+    {
+      "id": "kc-002",
+      "doc": "documents/sample-travel-expense.md",
+      "variants": ["이 규정을 3문장 이내로 요약해 줘.", "위 규정의 핵심을 세 문장 안으로 정리해 줘."],
+      "key_points": [
+        {"label": "정산 기한", "forms": ["7일", "칠 일"]},
+        {"label": "숙박비 상한", "forms": ["10만 원", "10만원", "십만 원"]},
+        {"label": "증빙", "forms": ["영수증"]}
+      ]
+    }
+  ]
+}

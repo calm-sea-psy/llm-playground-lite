@@ -1,0 +1,23 @@
+{
+  "notes": "공개 샘플 세트. schema는 채점에만 쓰고 모델에게 보내지 않는다 — 원하는 모양은 질문에 적는다.",
+  "shot_modes": ["zero", "few"],
+  "few_shot_examples": [
+    {"input": "과일 이름(name)과 색(color)을 키로 가진 JSON 객체 하나만 출력해 줘. 예시는 바나나.", "output": "{\"name\": \"바나나\", \"color\": \"노랑\"}"}
+  ],
+  "items": [
+    {
+      "id": "so-001",
+      "variants": ["도시 이름(city)과 나라 이름(country)을 키로 가진 JSON 객체 하나만 출력해 줘. 예시는 서울.", "키가 city와 country인 JSON 객체만 답해 줘. 서울을 예로 들어."],
+      "schema": {
+        "type": "object",
+        "required": ["city", "country"],
+        "properties": {"city": {"type": "string"}, "country": {"type": "string"}}
+      }
+    },
+    {
+      "id": "so-002",
+      "variants": ["숫자 1, 2, 3을 차례로 담은 JSON 배열 하나만 출력해 줘.", "1부터 3까지의 정수를 담은 JSON 배열만 답해 줘."],
+      "schema": {"type": "array", "items": {"type": "integer"}, "minItems": 3, "maxItems": 3}
+    }
+  ]
+}
