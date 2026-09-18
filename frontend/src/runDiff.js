@@ -10,8 +10,51 @@ export function documentLength(config) {
 }
 // 호스트 이름과 하드웨어 사양은 `측정 기계` 딱지를 되짚기 위한 기록이라 조건 비교에서 뺀다 — 기계가 다르다는 것은
 // `측정 기계`가 말하고, 사양까지 대조하면 같은 차이가 두 줄로 뜬다. 모델 식별값은 모델마다 당연히 달라(모델끼리 대조하면
-// 늘 `조건 다름`이 된다) 기록만 한다. Python·패키지 버전도 기록이다 — 채점이 바뀌면 판정기 버전이 따로 말한다
-const RECORD_ONLY_KEYS = new Set(['measurement_host', 'hardware', 'model_identity', 'software'])
+// 늘 `조건 다름`이 된다) 기록만 한다. Python·패키지 버전도 기록이다 — 채점이 바뀌면 판정기 버전이 따로 말한다.
+// 전원 상태도 기록이다 — 속도·전력 값을 앞선 실행과 나란히 놓는 리포트 표에 함께 찍고, 다르다고 경고하는 문턱은 아직 두지 않았다
+const RECORD_ONLY_KEYS = new Set(['measurement_host', 'hardware', 'model_identity', 'software', 'power'])
+// 전원 기록 가운데 **GPU 전력 한계**만 따로 대조한다 — 한계가 다르면 속도·안정성은 다른 환경에서 잰 값이다(AC/배터리·잔량은
+// 기록이라 대조하지 않는다). config에 없는 파생 키라 비교하는 곳이 키 목록에 직접 넣는다
+const DERIVED_KEYS = { gpu_power_limit: (cfg) => gpuPowerLimits(cfg.power) }
+
+/** 채점이 기대는 소프트웨어 — Python과 선언한 패키지의 설치 판. 같은 답이어도 판정 라이브러리가 바뀌면 점수가 달라질 수 있다.
+ * 설치되지 않은 패키지는 `없음`이라 적는다(선언과 설치가 다른 것도 기록이다). */
+export function softwareText(software) {
+  if (!software) return '기록 없음 (이 기록을 남기기 전 측정)'
+  const packages = Object.entries(software.packages ?? {})
+    .map(([name, version]) => `${name} ${version ?? '없음'}`)
+    .join(' · ')
+  return `Python ${software.python ?? '기록 없음'}${packages ? ` · ${packages}` : ''}`
+}
+
+/** 측정한 코드의 커밋 — `df242ca` 또는 손댄 것이 있으면 `df242ca+dirty`. 그 기록 이전 실행은 `기록 없음`. */
+export function commitText(commit) {
+  if (!commit?.sha) return '기록 없음 (이 기록을 남기기 전 측정)'
+  return `${commit.sha}${commit.dirty ? '+dirty' : ''}`
+}
+
+/** 그 실행에 실제로 걸려 있던 GPU 전력 한계(없으면 설정한 한계) — 없으면 undefined(기록 없음과 `GPU 없음`을 가르지 않는다). */
+function gpuPowerLimits(power) {
+  const gpus = power?.gpus
+  if (!gpus?.length) return undefined
+  const limits = gpus.map((g) => g.enforced_power_limit_watts ?? g.power_limit_watts).filter((w) => w != null)
+  return limits.length ? limits.slice().sort((a, b) => a - b) : undefined
+}
+// 긴 컨텍스트 압축 켬 경로(참고 행)의 요약기 조건 — 점수에 드는 값에는 걸리지 않아 모델끼리 대조해 표지에 경고하지 않는다.
+// 실행마다 요약기가 무엇이었는지는 리포트가 그 참고 행의 각주에 적는다. 직전 실행과 달라진 조건 한 줄에는 그대로 뜬다
+const REFERENCE_ONLY_KEYS = new Set(['summarizer_model', 'summarizer_sampling'])
+// 도구 응답(고정값/실시간)은 도구를 부르는 항목에만, 긴 컨텍스트 시나리오마다 재로드는 긴 컨텍스트에만 걸린다 — 모든 항목에
+// 대조하면 `도구 응답 — 폐쇄형, 환각 …`처럼 영향이 없는 지표까지 조건 다름으로 뜬다. 키마다 항목 목록을 두지 않는다는 원칙의
+// 예외라 이 두 키만 둔다
+const ITEM_SCOPED_KEYS = {
+  tool_responses: new Set(['tool_calling', 'injection_probe']),
+  long_context_reload: new Set(['long_context']),
+  // 전력 한계는 속도·안정성을 재는 항목에만 걸린다 — 품질·보안 답은 전력 한계로 달라지지 않는다(실측: 45W와 95W에서 같은 답)
+  gpu_power_limit: new Set(['model_load', 'short_probe', 'context_2000', 'context_4000', 'context_8000']),
+}
+// 도구 응답 — 기록이 없는 옛 실행은 도구를 실시간으로 실행했다(고정값이 생기기 전이다)
+export const TOOL_RESPONSES_LIVE = 'live'
+const TOOL_RESPONSES_TEXT = { fixed: '고정', live: '실시간' }
 // 이 기록을 남기기 전에 잰 실행 — 사양·서버 버전은 실행을 시작할 때만 읽을 수 있어 나중에 채울 수 없다
 const ENVIRONMENT_UNRECORDED = '기록 없음 (이 기록을 남기기 전 측정)'
 
@@ -35,7 +78,59 @@ export function hardwareText(hw) {
         : hw.gpus
             .map((g) => `${g.name}${g.vram_bytes ? ` ${gib(g.vram_bytes)}` : ''}${g.driver ? ` (드라이버 ${g.driver})` : ''}`)
             .join(', ')
-  return [cpu, ram, gpus].join(' · ')
+  // OS·GPU 백엔드는 나중에 기록하기 시작했다 — 없는 실행은 그렇게 적는다(지금 기계의 값으로 채우면 측정 시 값으로 읽힌다)
+  const os = hw.os ?? 'OS 기록 없음'
+  const cuda = 'cuda' in hw ? `CUDA ${hw.cuda ?? '못 읽음'}` : 'GPU 백엔드 기록 없음'
+  return [cpu, ram, gpus, os, cuda].join(' · ')
+}
+
+/** 실행을 시작할 때의 전원 — AC/배터리와 GPU 전력 한계(실제로 걸린 한계, 없으면 설정한 한계). 못 읽은 칸은 못 읽었다고 적는다. */
+export function powerText(power) {
+  if (!power) return ENVIRONMENT_UNRECORDED
+  const source =
+    power.ac_power === true
+      ? 'AC 연결'
+      : power.ac_power === false
+        ? `배터리${power.battery_percent != null ? ` ${power.battery_percent}%` : ''}`
+        : 'AC/배터리 못 읽음'
+  const watts = (w) => `${Math.round(w)}W`
+  const gpus =
+    power.gpus == null
+      ? 'GPU 전력 한계 못 읽음 (nvidia-smi)'
+      : power.gpus.length === 0
+        ? 'NVIDIA GPU 없음'
+        : power.gpus
+            .map((g) => {
+              // `한계 45W (기본 80W)`는 45W가 미달이라는 뜻으로 읽힌다 — 이 기계에서 실제로 걸린 상한이 무엇인지 적는다
+              const limit = g.enforced_power_limit_watts ?? g.power_limit_watts
+              const name = power.gpus.length > 1 ? `${g.name} ` : ''
+              const base = g.default_power_limit_watts != null ? ` (GPU 기본값 ${watts(g.default_power_limit_watts)})` : ''
+              return `${name}이 환경의 GPU 전력 한계 ${limit != null ? watts(limit) : '못 읽음'}${base}`
+            })
+            .join(', ')
+  return `${source} · ${gpus}`
+}
+
+/** 측정 경로의 도구 응답 — 고정이면 세트 옆에 기록해 둔 실제 응답, 실시간이면 도구를 그때 실행했다. 기록이 없는 옛 실행은 실시간이다. */
+export function toolResponsesText(config) {
+  const value = conditionValue(config ?? {}, 'tool_responses')
+  return value === 'fixed'
+    ? '고정 — 기록해 둔 실제 응답(현재 시각·공휴일·대기질·설치된 모델). 실시간으로 잰 실행의 Tool-calling 값과 나란히 읽지 않는다'
+    : `실시간 — 도구를 그때 실행${config && 'tool_responses' in config ? '' : '(기록 이전 실행)'}`
+}
+
+/** 긴 컨텍스트의 시작 상태 — 앞선 호출이 남긴 상태가 같은 입력의 답을 바꿔, 시나리오마다 모델을 다시 올렸는지가 조건이다.
+ * 기록이 없는 옛 실행은 앞 시나리오에 이어 돌았다. */
+export function longContextReloadText(config) {
+  if (conditionValue(config ?? {}, 'long_context_reload')) return '시나리오마다 모델을 다시 올림 — 켬·끔 두 경로와 2회차가 같은 상태에서 시작'
+  return `앞 시나리오에 이어서${config && 'long_context_reload' in config ? '' : '(기록 이전 실행)'}`
+}
+
+/** 2회차가 건너뛰는 항목 바로 뒤에서 두 바퀴 모두 모델을 다시 올렸나 — 바로 앞 호출이 남긴 상태가 답을 바꿔, 올리지 않은 실행은
+ * 건너뛴 자리 뒤 문항의 시작 상태가 다르다(1회차 점수에도 걸린다). 기록이 없는 옛 실행은 올리지 않았다. */
+export function reloadAfterSkippedText(config) {
+  if (conditionValue(config ?? {}, 'reload_after_skipped')) return '켬 — 2회차가 건너뛰는 항목 바로 뒤에서 두 바퀴 모두 모델을 다시 올림'
+  return `끔${config && 'reload_after_skipped' in config ? '' : '(기록 이전 실행)'}`
 }
 
 /** Ollama 서버 버전 — 키가 없으면 그 기록 이전 실행, null이면 읽으려 했지만 못 읽었다. */
@@ -59,9 +154,13 @@ export function consistencyNumPredict(cfg) {
 }
 
 function conditionValue(cfg, key) {
+  if (DERIVED_KEYS[key]) return DERIVED_KEYS[key](cfg)
   if (key === 'measurement_machine') return cfg[key] ?? MAIN_MACHINE
   if (key === 'document_length') return documentLength(cfg)
   if (key === 'consistency_num_predict') return consistencyNumPredict(cfg)
+  if (key === 'tool_responses') return cfg[key] ?? TOOL_RESPONSES_LIVE
+  if (key === 'long_context_reload') return cfg[key] ?? false
+  if (key === 'reload_after_skipped') return cfg[key] ?? false
   return cfg[key]
 }
 
@@ -80,9 +179,14 @@ const CONDITION_LABELS = {
   consistency_num_predict: '일관성 num_predict',
   consistency_sampling: '일관성 샘플링',
   summarizer_model: '요약 압축 모델',
+  summarizer_sampling: '요약 샘플링',
   document_length: '문서 길이',
   measurement_machine: '측정 기계',
   ollama_version: 'Ollama 버전',
+  tool_responses: '도구 응답',
+  long_context_reload: '긴 컨텍스트 시나리오마다 재로드',
+  reload_after_skipped: '건너뛴 항목 뒤 재로드',
+  gpu_power_limit: 'GPU 전력 한계',
 }
 
 export function conditionLabel(key) {
@@ -95,6 +199,8 @@ export function conditionValueText(key, value) {
   if (value === null && key === 'ollama_version') return '못 읽음'
   if (value === undefined || value === null) return '기록 없음'
   if (key === 'measurement_machine') return machineLabel(value)
+  if (key === 'tool_responses') return TOOL_RESPONSES_TEXT[value] ?? String(value)
+  if (key === 'gpu_power_limit') return value.map((w) => `${w}W`).join('·')
   if (typeof value === 'boolean') return value ? '켬' : '끔'
   if (Array.isArray(value)) return value.join(' / ')
   if (typeof value === 'object') {
@@ -129,7 +235,7 @@ export function diffRunConditions(prev, next) {
 
   const changed = runSettingDiff(prev, next)
   const unrecorded = []
-  const keys = new Set([...Object.keys(prevCfg), ...Object.keys(nextCfg)])
+  const keys = new Set([...Object.keys(prevCfg), ...Object.keys(nextCfg), ...Object.keys(DERIVED_KEYS)])
   for (const key of keys) {
     if (RECORD_ONLY_KEYS.has(key)) continue
     const [before, after] = [conditionValue(prevCfg, key), conditionValue(nextCfg, key)]
@@ -177,18 +283,21 @@ export function metricConditionMismatches(details) {
     if (!map.has(signature)) map.set(signature, make())
     map.get(signature).items.push(label)
   }
-  for (const { label, entries } of byItem.values()) {
+  for (const [itemId, { label, entries }] of byItem.entries()) {
     if (entries.length < 2) continue
     const recorded = entries.filter((e) => Object.keys(e.config).length > 0)
     for (const e of entries) {
       if (Object.keys(e.config).length === 0) unrecorded.set(e.runId, [...(unrecorded.get(e.runId) ?? []), label])
     }
     if (recorded.length < 2) continue
-    const keys = new Set(recorded.flatMap((e) => Object.keys(e.config)))
+    const keys = new Set([...recorded.flatMap((e) => Object.keys(e.config)), ...Object.keys(DERIVED_KEYS)])
     for (const key of keys) {
-      if (RECORD_ONLY_KEYS.has(key)) continue
+      if (RECORD_ONLY_KEYS.has(key) || REFERENCE_ONLY_KEYS.has(key)) continue
+      if (ITEM_SCOPED_KEYS[key] && !ITEM_SCOPED_KEYS[key].has(itemId)) continue
       const values = recorded.map((e) => ({ runId: e.runId, value: conditionValue(e.config, key) }))
       const known = values.filter((v) => v.value !== undefined)
+      // 파생 키는 아무 실행도 그 기록이 없으면 대조할 것 자체가 없다 — `기록 없음` 각주를 내지 않는다(그 기록 이전 실행들이다)
+      if (DERIVED_KEYS[key] && known.length === 0) continue
       if (new Set(known.map((v) => JSON.stringify(v.value))).size >= 2) {
         addTo(groups, JSON.stringify([key, values]), () => ({ key, values, items: [] }), label)
       } else if (known.length < values.length) {
@@ -286,7 +395,9 @@ export function withinRunConditionNotes(details) {
     for (const [itemId, source] of Object.entries(d.provenance)) {
       const config = source.config || {}
       if (source.run_id === d.id || Object.keys(config).length === 0) continue
-      const keys = [...new Set([...Object.keys(parent), ...Object.keys(config)])].filter((k) => !RECORD_ONLY_KEYS.has(k))
+      const keys = [...new Set([...Object.keys(parent), ...Object.keys(config)])].filter(
+        (k) => !RECORD_ONLY_KEYS.has(k) && (!ITEM_SCOPED_KEYS[k] || ITEM_SCOPED_KEYS[k].has(itemId)),
+      )
       const changed = keys.filter((key) => {
         const [from, to] = [conditionValue(parent, key), conditionValue(config, key)]
         return from !== undefined && to !== undefined && JSON.stringify(from) !== JSON.stringify(to)

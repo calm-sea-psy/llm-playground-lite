@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { fetchCompareNotesStatus, generateCompareNotes, rateCompareNote } from '../api'
 import { markerBadges, verificationSummary } from '../noteVerify'
-import { BASELINE_ROW_ID, demotedWeights, normalize, PRESETS, toRow, weightedScore } from '../scoring'
+import { BASELINE_ROW_ID, gatedWeights, normalize, PRESETS, toRow, weightedScore } from '../scoring'
 import RatingStars from './RatingStars'
 
 // 비교 노트 — 선택된 실행들의 모델 각각에게 비교 표 전체(+베이스라인)를
@@ -72,7 +72,7 @@ export default function CompareNotes({ selectedDetails, baseline, demotion, tabl
     const rows = selectedDetails.map((d) => toRow(d))
     if (baseline?.run) rows.push(toRow(baseline.run, BASELINE_ROW_ID))
     const norm = normalize(rows)
-    const weights = demotedWeights(PRESETS.usage.build(), demotion)
+    const weights = gatedWeights(PRESETS.usage.build(), demotion)
     return Object.fromEntries(
       selectedDetails.map((d) => [d.id, weightedScore(norm, weights, d.id)]),
     )

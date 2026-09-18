@@ -17,7 +17,7 @@ import { conditionMismatchLines } from '../runDiff'
 import {
   BASELINE_ROW_ID,
   comparableRuns,
-  demotedWeights,
+  gatedWeights,
   formatRawCell,
   isPromptExperiment,
   latestSelectionRun,
@@ -195,7 +195,7 @@ export default function ComparePage() {
     [modelGroups],
   )
   const previewDemotion = useConsistencyDemotion(previewRunIds, judgmentRefresh)
-  const previewWeights = useMemo(() => demotedWeights(PRESETS.usage.build(), previewDemotion), [previewDemotion])
+  const previewWeights = useMemo(() => gatedWeights(PRESETS.usage.build(), previewDemotion), [previewDemotion])
   const baselinePreviewScore = baseline?.run ? weightedScore(previewNormalized, previewWeights, BASELINE_ROW_ID) : null
 
   function previewScoreFor(runId) {

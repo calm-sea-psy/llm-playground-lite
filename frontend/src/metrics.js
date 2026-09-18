@@ -4,6 +4,14 @@
 
 export const pctFmt = (v) => `${(v * 100).toFixed(0)}%`
 
+/** 부하 시 tok/s 유지율이 100%를 넘으면 그 값은 쓸 수 없다 — 부하 없는 기준 측정(짧은 탐침)이 부하 측정보다 느렸다는 뜻이라,
+ * 부하를 견딘 정도가 아니라 기준이 눌린 정도를 재고 있다(실측: 전력 한계가 낮아 클럭이 오르내린 실행). 값은 남기고 점수에서만 뺀다.
+ * 판정을 한 곳에 두어 화면 표와 리포트가 갈리지 않게 한다(`scoring.js`가 이 함수를 쓴다). */
+export function retentionInvalidCause(metrics) {
+  const ratio = metrics?.context_retention_ratio
+  return ratio != null && ratio > 1 ? '부하 없는 기준 측정이 부하 측정보다 느렸다(기준 탐침이 눌렸다)' : null
+}
+
 // 속도·리소스·안정성 지표. get()은 run.metrics를 받아 원본 값을 꺼내고,
 // fmt()는 그 값을 사람이 읽기 좋은 단위로 바꾼다. item은 그 값이 나오는 실행
 // 항목 id — 저장 상태(능력 부재·실행 실패)를 읽는 데 쓴다(scoring.formatRawCell).
@@ -36,6 +44,7 @@ export const METRICS = [
     label: '컨텍스트 부하 시 tok/s 유지율',
     get: (m) => m.context_retention_ratio,
     fmt: (v) => `${(v * 100).toFixed(0)}%`,
+    invalid: retentionInvalidCause,
   },
   {
     key: 'load_success_ratio',

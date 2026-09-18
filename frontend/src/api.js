@@ -122,12 +122,12 @@ export async function startTestRun({ model, runType = 'selection', systemPromptN
   return res.json()
 }
 
-// 지표 단위 재실행 — 고른 항목만 별도 결과 파일로 다시 잰다.
-export async function rerunTestItems(runId, itemIds) {
+// 지표 단위 재실행 — 고른 항목만 별도 결과 파일로 다시 잰다. 이유가 없으면 서버가 받지 않는다(리포트의 혼합 실행 줄에 실린다).
+export async function rerunTestItems(runId, itemIds, reason) {
   const res = await fetch(`/api/tests/runs/${encodeURIComponent(runId)}/rerun`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ item_ids: itemIds }),
+    body: JSON.stringify({ item_ids: itemIds, reason }),
   })
   if (!res.ok) {
     const body = await res.json().catch(() => null)

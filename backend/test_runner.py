@@ -23,6 +23,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Literal
 
+import agent_tools
 import aux_models
 import baseline
 import bench_config as cfg
@@ -114,17 +115,20 @@ _BASELINE_SKIPPED_ITEMS = {"consistency"}
 # 캐시가 비어, 두 바퀴가 같은 캐시 상태에서 출발한다(같은 호출을 연달아 보내면 2회차 입력이 통째로 캐시에서 나와 재현과 캐시가
 # 겹친다). 워밍업까지 다시 돈다 — 없으면 첫 문항 호출만 캐시 상태와 응답 시간 조건이 다르다. 속도 탐침·컨텍스트 부하는 돌지
 # 않는다(속도는 반복 중앙값으로 이미 변동을 잰다). 긴 컨텍스트는 압축 끔 경로만 돈다. 점수에는 넣지 않는다(reproduction.py)
+# Tool-calling은 종합 점수에 드는 지표라 돈다 — 도구 응답이 고정값일 때 두 바퀴의 입력이 같다(실시간이면 바퀴마다 결과가 다르다)
 SECOND_ROUND_EXCLUDED = {
     "consistency": "샘플링을 일부러 흔들어 같은 질문을 여러 번 묻는 세트라 글자 일치로 재현을 보면 늘 갈린다",
-    "tool_calling": "문항 세트 밖이고 선정 규칙에 들지 않는다",
-    "injection_probe": "문항 세트 밖이고 선정 규칙에 들지 않는다",
+    "injection_probe": "참고 값(n 2)이고 선정 규칙·종합 점수에 들지 않는다",
 }
-SECOND_ROUND_LONG_CONTEXT = "압축 끔 경로만 — 켬 경로는 요약 모델 호출이 끼고 그 요약이 고정 샘플링이 아니라 후보 모델의 재현을 못 본다"
+SECOND_ROUND_LONG_CONTEXT = "압축 끔 경로만 — 점수는 끔 경로에서 나고, 켬 경로는 점수에 들지 않는 참고다"
 REPEAT_RULE = ("선정용 실행은 1회차를 다 돈 뒤 모델을 내렸다 올려 같은 호출을 같은 순서로 한 번 더 돈다(2회차). "
+               "2회차가 건너뛰는 항목 바로 뒤에는 두 바퀴 모두 모델을 다시 올린다 — 바로 앞 호출이 남긴 상태가 같은 입력의 답을 "
+               "바꿔, 건너뛴 자리에서 두 바퀴의 상태가 갈리지 않게 한다. "
                "점수·n·게이트·재채점은 1회차만 쓰고, 2회차는 같은 답이 나왔는지만 본다")
 # 계측(응답 시간·GPU 전력)이 세는 호출 — 두 참고 값이 같은 호출을 본다(power_meter.RunMeter)
 METERING_RULE = ("계측(응답 시간·GPU 전력)은 계측 구간 안의 후보 모델 호출 전부(두 바퀴)다 — 속도·리소스 탐침, 두 바퀴 사이의 "
-                 "모델 로드·워밍업, 긴 컨텍스트 켬 경로(요약 모델이 끼는 호출), 도구 호출은 구간 밖이다. 채점은 1회차만 쓴다")
+                 "모델 로드·워밍업, 모델을 다시 올리는 시간(긴 컨텍스트 시나리오마다·2회차가 건너뛰는 항목 뒤), 긴 컨텍스트 켬 경로"
+                 "(요약 모델이 끼는 호출), 도구 호출은 구간 밖이다. 채점은 1회차만 쓴다")
 
 # 기준선이 재는 범위(`_build_items`의 baseline 스코프)의 까닭 — 리포트가 `포함된 실행` 아래에 싣는다. 범위를 바꾸면 함께 고친다
 BASELINE_SCOPE_REASON = (
@@ -249,6 +253,8 @@ class Run:
     second_round: dict[str, Any] | None = None
     # 두 바퀴의 재현 요약(reproduction.compare) — 실행이 끝날 때 한 번 센다
     reproduction: dict[str, Any] | None = None
+    # 지표 재실행의 이유 — 합친 뷰에서 그 재실행이 낸 지표의 출처에 따라간다. 이 기록 이전 재실행은 없다
+    rerun_reason: str | None = None
 
 
 _runs: dict[str, Run] = {}
@@ -281,14 +287,17 @@ def config_snapshot(provider_name: str = "ollama") -> dict[str, Any]:
         "consistency_sampling": dict(cfg.REALISTIC_SAMPLING) if fixed else None,
         # 문서를 주고 묻는 세트가 읽는 판(점수에 드는 쪽). 과제용 고정 문항은 실행을 시작할 때 짧은 판으로 덮어 쓴다
         "document_length": qt.REPRESENTATIVE_DOCUMENT_LENGTH,
-        # 긴 컨텍스트 기억력의 압축 요약은 항상 이 고정 모델이 한다(채점 대상과
-        # 무관 — quality_runner.py의 _SUMMARIZER_MODEL 주석 참고). 요약 모델이 바뀌면
-        # 과거 결과와 비교가 성립하지 않으므로 num_ctx·샘플링과 같은 급의
-        # 측정 조건으로 기록한다.
-        "summarizer_model": quality_runner._SUMMARIZER_MODEL,
-        # 요약 호출이 보내는 샘플링 — seed가 없어 요약이 끼는 경로(긴 컨텍스트 켬)는 고정 샘플링이 아니다. 컨텍스트는 요청값이
-        # 아니라 실제로 올라간 값을 긴 컨텍스트 결과(`summarizer_loaded`)에 남긴다
-        "summarizer_sampling": {"temperature": summarizer.SUMMARY_TEMPERATURE, "top_p": ollama_client.APP_TOP_P, "seed": None},
+        # 긴 컨텍스트 압축 켬 경로(참고)의 요약기 — 후보 자신이다(`quality_runner.SELF_SUMMARIZER`). 옛 실행은 별도 요약
+        # 모델(`llama3.2:3b`)로 요약해 켬 참고값이 같은 것이 아니다 — 리포트가 켬 참고 행 각주에 실행마다 적는다. 켬 경로를
+        # 돌지 않는 프로바이더(클라우드)는 요약하지 않아 두 값 모두 None이다
+        "summarizer_model": quality_runner.SELF_SUMMARIZER if fixed else None,
+        # 요약 호출이 실제로 보내는 샘플링 — 리포트는 이 기록의 seed로 켬 경로가 고정 샘플링인지 가른다(seed를 보내기 전 실행은
+        # `None`으로 남아 있다)
+        "summarizer_sampling": {"temperature": summarizer.SUMMARY_TEMPERATURE, "top_p": ollama_client.APP_TOP_P,
+                                "seed": summarizer.SUMMARY_SEED} if fixed else None,
+        # 긴 컨텍스트가 시나리오마다 모델을 내렸다 올려 같은 상태에서 시작했나 — 앞선 호출이 남긴 상태가 같은 입력의 답을 바꿔,
+        # 키가 없는 옛 실행(앞 시나리오에 이어 돌았다)과는 끔 경로 값도 같은 잣대가 아니다. 다시 올리기는 네이티브 경로만 된다
+        "long_context_reload": bool(providers.NATIVE_API.get(provider_name)),
         # 기계에 딸린 지표를 다른 기계의 값과 섞지 않기 위한 기록. 호스트 이름은 설정을 빠뜨린
         # 보조 PC를 나중에 되짚기 위한 것이라 조건 비교(runDiff)에서는 보지 않는다.
         "measurement_machine": cfg.measurement_machine(),
@@ -297,17 +306,23 @@ def config_snapshot(provider_name: str = "ollama") -> dict[str, Any]:
 
 
 def measurement_environment(provider_name: str) -> dict[str, Any]:
-    """이 기계에서 도는 실행의 사양과 Ollama 서버 버전, 이 앱의 Python·패키지 버전 — 실행을 시작할 때 한 번 읽는다(나중에
+    """이 기계에서 도는 실행의 사양·전원 상태와 Ollama 서버 버전, 이 앱의 Python·패키지 버전 — 실행을 시작할 때 한 번 읽는다(나중에
     붙일 수 없다). 클라우드 실행은 이 기계에서 돌지 않아 사양과 Ollama 버전을 적지 않지만, 호출하고 채점하는 쪽의 소프트웨어는
     적는다. 버전을 못 읽으면 None으로 남기고 실행은 막지 않는다 — 서버가 정말 안 떠 있으면 첫 항목이 그 사실로 실패한다."""
     software = machine_info.software_snapshot()
+    # 이 도구의 커밋 — 같은 세트·같은 모델이어도 코드가 다르면 값이 달라질 수 있다. 어느 코드로 잰 것인지 되짚는 값이다
+    tool_commit = machine_info.git_commit()
     if not providers.NATIVE_API.get(provider_name):
-        return {"software": software}
+        return {"software": software, "tool_commit": tool_commit}
     try:
         version = ollama_client.server_version()
     except Exception:  # noqa: BLE001 — 기록이 목적이라 조회 실패로 실행을 멈추지 않는다
         version = None
-    return {"hardware": machine_info.hardware_snapshot(), "ollama_version": version, "software": software}
+    # 도구 응답 — 세트 옆 고정값이 있으면 측정 경로의 도구가 기록된 응답을 돌려준다. 실시간이던 옛 실행(키 없음)과 섞이면 조건 다름이다
+    tool_responses = (tool_calling_runner.TOOL_RESPONSES_FIXED if tool_calling_runner.FIXTURES_PATH.exists()
+                      else tool_calling_runner.TOOL_RESPONSES_LIVE)
+    return {"hardware": machine_info.hardware_snapshot(), "power": machine_info.power_snapshot(), "ollama_version": version,
+            "software": software, "tool_responses": tool_responses, "tool_commit": tool_commit}
 
 
 def model_identity(model: str, provider_name: str) -> dict[str, Any] | None:
@@ -370,7 +385,19 @@ def repeats_twice(run_type: str, scope: str, provider_name: str, kind: str = "ru
 
 
 def second_round_item_ids() -> list[str]:
-    return ["model_load", "warmup", *[k for k in _QUALITY_ITEM_LABELS if k not in SECOND_ROUND_EXCLUDED]]
+    items = [*_QUALITY_ITEM_LABELS, *_TOOL_CALLING_ITEM_LABELS]
+    return ["model_load", "warmup", *[k for k in items if k not in SECOND_ROUND_EXCLUDED]]
+
+
+def reload_points(item_ids: list[str]) -> list[str]:
+    """두 바퀴 모두 그 앞에서 모델을 다시 올리는 항목 — 1회차 순서에서 **바로 앞 항목이 2회차에 없는** 2회차 문항 항목.
+    바로 앞에 보낸 호출이 남긴 상태가 같은 입력의 답을 바꾼다(실측: 긴 컨텍스트 끝 턴 뒤와 일관성 호출 뒤의 환각 세트가 서로
+    다른 답을 냈고, 다시 올린 직후는 일관성 호출 뒤와 같았다). 1회차에만 있는 항목을 지나면 두 바퀴의 앞 호출이 갈리니, 그 자리에서
+    다시 올려 같은 상태로 잇는다. 드러난 자리만이 아니라 건너뛰는 항목 뒤 어디든이다 — 속도 탐침 뒤의 지시 따르기도 든다.
+    모델 로드·워밍업은 2회차가 원래 다시 도는 머리라 뺀다."""
+    second = set(second_round_item_ids())
+    return [cur for prev, cur in zip(item_ids, item_ids[1:])
+            if cur in second and cur not in ("model_load", "warmup") and prev not in second]
 
 
 def repeat_condition() -> dict[str, Any]:
@@ -415,9 +442,11 @@ def _start(
         elif scope == "full":
             config["question_set"] = qt.QUESTION_SET  # 세트의 모든 문항 — 고른 문항만 도는 실행은 `assignment`가 그 목록을 적는다
         second_round = None
+        # 2회차가 건너뛰는 항목 뒤에서 두 바퀴 모두 다시 올리나 — 두 바퀴를 도는 실행만 한다. 키가 없는 옛 실행은 올리지 않았다
+        config["reload_after_skipped"] = repeats_twice(run_type, scope, provider_name)
         if repeats_twice(run_type, scope, provider_name):
             config["repeat"] = repeat_condition()
-            labels = {"model_load": "모델 로드 시간", "warmup": "워밍업", **_QUALITY_ITEM_LABELS}
+            labels = {"model_load": "모델 로드 시간", "warmup": "워밍업", **_QUALITY_ITEM_LABELS, **_TOOL_CALLING_ITEM_LABELS}
             second_round = {"items": [{"id": i, "label": labels[i], "status": "pending"} for i in second_round_item_ids()],
                             "calls": {}}
         run = Run(
@@ -487,10 +516,13 @@ def start_assignment_run(provider_name: str = "ollama", model: str | None = None
                   document_length=qt.DOCUMENTS_SHORT)
 
 
-def start_rerun(parent_run_id: str, item_ids: list[str]) -> dict:
+def start_rerun(parent_run_id: str, item_ids: list[str], reason: str | None = None) -> dict:
     """지표 단위 재실행. 한 문항의 버그 때문에 253회를 전부 다시
     돌리지 않도록, 고른 항목만 **별도 결과 파일**로 다시 잰다. 지문·config는
-    재실행 시작 시점에 새로 찍는다 — 합쳐 보여줄 때 지표마다 출처를 달아야 하므로."""
+    재실행 시작 시점에 새로 찍는다 — 합쳐 보여줄 때 지표마다 출처를 달아야 하므로.
+    **이유를 받아야 시작한다** — 합친 값은 원래 실행과 다른 때 잰 것이라, 왜 다시 쟀는지가 없으면 리포트가 출처만 적고 까닭을
+    못 적는다. 줄바꿈·겹친 공백은 한 칸으로 접는다(리포트의 한 줄에 실린다)."""
+    reason = " ".join((reason or "").split())
     with _lock:
         if _active_run_id is not None:
             raise RuntimeError("이미 다른 실행이 진행 중입니다")
@@ -504,6 +536,8 @@ def start_rerun(parent_run_id: str, item_ids: list[str]) -> dict:
         bad = [i for i in item_ids if i not in RERUNNABLE_ITEM_IDS]
         if not item_ids or bad:
             raise ValueError(f"재실행할 수 없는 항목: {bad or '(없음)'}")
+        if not reason:
+            raise ValueError("재실행 이유를 적어야 합니다 — 리포트의 혼합 실행 줄에 실립니다")
         labels = {**_QUALITY_ITEM_LABELS, **_TOOL_CALLING_ITEM_LABELS}
         items = [RunItem(id=i, label=labels[i]) for i in item_ids]
         if010 = (parent.get("metrics", {}).get("instruction_following") or {}).get("capability_control_passed", True)
@@ -522,7 +556,9 @@ def start_rerun(parent_run_id: str, item_ids: list[str]) -> dict:
             started_at=datetime.now(UTC).isoformat(),
             config={**config_snapshot(parent.get("provider_name", "ollama")),
                     **run_conditions(parent["model"], parent.get("provider_name", "ollama")),
-                    "document_length": document_length},
+                    "document_length": document_length,
+                    # 지표 재실행은 한 바퀴라 건너뛴 항목 뒤에서 다시 올리지 않는다 — 원래 실행이 올렸으면 섞임으로 뜬다
+                    "reload_after_skipped": False},
             scope="full",
             provider_name=parent.get("provider_name", "ollama"),
             fingerprints=baseline.compute_run_fingerprints("full", document_length),
@@ -534,6 +570,7 @@ def start_rerun(parent_run_id: str, item_ids: list[str]) -> dict:
             run_type=parent.get("run_type", SELECTION),
             system_prompt_meta=parent.get("system_prompt_meta"),
             system_prompt_application=parent.get("system_prompt_application"),
+            rerun_reason=reason,
         )
         return _launch(run)
 
@@ -734,9 +771,18 @@ def _meter_for(run: Run) -> power_meter.RunMeter | None:
     return None
 
 
-def _run_round_one(run: Run, probe: dict[str, Any], provider: providers.Provider, meter: power_meter.RunMeter | None) -> bool:
+def _reload_before_item(run: Run, meter: power_meter.RunMeter | None) -> None:
+    """두 바퀴의 상태를 맞추려 모델을 다시 올린다(`reload_points`). 로드 시간 지표가 아니다 — 올린 값은 버린다. 다시 올리는 동안은
+    계측 구간 밖이다(다음 문항 항목이 구간을 다시 연다)."""
+    if meter is not None:
+        meter.pause()
+    bench_measure.measure_model_load(run.model)
+
+
+def _run_round_one(run: Run, probe: dict[str, Any], provider: providers.Provider, meter: power_meter.RunMeter | None,
+                   reloads: frozenset[str] = frozenset()) -> bool:
     """1회차 — 항목 목록 그대로. 계측 구간은 문항 항목(품질·보안)만이다: 첫 문항 직전에 열고, 문항이 아닌 항목(도구 호출)에서
-    끊는다. 완료된 항목이 하나라도 있었나를 돌려준다."""
+    끊는다. `reloads`의 항목은 그 앞에서 모델을 다시 올린다. 완료된 항목이 하나라도 있었나를 돌려준다."""
     question_ids = set(qt.ASSIGNMENT_QUESTION_COUNTS) if run.run_type == ASSIGNMENT else set(_QUALITY_ITEM_LABELS)
     any_completed = False
     for item in run.items:
@@ -746,7 +792,7 @@ def _run_round_one(run: Run, probe: dict[str, Any], provider: providers.Provider
             item.status = "running"
             item.started_at = datetime.now(UTC).isoformat()
             run.current_item = item.id
-        if meter is not None:
+        if meter is not None and item.id not in reloads:  # 다시 올리는 항목은 올린 뒤에 연다(아래)
             if item.id in question_ids:
                 meter.begin()  # 처음이면 모델이 올라간 상태의 대기 전력을 재고 연다, 끊겨 있었으면 다시 연다
             else:
@@ -756,6 +802,10 @@ def _run_round_one(run: Run, probe: dict[str, Any], provider: providers.Provider
         memory = memory_probe.snapshot(run.model) if run.provider_name == "ollama" else None
         used_aux: list[dict[str, Any]] = []
         try:
+            if item.id in reloads:  # 다시 올리다 실패하면 이 항목이 실패다 — 상태를 맞추지 못한 채 돌지 않는다
+                _reload_before_item(run, meter)
+                if meter is not None and item.id in question_ids:
+                    meter.begin()
             with aux_models.collect() as used_aux:
                 _run_item(run, item, probe, provider)
             _record_aux_models(item, used_aux)
@@ -792,9 +842,9 @@ def _run_round_one(run: Run, probe: dict[str, Any], provider: providers.Provider
 
 
 def _run_second_round(run: Run, probe: dict[str, Any], provider: providers.Provider,
-                      meter: power_meter.RunMeter | None) -> None:
+                      meter: power_meter.RunMeter | None, reloads: frozenset[str] = frozenset()) -> None:
     """2회차 — 모델 로드(내리고 → 다시 올리고) → 워밍업 → 1회차와 같은 문항 호출. 문항 결과는 점수 자리에 넣지 않고 호출 기록만
-    `second_round.calls`에 둔다. 항목 하나가 실패해도 다음으로 넘어간다."""
+    `second_round.calls`에 둔다. `reloads`의 항목은 1회차와 같이 그 앞에서 다시 올린다. 항목 하나가 실패해도 다음으로 넘어간다."""
     state = run.second_round or {}
     for entry in state.get("items") or []:
         with _lock:
@@ -809,11 +859,24 @@ def _run_second_round(run: Run, probe: dict[str, Any], provider: providers.Provi
             elif entry["id"] == "warmup":
                 for _ in range(cfg.WARMUP_COUNT):
                     bench_measure.measure_warmup(run.model, probe["short"])
+            elif entry["id"] == "tool_calling" and not _supports_tools(run.model):
+                # 1회차가 능력 부재로 끝난 항목 — 다시 돌 것이 없다. 실패가 아니라 건너뜀으로 적는다
+                with _lock:
+                    entry["status"] = "skipped"
+                    entry["reason"] = "능력 부재 — 모델이 도구 호출 능력을 보고하지 않는다"
+                    entry["finished_at"] = datetime.now(UTC).isoformat()
+                    run.completed += 1
+                continue
             else:
+                if entry["id"] in reloads:
+                    _reload_before_item(run, meter)
                 if meter is not None:
                     meter.begin()
-                options = {"compress_paths": (False,)} if entry["id"] == "long_context" else {}
-                result = _quality_result(run, entry["id"], provider, None, **options)
+                if entry["id"] == "tool_calling":
+                    result = tool_calling_runner.run_tool_calling(run.model, None)
+                else:
+                    options = {"compress_paths": (False,)} if entry["id"] == "long_context" else {}
+                    result = _quality_result(run, entry["id"], provider, None, **options)
                 state["calls"][entry["id"]] = reproduction.records(entry["id"], result)
             with _lock:
                 entry["status"] = "completed"
@@ -836,6 +899,11 @@ def _execute(run_id: str) -> None:
     # 두 바퀴 모두 같은 판을 읽는다 — 문맥은 이 실행 스레드에만 걸리고 끝나면 풀린다
     doc_token = qt.enter_document_length(run.config.get("document_length") or qt.DOCUMENTS_SHORT)
     meter = _meter_for(run)
+    # 도구 고정값은 실행 조건이 `fixed`일 때만 건다 — 두 바퀴와 채점이 같은 문맥 안에서 돈다. 시작한 뒤 파일이 사라졌으면
+    # 실시간으로 돌고 조건도 그렇게 고쳐 적는다(적힌 조건과 실제가 어긋나지 않게)
+    fixtures = tool_calling_runner.load_fixtures() if run.config.get("tool_responses") == tool_calling_runner.TOOL_RESPONSES_FIXED else None
+    if fixtures is None and run.config.get("tool_responses") == tool_calling_runner.TOOL_RESPONSES_FIXED:
+        run.config["tool_responses"] = tool_calling_runner.TOOL_RESPONSES_LIVE
     try:
         probe = _load_probe()
         provider = providers.get_provider(run.provider_name)
@@ -844,10 +912,12 @@ def _execute(run_id: str) -> None:
             if not run.precheck["passed"]:
                 with _lock:
                     run.status = "failed"
-        with quality_runner.metering(meter) if meter is not None else nullcontext():
-            any_completed = _run_round_one(run, probe, provider, meter)
+        # 다시 올리는 자리는 적힌 조건을 따른다 — 기록과 실제가 어긋나지 않게
+        reloads = frozenset(reload_points([it.id for it in run.items]) if run.config.get("reload_after_skipped") else [])
+        with quality_runner.metering(meter) if meter is not None else nullcontext(), agent_tools.fixed_responses(fixtures):
+            any_completed = _run_round_one(run, probe, provider, meter, reloads)
             if run.second_round is not None:
-                _run_second_round(run, probe, provider, meter)
+                _run_second_round(run, probe, provider, meter, reloads)
 
         if meter is not None:
             measured = meter.finish()  # 꼬리·대기 측정에 몇 초 걸린다 — 잠금 밖에서
@@ -1048,6 +1118,8 @@ def _provenance(data: dict) -> dict:
         "kind": data.get("kind", "run"),
         # 재실행에서 온 값은 그 파일의 재채점 시각을 따른다 — 합친 뷰의 `rescored_at`은 부모 파일의 것이다
         "rescored_at": data.get("rescored_at"),
+        # 재실행 이유 — 원래 실행과 이유 기록 전 재실행은 None
+        "reason": data.get("rerun_reason"),
     }
 
 
@@ -1129,10 +1201,11 @@ def load_result(run_id: str) -> dict | None:
     data = _read_result(run_id)
     if data is None:
         return None
+    # 긴 컨텍스트의 옛 모양(대표값이 압축 켬이던 때)은 읽을 때 지금 모양으로 — 파일은 그대로다
     if data.get("kind") == "metric_rerun":
-        return response_health.attach_derived(data)
+        return response_health.attach_derived(quality_runner.current_long_context(data))
     # 합친 뷰는 부모 파일에 저장된 파생 값과 구성이 달라 항상 다시 계산한다
-    return response_health.attach_derived(merge_with_reruns(data, _reruns_of(run_id)))
+    return response_health.attach_derived(quality_runner.current_long_context(merge_with_reruns(data, _reruns_of(run_id))))
 
 
 def estimate_duration(model: str, scope: str = "full") -> dict[str, Any]:

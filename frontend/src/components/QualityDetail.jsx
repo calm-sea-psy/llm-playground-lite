@@ -234,13 +234,14 @@ export default function QualityDetail({ metrics }) {
   }
 
   if (m.long_context) {
+    // 점수는 압축 끔 경로 — 켬은 참고라 괄호에 둔다(옛 결과의 모양은 백엔드가 읽을 때 바꿔 보낸다)
     const lc = m.long_context
     sections.push(
       <Section
         key="long_context"
         id="long_context"
         title="긴 컨텍스트 기억력 + 다중 턴 제약 유지"
-        scoreLine={`기억력 ${pct(lc.recall?.score) ?? '—'} (압축끔 ${pct(lc.recall?.score_uncompressed) ?? '—'}) · 제약 ${pct(lc.constraint?.score) ?? '—'} (압축끔 ${pct(lc.constraint?.score_uncompressed) ?? '—'})`}
+        scoreLine={`기억력 ${pct(lc.recall?.score) ?? '—'} (참고 압축켬 ${pct(lc.recall?.score_compressed) ?? '—'}) · 제약 ${pct(lc.constraint?.score) ?? '—'} (참고 압축켬 ${pct(lc.constraint?.score_compressed) ?? '—'})`}
       >
         {lc.detail?.map((e, i) => (
           <div key={i} className="qa-row">

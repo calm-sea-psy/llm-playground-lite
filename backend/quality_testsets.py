@@ -131,7 +131,7 @@ DOCUMENT_DIRS = {DOCUMENTS_SHORT: "documents", DOCUMENTS_LONG: "documents/long"}
 # 네 번 돌고, 짧은 판 실행은 이미 있다. 짧은 판과의 비교는 같은 모델의 짧은 판 실행과 나란히 한다(과제용 고정 문항은 짧은 판으로만 잰다)
 REPRESENTATIVE_DOCUMENT_LENGTH = DOCUMENTS_LONG
 # 긴 판의 길이가 어디서 온 값인지 — 조건과 함께 적는다(수에서 끌어낸 값과 구분되게)
-LONG_DOCUMENTS_BASIS = "긴 문서의 길이(2천~5천 자)는 실제 사내 문서 표본이 아니라 어림으로 잡은 값이다"
+LONG_DOCUMENTS_BASIS = "긴 문서를 2천~5천 자로 잡은 것은 실제 사내 문서 표본이 아니라 어림이다"
 
 _document_length: ContextVar[str] = ContextVar("document_length", default=DOCUMENTS_SHORT)
 

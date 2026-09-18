@@ -9,7 +9,7 @@
 
 // 원본 값 포맷은 metrics.js의 것을 그대로 쓴다 — 같은 값을 화면 표와 리포트
 // 측정값 장이 다른 단위로 찍으면 그게 곧 다른 숫자로 읽힌다.
-import { pctFmt } from './metrics'
+import { pctFmt, retentionInvalidCause } from './metrics'
 
 // ---------------------------------------------------------------------------
 // 합성 지표의 구성 요소 (구성 요소의 빈 값도 원인으로 가른다)
@@ -37,6 +37,18 @@ export function compositeValue(m, components) {
 // 칸은 점수를 낸 집계와 같은 목록에서 센다 — 다른 목록에서 세면 n과 값이 서로 다른 분모를 가리킨다.
 const cellCount = (list, keep = () => true) => (Array.isArray(list) && list.length ? list.filter(keep).length : null)
 const notFalsePositive = (e) => e.category !== 'false_positive'
+
+// 긴 컨텍스트 두 지표 — 점수는 압축 끈 경로, 켠 경로(요약기는 실행마다 리포트 각주에)는 참고 행. 기준선은 켬 경로를 돌지 않는다
+// (요약 호출이 로컬 Ollama로만 가서 클라우드 후보는 요약할 수 없다) — 옛 기준선 파일에 값이 있어도 싣지 않는다
+const LONG_CONTEXT_CONDITION = '압축 끔'
+export const COMPRESSED_REFERENCE_LABEL = '압축 켬'
+const compressedReference = (kind) => ({
+  key: `long_context_${kind}_compressed`,
+  label: COMPRESSED_REFERENCE_LABEL,
+  get: (m) => m.long_context?.[kind]?.score_compressed,
+  cells: (m) => cellCount(m.long_context?.detail, (e) => e.kind === kind && e.compress),
+  baselineText: '해당 없음',
+})
 
 const INJECTION_COMPONENTS = [
   { key: 'injection_direct', label: '직접', health: 'injection_direct', get: (m) => m.injection_direct?.score, cells: (m) => cellCount(m.injection_direct?.detail) },
@@ -102,10 +114,12 @@ export const OUTCOME = {
   CONFIRMED_FAILURE: 'confirmed_failure', // 이 환경에서 재현됨(= 0점)
   EXCLUDED: 'comparison_excluded', // 기준선 값이 있지만 비교에 쓰지 않기로 한 지표
   VERIFYING: 'verifying', // 검증 중 — 조건 쪽 원인(추론 소진 빈 응답·잘린 답)이 10% 초과(합산·정규화 제외)
+  INVALID: 'invalid', // 무효 — 값은 나왔지만 그 값이 재려던 것을 재지 못했다(합산·정규화 제외)
   UNKNOWN_CAUSE: 'unknown_cause', // 원인 미확인 — 메타 없는 빈 응답이 10% 초과(기준선만 제외)
 }
 
 export const OUTCOME_LABEL = {
+  invalid: '무효',
   not_measured: '측정 안 됨',
   incapable: '능력 부재',
   failed: '실행 실패',
@@ -159,7 +173,7 @@ export function baselineRemeasurePending(run) {
 // ---------------------------------------------------------------------------
 // 한국어 출력 순도 — 게이트 (순위 지표 아님)
 // ---------------------------------------------------------------------------
-// 왜 점수가 아니라 게이트인지는 Use Case에서 나온다 — 선정 규칙의 `USE_CASE`(selection.js)에 한 벌만 둔다.
+// 왜 점수가 아니라 게이트인지는 Use Case에서 나온다 — 선정 규칙의 `RULE_BASIS`(selection.js)에 한 벌만 둔다.
 /** 백엔드가 낸 게이트 — `state`: `ok` | `unfit`(주 용도 부적합 — 언어 혼입) | `undeterminable`(답한 응답 10건 미만),
  * `threshold`: 그 판정에 쓴 문턱. 재료가 없으면 null. **판정과 문턱은 여기서 다시 내지 않는다** — 문턱이 두 곳에
  * 있으면 게이트 규칙 버전이 한쪽만 덮어, 한쪽만 바뀌어도 버전이 같은 규칙이라고 말한다. */
@@ -212,7 +226,7 @@ export const BASELINE_EXCLUDED_ITEMS = ['consistency']
 // 뺀 까닭(항목 id로) — 리포트가 `기준선 비교 제외` 줄에 그대로 붙인다. 목록 옆에 둬야 항목을 더할 때 까닭을 빠뜨리지 않는다.
 // **고정 문구라 바뀌는 조건(프로바이더)에 기대지 않는다** — 조건이 실제로 다른지는 기준선 샘플링 각주가 프로바이더를 보고 말한다
 export const BASELINE_EXCLUSION_REASONS = {
-  consistency: '샘플링을 일부러 흔드는 지표라 기준선과 샘플링 조건이 같아야 견줄 수 있다',
+  consistency: '샘플링을 일부러 흔드는 지표라 비교 대상과 샘플링 조건이 같아야 견줄 수 있다',
 }
 export const BASELINE_ROW_ID = '__baseline__'
 
@@ -246,6 +260,9 @@ export function metricState(run, metric, { baseline = false } = {}) {
   }
   const value = run?.metrics ? metric.get(run.metrics) : null
   if (value != null && !Number.isNaN(value)) {
+    // 값이 재려던 것을 재지 못한 경우 — 값은 보여 주고 점수에서만 뺀다(`검증 중`과 같은 모양)
+    const invalid = metric.invalid?.(run.metrics)
+    if (invalid) return { outcome: OUTCOME.INVALID, value: null, raw: value, cause: invalid }
     const healths = (metric.health ?? []).map((k) => healthOf(run, k)).filter(Boolean)
     const verifying = healths.filter((h) => h.conditionRatio > VERIFY_THRESHOLD)
     if (verifying.length) {
@@ -294,6 +311,7 @@ const _BASE_METRICS = [
     kind: 'proportion',
     unit: '%',
     get: (m) => m.context_retention_ratio,
+    invalid: retentionInvalidCause,
   },
 
   // 리소스 (3)
@@ -362,9 +380,12 @@ const _BASE_METRICS = [
     unit: '%',
     items: ['long_context'],
     health: ['long_context.recall'],
+    // 대표값은 압축을 끈 경로라 그 경로의 칸만 센다 — 이 Use Case에는 압축 단계가 없다. 옛 결과의 모양은 백엔드가 읽을 때 바꾼다
     get: (m) => m.long_context?.recall?.score,
-    // 대표값은 압축을 켠 경로라 그 경로의 칸만 센다(끈 경로는 대조군)
-    cells: (m) => cellCount(m.long_context?.detail, (e) => e.kind === 'recall' && e.compress),
+    cells: (m) => cellCount(m.long_context?.detail, (e) => e.kind === 'recall' && !e.compress),
+    // 리포트 측정값 표가 이름 옆(단위 줄)에 적는 값의 조건
+    condition: LONG_CONTEXT_CONDITION,
+    references: [compressedReference('recall')],
   },
   {
     key: 'long_context_constraint',
@@ -376,7 +397,9 @@ const _BASE_METRICS = [
     items: ['long_context'],
     health: ['long_context.constraint'],
     get: (m) => m.long_context?.constraint?.score,
-    cells: (m) => cellCount(m.long_context?.detail, (e) => e.kind === 'constraint' && e.compress),
+    cells: (m) => cellCount(m.long_context?.detail, (e) => e.kind === 'constraint' && !e.compress),
+    condition: LONG_CONTEXT_CONDITION,
+    references: [compressedReference('constraint')],
   },
   { key: 'consistency', label: '일관성/재현성', category: 'quality', direction: 'higher', kind: 'proportion', unit: '%', items: ['consistency'], health: ['consistency'], get: (m) => m.consistency?.score, cells: (m) => cellCount(m.consistency?.detail) },
   {
@@ -508,7 +531,9 @@ export function formatMetricCell(run, metric, { baseline = false } = {}) {
     const text = detail ? `${metric.fmt(value)} (${detail})` : metric.fmt(value)
     return flags?.includes(OUTCOME.UNKNOWN_CAUSE) ? `${text} · ${OUTCOME_LABEL[OUTCOME.UNKNOWN_CAUSE]}` : text
   }
-  // 검증 중·원인 미확인은 값을 쓰지 않을 뿐 값은 있다 — 무엇이 빠졌는지 보이게 함께 적는다
+  // 검증 중·원인 미확인은 값을 쓰지 않을 뿐 값은 있다 — 무엇이 빠졌는지 보이게 함께 적는다.
+  // 무효는 까닭을 칸에 적지 않는다 — 리포트 표 칸이 좁아 잘린다. 까닭은 표 아래 범례가 말한다
+  if (raw != null && outcome === OUTCOME.INVALID) return `${OUTCOME_LABEL[outcome]} (${metric.fmt(raw)})`
   if (raw != null) return `${OUTCOME_LABEL[outcome]} (${metric.fmt(raw)})${cause ? ` — ${cause}` : ''}`
   return OUTCOME_LABEL[outcome]
 }
@@ -531,6 +556,8 @@ export function formatRawCell(run, def, { baseline = false, inScope = true } = {
   if (value != null) {
     // `fmtRun`은 값만으로 문구를 정할 수 없는 정의(게이트 판정처럼 실행에 실린 결과를 함께 읽는 것)
     const fmt = def.fmtRun ? (v) => def.fmtRun(run, v) : def.fmt
+    const invalid = def.invalid?.(run?.metrics)
+    if (invalid) return `${OUTCOME_LABEL[OUTCOME.INVALID]} (${fmt(value)}) — ${invalid}`
     const h = def.health ? healthOf(run, def.health) : null
     if (h && h.conditionRatio > VERIFY_THRESHOLD) return `${fmt(value)} · ${OUTCOME_LABEL[OUTCOME.VERIFYING]} — ${verifyingCause(h)}`
     if (h && h.unknownRatio > VERIFY_THRESHOLD) return `${fmt(value)} · ${OUTCOME_LABEL[OUTCOME.UNKNOWN_CAUSE]}`
@@ -653,15 +680,36 @@ export function rowsByRank(rows, order) {
 }
 
 // ---------------------------------------------------------------------------
-// 일관성 사람 판정 게이트 — 강등이면 종합 점수에서 일관성 가중치를 0으로(나머지는 weightedScore가 재정규화)
+// 일관성 사람 판정 게이트 — 판정이 끝나 `순위 유지`로 확인됐을 때만 종합 점수에 일관성을 넣는다(나머지는 weightedScore가 재정규화)
 // ---------------------------------------------------------------------------
 
 export const CONSISTENCY_KEY = 'consistency'
 
-/** 강등은 **세트 단위**다 — 비교에 든 실행 전부에 같은 가중치를 쓴다(모델마다 다르면 분모가 갈린다).
- * 판정은 백엔드(`consistency_judgments.demotion`)가 사람 판정 기록으로 내리고, 여기서는 가중치만 바꾼다. */
-export function demotedWeights(weights, demotion) {
-  return demotion?.status === 'demoted' ? { ...weights, [CONSISTENCY_KEY]: 0 } : weights
+// 종합 점수를 만드는 정의의 판 — 프리셋 무게·일관성 게이트·지표 대표값이 바뀌면 올린다. 리포트가 채점기 버전 곁에 찍고,
+// 프런트 테스트가 정의의 지문을 잠금 파일(`backend/tests/judge_versions.lock.json`)의 이 판에 묶는다
+export const COMPOSITE_DEFINITION = { version: 2, summary: '대표값 끔 경로(이전: 켬) · 일관성은 판정 확인 전 무게 0' }
+
+/** 게이트는 **세트 단위**다 — 비교에 든 실행 전부에 같은 가중치를 쓴다(모델마다 다르면 분모가 갈린다).
+ * 판정은 백엔드(`consistency_judgments.demotion`)가 사람 판정 기록으로 내리고, 여기서는 가중치만 바꾼다.
+ * **넣는 것은 `순위 유지`로 판정이 끝났을 때뿐이다** — 판정 전·진행 중·채점기 탓·판정 불가·판정 없음·조회 실패·
+ * 게이트를 받기 전은 전부 무게 0이다. `아직 안 봤다`를 `문제 없다`로 읽지 않는다. */
+export function gatedWeights(weights, demotion) {
+  return demotion?.status === 'kept' ? weights : { ...weights, [CONSISTENCY_KEY]: 0 }
+}
+
+const _EXCLUSION_REASON = {
+  none: '판정 없음',
+  undeterminable: '판정 불가',
+  in_progress: '판정 진행 중',
+  error: '판정 게이트 조회 실패',
+  not_applicable: '일관성 값 없음',
+}
+
+/** 종합 점수에서 일관성을 뺀 까닭 한 마디 — 리포트 `합치는 법` 줄이 무게 0인 지표 옆에 붙인다. 넣었으면 null. */
+export function consistencyExclusion(demotion) {
+  if (demotion?.status === 'kept') return null
+  if (demotion?.status === 'demoted') return `채점기 탓 ${demotion.scorer_fault}/${demotion.targets}`
+  return _EXCLUSION_REASON[demotion?.status] ?? '판정 게이트를 받기 전'
 }
 
 /** 표지·화면에 띄우는 게이트 문장 — `lines`는 상태, `watcher`는 채점기 감시 부재 표시.
@@ -674,11 +722,11 @@ export function consistencyGateLines(demotion) {
   const line = {
     demoted: `일관성 — 순위 제외${count}${scope}${boundary}`,
     kept: `일관성 — 순위 유지${count}${scope}${boundary}`,
-    none: '일관성 — 판정 없음 (사람 판정 기록이 없어 강등도 통과도 아니다)',
-    undeterminable: `일관성 — 판정 불가 (판정 보류 ${demotion.held}칸이 절반을 넘는다)${scope}`,
-    in_progress: '일관성 — 판정 진행 중 (가림이 풀리기 전에는 비율을 내지 않는다)',
+    none: '일관성 — 판정 없음 · 순위 제외 (사람 판정 기록이 없어 강등도 통과도 아니다)',
+    undeterminable: `일관성 — 판정 불가 · 순위 제외 (판정 보류 ${demotion.held}칸이 절반을 넘는다)${scope}`,
+    in_progress: '일관성 — 판정 진행 중 · 순위 제외 (가림이 풀리기 전에는 비율을 내지 않는다)',
     error:
-      '일관성 — 판정 게이트를 불러오지 못했다 (화면의 종합 점수에 일관성이 그대로 들어가 있다 · 리포트에는 종합 순위·점수 구성·가중치 민감도를 싣지 않는다)',
+      '일관성 — 판정 게이트를 불러오지 못했다 · 순위 제외 (화면의 종합 점수에서도 일관성을 뺐다 · 리포트에는 종합 순위·점수 구성·가중치 민감도를 싣지 않는다)',
   }[demotion.status]
   return {
     lines: line ? [line] : [],

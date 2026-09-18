@@ -1823,6 +1823,26 @@ button.stop {
   font-size: 11px;
 }
 
+/* 재실행 이유 입력 — 버튼 자리에 열린다 */
+.run-item-reason {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+
+.run-item-reason input {
+  min-width: 18em;
+  padding: 1px 6px;
+  font-size: 12px;
+}
+
+.run-item-reason button {
+  padding: 1px 8px;
+  font-size: 11px;
+}
+
 .run-item-source,
 .run-mixed-note {
   color: #71717a;

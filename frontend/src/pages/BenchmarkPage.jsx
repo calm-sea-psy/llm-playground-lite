@@ -210,11 +210,11 @@ export default function BenchmarkPage() {
     }
   }
 
-  async function handleRerun(itemId) {
+  async function handleRerun(itemId, reason) {
     if (!detail) return
     setError('')
     try {
-      const started = await rerunTestItems(detail.id, [itemId])
+      const started = await rerunTestItems(detail.id, [itemId], reason)
       setRun(started)
       pollRun(started.id)
     } catch (e) {
@@ -364,7 +364,7 @@ export default function BenchmarkPage() {
               config={config}
               suites={suites}
               estimate={estimate}
-              toolWarning={toolAvailabilityWarning(tools)}
+              toolWarning={toolAvailabilityWarning(tools, { fixed: config?.tool_responses === 'fixed' })}
               diff={diff}
               lastRun={modelHistory[0]}
             />

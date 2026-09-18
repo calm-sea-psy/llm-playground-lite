@@ -216,6 +216,12 @@ class RunOut(BaseModel):
     # 2회차(같은 호출을 한 번 더 돈 기록)와 두 바퀴의 재현 요약 — 여기 적지 않으면 응답에서 조용히 빠진다
     second_round: dict | None = None
     reproduction: dict | None = None
+    # 지표 재실행의 이유 — 재실행 파일에만 있다(합친 뷰에서는 지표마다 `provenance[].reason`). 적은 시각은 이유를 나중에 적었을 때만
+    # 있다(maintenance.py add-rerun-reason) — 여기 적지 않으면 응답에서 조용히 빠진다
+    rerun_reason: str | None = None
+    rerun_reason_added_at: str | None = None
+    # 결과 파일에서 비밀을 가린 기록 — 언제·어느 자리를(측정값은 그대로다). 가린 적 없는 파일은 None
+    redactions: list | None = None
 
 
 class RunSummary(BaseModel):

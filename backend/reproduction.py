@@ -17,7 +17,8 @@ from collections import Counter
 from typing import Any
 
 RULE = ("같은 답인가는 글자 단위 완전 일치로 본다(점수가 같아도 글자가 다르면 갈림). 두 바퀴의 cached_tokens가 같은 쌍만 "
-        "재현을 판정하고, 다른 쌍은 캐시 섞임으로 따로 센다")
+        "재현을 판정하고, 다른 쌍은 캐시 섞임으로 따로 센다. Tool-calling은 문항(변형) 단위로 도구 호출 열(이름·인자 순서)과 "
+        "최종 답이 모두 같아야 재현이고, 캐시 조건은 문항의 첫 호출로 본다")
 
 _SHOT_METRICS = ("instruction_following", "structured_output")
 
@@ -26,6 +27,18 @@ def _slim(entry: dict[str, Any]) -> dict[str, Any]:
     out = {"response": entry.get("response") or ""}
     if entry.get("call") is not None:
         out["call"] = entry["call"]
+    if entry.get("failure"):
+        out["failure"] = entry["failure"]
+    return out
+
+
+def _tool_record(entry: dict[str, Any]) -> dict[str, Any]:
+    """도구 호출 문항 하나 — 최종 답과 호출 열(이름·인자, 순서대로). 캐시 조건은 **첫 호출**의 메타다: 뒤 호출은 앞 hop의 입력이
+    캐시를 만들어 두 바퀴가 같아도 개수가 흔들리지 않는다. 첫 호출 메타가 없는 옛 기록은 판정하지 않는다."""
+    out = {"response": entry.get("response") or "",
+           "calls": [[c.get("name"), c.get("arguments")] for c in entry.get("calls") or []]}
+    if entry.get("first_call") is not None:
+        out["call"] = entry["first_call"]
     if entry.get("failure"):
         out["failure"] = entry["failure"]
     return out
@@ -40,6 +53,14 @@ def records(metric: str, result: dict[str, Any]) -> list[dict[str, Any]]:
     if metric == "long_context":
         return [{"path": "off", "scenario": t["scenario"], "turn": t["turn"], **_slim(t)}
                 for t in result.get("turns") or [] if not t.get("compress")]
+    if metric == "tool_calling":
+        out = []
+        for path, detail in (("basic", result.get("basic_detail") or []), ("advanced", result.get("advanced_detail") or [])):
+            seen: Counter[str] = Counter()
+            for entry in detail:
+                seen[entry["id"]] += 1
+                out.append({"path": path, "id": entry["id"], "n": seen[entry["id"]], **_tool_record(entry)})
+        return out
     if metric in _SHOT_METRICS:
         sources = [(shot, (result.get(shot) or {}).get("detail") or []) for shot in ("zero", "few") if shot in result]
     elif metric == "hallucination":
@@ -94,7 +115,8 @@ def compare(metrics: dict[str, Any], second_calls: dict[str, list[dict[str, Any]
                 summary["not_compared"] += 1
                 record["pair"] = {"paired": True, "compared": False}
                 continue
-            same = first["response"] == record["response"]
+            # 도구 호출 기록은 호출 열까지 같아야 같은 답이다(다른 지표는 둘 다 없어 같다)
+            same = first["response"] == record["response"] and first.get("calls") == record.get("calls")
             first_cached, second_cached = first["call"].get("cached_tokens"), record["call"].get("cached_tokens")
             cache_equal = first_cached is not None and first_cached == second_cached
             tokens = max(first["call"].get("completion_tokens") or 0, record["call"].get("completion_tokens") or 0)

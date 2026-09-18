@@ -21,7 +21,39 @@ PYPROJECT = Path(__file__).parent / "pyproject.toml"
 
 
 def hardware_snapshot() -> dict[str, Any]:
-    return {"cpu": _cpu_name(), "logical_cpus": os.cpu_count(), "ram_bytes": _ram_bytes(), "gpus": _gpus()}
+    # OS와 GPU 백엔드(CUDA)도 값이다 — 같은 기계라도 드라이버·런타임이 바뀌면 같은 입력에 다른 답이 나올 수 있다
+    return {"cpu": _cpu_name(), "logical_cpus": os.cpu_count(), "ram_bytes": _ram_bytes(), "gpus": _gpus(),
+            "os": os_name(), "cuda": cuda_version()}
+
+
+def os_name() -> str:
+    """운영체제 이름과 판 — `Windows 11 (10.0.26200)`처럼 적는다(판이 이름에 이미 들어 있으면 이름만)."""
+    release, version = platform.release(), platform.version()
+    return f"{platform.system()} {release}".strip() + (f" ({version})" if version and version != release else "")
+
+
+def cuda_version() -> str | None:
+    """GPU 백엔드 — `nvidia-smi`가 적는 CUDA 판. 도구가 없거나 그 줄이 없으면 None(못 읽음)."""
+    try:
+        smi = subprocess.run(["nvidia-smi"], capture_output=True, text=True, timeout=10, check=True).stdout
+    except (OSError, subprocess.SubprocessError):
+        return None
+    match = re.search(r"CUDA Version:\s*([0-9.]+)", smi)
+    return match.group(1) if match else None
+
+
+def git_commit() -> dict[str, Any] | None:
+    """이 도구(저장소)의 지금 커밋 — 리포트와 측정이 어느 코드로 나온 것인지 되짚는 값. 작업 트리에 손댄 것이 있으면 `dirty`.
+    git이 없거나 저장소가 아니면 None(기록 없음)."""
+    root = Path(__file__).resolve().parent.parent
+    try:
+        sha = subprocess.run(["git", "-C", str(root), "rev-parse", "--short", "HEAD"],
+                             capture_output=True, text=True, timeout=10, check=True).stdout.strip()
+        status = subprocess.run(["git", "-C", str(root), "status", "--porcelain"],
+                                capture_output=True, text=True, timeout=10, check=True).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return {"sha": sha, "dirty": bool(status)} if sha else None
 
 
 def _cpu_name() -> str | None:
@@ -85,6 +117,69 @@ def _gpus() -> list[dict[str, Any]] | None:
             vram = None
         gpus.append({"name": name, "vram_bytes": vram, "driver": driver or None})
     return gpus
+
+
+def power_snapshot() -> dict[str, Any]:
+    """실행을 시작할 때의 전원 상태 — AC/배터리와 GPU 전력 한계. 같은 기계·같은 모델에서도 tok/s와 GPU 평균 전력은 전원에 따라
+    달라진다(노트북 GPU는 배터리·전원 모드에 따라 한계가 바뀐다). **시작 시점 한 번**이라 실행 중에 전원이 바뀐 것은 남지 않는다."""
+    return {**_power_source(), "gpus": _gpu_power_limits()}
+
+
+class _PowerStatus(ctypes.Structure):
+    _fields_ = [
+        ("ac_line_status", ctypes.c_ubyte),
+        ("battery_flag", ctypes.c_ubyte),
+        ("battery_life_percent", ctypes.c_ubyte),
+        ("system_status_flag", ctypes.c_ubyte),
+        ("battery_life_time", ctypes.c_ulong),
+        ("battery_full_life_time", ctypes.c_ulong),
+    ]
+
+
+def _power_source() -> dict[str, Any]:
+    """`{ac_power, battery_percent}` — 못 읽으면 None. Windows는 `GetSystemPowerStatus`, 그 밖은 읽지 않는다."""
+    if platform.system() != "Windows":
+        return {"ac_power": None, "battery_percent": None}
+    status = _PowerStatus()
+    if not ctypes.windll.kernel32.GetSystemPowerStatus(ctypes.byref(status)):
+        return {"ac_power": None, "battery_percent": None}
+    return power_source_from_status(status.ac_line_status, status.battery_flag, status.battery_life_percent)
+
+
+def power_source_from_status(ac_line: int, battery_flag: int, percent: int) -> dict[str, Any]:
+    """`GetSystemPowerStatus` 값의 뜻 — AC 0 끊김 · 1 연결 · 그 밖 모름. 배터리 플래그 128은 배터리 없음, 255와 잔량 255는 모름."""
+    ac_power = {0: False, 1: True}.get(ac_line)
+    battery_percent = None if battery_flag in (128, 255) or percent == 255 else int(percent)
+    return {"ac_power": ac_power, "battery_percent": battery_percent}
+
+
+def _gpu_power_limits() -> list[dict[str, Any]] | None:
+    """NVIDIA GPU마다 전력 한계(W) — `power.limit`(설정한 한계) · `enforced.power.limit`(실제로 걸린 한계) · `power.default_limit`.
+    노트북 GPU는 `power.limit`이 `[N/A]`로 나오고 걸린 한계만 읽히는 일이 있어 셋을 다 남긴다. 칸마다 못 읽으면 None, 도구가 없거나
+    실패하면 None(못 읽음), GPU가 없으면 빈 목록이다(`_gpus`와 같은 가름)."""
+    try:
+        out = subprocess.run(
+            ["nvidia-smi", "--query-gpu=name,power.limit,enforced.power.limit,power.default_limit", "--format=csv,noheader,nounits"],
+            capture_output=True, text=True, timeout=10, check=True,
+        ).stdout
+    except (OSError, subprocess.SubprocessError):
+        return None
+    gpus = []
+    for line in out.strip().splitlines():
+        parts = [p.strip() for p in line.split(",")]
+        if len(parts) != 4:
+            return None  # 모양이 다르면 읽지 않는다
+        name, limit, enforced, default = parts
+        gpus.append({"name": name, "power_limit_watts": _watts(limit), "enforced_power_limit_watts": _watts(enforced),
+                     "default_power_limit_watts": _watts(default)})
+    return gpus
+
+
+def _watts(text: str) -> float | None:
+    try:
+        return float(text)
+    except ValueError:
+        return None  # `[N/A]`·`[Not Supported]`
 
 
 def software_snapshot() -> dict[str, Any]:

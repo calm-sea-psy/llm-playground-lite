@@ -26,10 +26,11 @@ export function useFeatures() {
 }
 
 /** 실행 전 경고 — 모델에게 주지 못하는 도구가 있으면 한 줄. 측정은 오류 없이 줄어든 도구로 재므로 여기서 보여야 한다.
- * 도구 화면은 키가 없어도 전부 나열하므로(배지만 붙는다) 수를 세려면 상태를 봐야 한다. */
-export function toolAvailabilityWarning(tools) {
+ * 도구 화면은 키가 없어도 전부 나열하므로(배지만 붙는다) 수를 세려면 상태를 봐야 한다.
+ * 도구 응답이 고정값이면(`fixed`) 고정값을 가진 도구는 키 없이도 기록된 응답으로 모델에게 간다 — 빠진 도구로 세지 않는다. */
+export function toolAvailabilityWarning(tools, { fixed = false } = {}) {
   const measured = (tools ?? []).filter((t) => t.scope === 'test' || t.scope === 'both')
-  const unready = measured.filter((t) => t.status !== 'ready')
+  const unready = measured.filter((t) => t.status !== 'ready' && !(fixed && t.fixture_backed))
   if (unready.length === 0) return null
   const reason = (t) => (t.status === 'missing_key' ? `키 없음(${t.requires_key})` : '비활성')
   return (

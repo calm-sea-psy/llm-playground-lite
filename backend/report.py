@@ -78,6 +78,12 @@ _BOXPLOT_MIN_SAMPLES = 8
 
 # 장 이름(번호 없이) — 번호는 렌더 시점에 매긴다
 CH_COVER = "결과 리포트"
+CH_REQUIREMENTS = "과제 요건 대응"
+CH_SELECTION_BASIS = "필수 통과 조건과 선정 근거"
+CH_LIMITS = "한계와 개선 과제, 운영 권고"
+CH_ASSIGNMENT_QUESTIONS = "과제 10문항 / Cloud 5문항"
+CH_LOCAL_CLOUD = "Local vs Cloud"
+CH_MODEL_CARDS = "모델 카드와 식별값"
 CH_CONDITIONS = "측정 조건 상세"
 CH_SCORING = "채점과 검증"
 CH_MEASUREMENTS = "측정값"
@@ -107,6 +113,17 @@ _READING_GUIDES = {
     CH_VARIANCE_BOX: "박스는 사분위, 수염은 범위다. 같은 탐침을 반복한 값이라 모델의 실사용 변동이 아니라 측정 신뢰도를 가리킨다.",
     CH_CONSISTENCY: "점수는 같은 질문을 반복한 답끼리의 유사도다. 점수만으로는 원인을 알 수 없다 — "
     "두 답의 내용이 같은가 하나만 본다: 같으면 채점기 탓, 다르면 모델 탓, 일부만 다르면 섞임. 판정은 장 끝 판정칸에 모인다.",
+    CH_ASSIGNMENT_QUESTIONS: "과제가 세는 고정 문항을 이 세트 안에서 골라 문항 단위로 펼친 것이다 — 세트 전체의 "
+    "점수는 `측정값` 장에 있다. 문항 전문·기대 결과는 싣지 않는다.",
+    CH_REQUIREMENTS: "과제가 묻는 것과 이 리포트가 답하는 자리를 이어 둔 것이다 — 값은 그 장에 있고 여기서 되풀이하지 않는다.",
+    CH_LIMITS: "이 리포트가 무엇을 말하지 못하는가를 한곳에 모은 것이다 — 값은 앞 장에서 왔고, 무엇을 고쳐야 하는지와 "
+    "운영 권고는 사람이 적은 문장이다.",
+    CH_SELECTION_BASIS: "요구가 조건이 되고 조건이 판정이 되는 순서다 — 종합 점수는 여기 들어오지 않는다(순위와 규칙은 "
+    "잣대가 다르다). 후보 넷을 모두 적는다: 떨어진 까닭과 남았는데 밀린 까닭은 다른 말이다.",
+    CH_LOCAL_CLOUD: "위 표는 잰 값이고, 아래 표는 배포 형태의 성질이다(잰 값이 아니다) — 둘을 한 표에 섞지 않는다. "
+    "로컬을 쓰는 이유와 이 모델을 고른 이유는 다른 질문이다.",
+    CH_MODEL_CARDS: "무엇을 실제로 돌렸나 — 위 표는 실행 파일이 말하는 값이고, 아래 문단은 모델 카드가 말하는 값이다(우리가 잰 값이 "
+    "아니다). 둘을 섞지 않는다 — 카탈로그의 태그가 실행의 태그와 다르면 그 자리에 경고를 적는다.",
     CH_SCORING: "무엇으로 채점했고, 그 채점이 어긋나지 않게 무엇이 막고 있나. 세트의 정답·판정 열쇠는 적지 않는다 — "
     "리포트가 세트의 새 배포 경로가 되면 다음 측정이 무효가 된다. 채점 방법은 여기 있고, 실제로 무엇이 걸렸는지는 "
     "부록 `지표별 실패 사례`에 있다.",
@@ -123,8 +140,8 @@ _READING_GUIDES = {
 # 사람이 범례를 믿지 않게 된다(`값이 없으면 줄이 없다`와 같은 규칙).
 _LEGEND_GAP_HATCH = "빗금 막대는 일부 지표를 빼고 계산된 점수라 같은 잣대가 아니다."
 _LEGEND_GAP_MARK = "※ 표시 모델은 일부 지표를 빼고 계산됐다."
-_LEGEND_BASELINE_LINE = "세로 점선은 기준선이다."
-_LEGEND_BASELINE_TICK = "세로 막대는 기준선이다."
+_LEGEND_BASELINE_LINE = "세로 점선은 {base} 값이다."
+_LEGEND_BASELINE_TICK = "세로 막대는 {base} 값이다."
 _LEGEND_FAILED_X = "×는 실행 실패다."
 _LEGEND_ROW_NOTE = "행 이름 아래 작은 글씨는 그 행에서 값이 없는 모델과 이유다."
 # 측정값 표 칸의 상태 문구 — (칸에 나오는 말, 설명)
@@ -132,10 +149,13 @@ _STATE_LEGENDS = (
     ("측정 안 됨", "측정 안 됨(재지 않음)"),
     ("능력 부재", "능력 부재(못 함 = 0점)"),
     ("실행 실패", "실행 실패(오류로 끝남, 괄호는 원인)"),
-    ("비교 제외", "— 비교 제외(기준선 값이 있지만 쓰지 않음)"),
+    ("비교 제외", "— 비교 제외({base} 값이 있지만 쓰지 않음)"),
     ("검증 중", "검증 중(조건 쪽 원인 — 출력 상한에 걸려 잘린 답·추론이 예산을 먹은 빈 응답 — 이 합쳐서 10% 초과라 합산에서 뺌, "
               "원인별 비율을 뒤에 적음)"),
-    ("원인 미확인", "원인 미확인(원인을 가를 기록이 없는 빈 응답이 10% 초과 — 기준선은 뺌, 후보는 표시만)"),
+    ("원인 미확인", "원인 미확인(원인을 가를 기록이 없는 빈 응답이 10% 초과 — {base}에서는 뺌, 후보는 표시만)"),
+    # 까닭을 칸에 적으면 좁은 칸에서 잘린다 — 칸에는 `무효 (112%)`만 두고 까닭은 이 범례가 말한다
+    ("무효", "무효(값은 나왔지만 재려던 것을 재지 못해 합산에서 뺌 — 부하 시 tok/s 유지율이 100%를 넘은 것은 부하 없는 기준 "
+           "측정이 부하 측정보다 느렸다는 뜻이다. 괄호는 그 값)"),
 )
 
 
@@ -421,28 +441,37 @@ def _guide_and_explanations(fig: Figure, y: float, chapter: str, explanations: l
 
 
 def _gap_warning_lines(meta: dict[str, Any], labels: dict[str, str]) -> list[str]:
-    """지표 집합 경고 — 모델별로 빼고 계산된 지표와 이유."""
-    out = []
+    """지표 집합 경고 — 빼고 계산된 지표와 이유. **같은 지표를 같은 까닭으로 뺀 모델은 한 줄로 모은다** — 같은 문장이 모델 수만큼
+    되풀이되면 결론 면이 넘치고, 읽는 사람은 같은 말을 여러 번 읽는다."""
+    same: dict[tuple[str, int], list[str]] = {}
     for run_id, gaps in (meta.get("metric_set_gaps") or {}).items():
         if gaps:
             detail = ", ".join(f"{g['label']}({g['outcome']})" for g in gaps)
-            out.append(f"▲ {labels.get(run_id, run_id)}는 {len(gaps)}개 지표를 빼고 계산됐다 — {detail}")
-    return out
+            same.setdefault((detail, len(gaps)), []).append(labels.get(run_id, run_id))
+    return [f"▲ {' · '.join(names)}는 {count}개 지표를 빼고 계산됐다 — {detail}" for (detail, count), names in same.items()]
 
 
 def _gap_ids(meta: dict[str, Any]) -> set[str]:
     return {run_id for run_id, gaps in (meta.get("metric_set_gaps") or {}).items() if gaps}
 
 
+def _baseline_name(meta: dict[str, Any]) -> str:
+    """견줄 상대를 부르는 이름 — 이번 판에 실제로 쓴 모델 이름이다. `기준선`은 역할이라 무엇과 견줬는지를 말하지 않아,
+    표 열·범례·문장에서 모두 이름으로 부른다(어느 실행이 그 자리인지는 표지와 포함된 실행 표가 말한다).
+    이름이 기록되지 않은 판에서만 역할 이름으로 돌아간다."""
+    return ((meta or {}).get("baseline") or {}).get("model") or "기준선"
+
+
 def _baseline_footnote(meta: dict[str, Any]) -> str | None:
     base = meta.get("baseline")
     if not base:
         return None
+    name = _baseline_name(meta)
     unverified = [e["label"] for e in base.get("exclusions") or [] if e.get("outcome") in _VERIFY_OUTCOMES]
     return (
-        f"※ 기준선 점선은 절대 만점이 아니라 **비교군 안에서 그 지표들이 전부 최고**라는 뜻이다. "
-        f"기준선은 {base.get('metric_count', '?')}개 지표로 계산됐다(후보는 최대 {meta.get('metric_count', 25)}개) — 잣대가 다르다."
-        + (f" 검증 전이라 기준선에서 뺀 지표: {', '.join(unverified)}." if unverified else "")
+        f"※ {name} 점선은 절대 만점이 아니라 **비교군 안에서 그 지표들이 전부 최고**라는 뜻이다. "
+        f"{name} 값은 {base.get('metric_count', '?')}개 지표로 계산됐다(후보는 최대 {meta.get('metric_count', 25)}개) — 잣대가 다르다."
+        + (f" 검증 전이라 {name}에서 뺀 지표: {', '.join(unverified)}." if unverified else "")
     ).replace("**", "")
 
 
@@ -457,26 +486,28 @@ def _baseline_status_lines(meta: dict[str, Any]) -> tuple[list[str], list[str]]:
     base = meta.get("baseline")
     if not base:
         return [], []
+    name = _baseline_name(meta)
     warnings: list[str] = []
     footnotes: list[str] = []
     if base.get("remeasure_pending"):
-        warnings.append("▲ 기준선 재측정 대기 — 호출 기록(종료 사유·추론 토큰) 이나 세트 기록이 없는 측정이라 빈 응답의 원인을 가를 수 없다")
+        warnings.append(f"▲ {name} 재측정 대기 — 호출 기록(종료 사유·추론 토큰) 이나 세트 기록이 없는 측정이라 빈 응답의 원인을 가를 수 없다")
     by_outcome: dict[str, list[str]] = {}
     for e in base.get("exclusions") or []:
         by_outcome.setdefault(e.get("outcome"), []).append(e["label"])
     for outcome, text in _VERIFY_OUTCOMES.items():
         if by_outcome.get(outcome):
-            warnings.append(f"▲ 기준선 {text}: {', '.join(by_outcome[outcome])} — 기준선 계산에서 뺐다")
+            warnings.append(f"▲ {name} {text}: {', '.join(by_outcome[outcome])} — {name} 계산에서 뺐다")
     if by_outcome.get("unknown_cause"):
         footnotes.append("※ 원인 미확인 — 빈 응답이 10%를 넘었지만 거절인지 예산 소진인지 가를 기록이 없다. 원인을 단정하지 않는다.")
     if providers.applies_fixed_sampling(base.get("provider")) is False:
         # 기록이 아니라 프로바이더로 판단한다 — 옛 결과의 설정 기록에는 보내지 않은 고정 샘플링이 남아 있다. 기준선과 견주는 모든 칸에 걸리는 조건이다
-        footnotes.append("※ 기준선은 샘플링을 고정하지 않는다 — 클라우드 경로는 temperature·seed를 받지 않아 같은 입력에도 답이 달라질 수 있다.")
+        footnotes.append(f"※ {name}에서는 샘플링을 고정하지 않는다 — 클라우드 경로는 temperature·seed를 받지 않아 "
+                         "같은 입력에도 답이 달라질 수 있다.")
     excluded = [e for e in base.get("exclusions") or [] if e.get("outcome") == "comparison_excluded"]
     if excluded:
         # 뺀 까닭은 제외 목록 옆의 데이터에서 온다 — 까닭이 없는 항목은 이름만 적는다
         parts = [f"{e['label']} — {e['why']}" if e.get("why") else e["label"] for e in excluded]
-        footnotes.append(f"※ 기준선 비교 제외(정의상): {'; '.join(parts)}")
+        footnotes.append(f"※ {name} 비교 제외(정의상): {'; '.join(parts)}")
     return warnings, footnotes
 
 
@@ -536,7 +567,10 @@ def _document_length_line(length: str | None = None, tail: str | None = None) ->
         groups.setdefault((len(chars), min(chars), max(chars)), []).append(name)
     parts = [f"{_rule_names(names)}: {count}개 " + (f"{low}자" if low == high else f"{low}~{high}자")
              for (count, low, high), names in groups.items()]
-    tail = tail or (f"{qt.LONG_DOCUMENTS_BASIS}." if length == qt.DOCUMENTS_LONG else
+    # 어림으로 잡은 폭과 **실제 세트의 폭**을 같이 적는다 — 어림만 적으면 세트가 그 폭을 채웠는지 알 수 없다
+    chars = [entry["chars"] for entry in docs.values()]
+    tail = tail or (f"{qt.LONG_DOCUMENTS_BASIS} — 실제 세트는 {min(chars):,}~{max(chars):,}자."
+                    if length == qt.DOCUMENTS_LONG else
                     "`컨텍스트 단계`의 긴 입력은 속도를 재는 채움 글이라, 이보다 긴 문서를 읽고 답하는 능력은 재지 않았다.")
     return f"문서를 주고 묻는 세트의 문서 길이({length} — 지금 세트, 공백·줄바꿈 포함) — {' · '.join(parts)}. {tail}"
 
@@ -558,13 +592,6 @@ def _split_text(split: dict[str, Any]) -> str:
     return f"{split['scenario']} {split['turn']}턴(켬·끔 {cache}, {load_text})"
 
 
-# ---------------------------------------------------------------------------
-# 문서 길이 비교 — 짧은 판은 새로 돌지 않는다. 긴 판 실행마다 같은 모델의 앞선 짧은 판 실행과 나란히 둔다
-# ---------------------------------------------------------------------------
-
-DOCUMENT_PAIR_ROW_PREFIX = "문서 길이 · "
-
-
 def _same_items_score(result: Any, ids: set[str]) -> float | None:
     """문서를 읽는 문항만의 점수 — 결과가 그 문항만 담았으면 결과 점수 그대로(게이트가 걸린 값), 아니면 그 문항만 모아 센다
     (폐쇄형은 문서 문항이 일부다)."""
@@ -576,93 +603,6 @@ def _same_items_score(result: Any, ids: set[str]) -> float | None:
     if {e["id"] for e in detail} <= ids or result.get("score") is None:
         return result.get("score")
     return quality_runner.aggregate_variants([e for e in detail if e["id"] in ids])
-
-
-def _pair_checks(run: dict[str, Any], pair: dict[str, Any], metrics: list[str]) -> list[dict[str, Any]]:
-    """두 실행에서 문서 길이 말고 같아야 하는 것 — 모델(digest)·채점기 버전·서버(Ollama 버전). **대조한 것 전부**를 돌려준다:
-    달라진 것만 적으면 `달라진 게 없다`와 `안 봤다`가 구분되지 않는다. `same`은 True(같음)·False(다름)·None(한쪽에 기록이
-    없어 대조 못 함 — 같다고 하지 않는다). `[{"name", "same", "text"}]`"""
-    def check(name: str, values: list[Any], differs: str) -> dict[str, Any]:
-        if None in values:
-            return {"name": name, "same": None, "text": f"{name} 기록 없음(대조 못 함)"}
-        same = values[0] == values[1]
-        return {"name": name, "same": same, "text": f"{name} 동일" if same else differs}
-
-    digests = [((r.get("config") or {}).get("model_identity") or {}).get("digest") for r in (pair, run)]
-    scorers = [{m: (r.get("scorer_versions") or {}).get(m) for m in metrics} if r.get("scorer_versions") else None
-               for r in (pair, run)]
-    versions = [(r.get("config") or {}).get("ollama_version") for r in (pair, run)]
-    changed = [m for m in metrics if None not in scorers and scorers[0][m] != scorers[1][m]]
-    return [check("모델 digest", digests, f"모델 digest {str(digests[0])[:12]} → {str(digests[1])[:12]}"),
-            check("채점기", scorers, f"채점기 달라짐({_rule_names(changed)})"),
-            check("Ollama", versions, f"Ollama {versions[0]} → {versions[1]}")]
-
-
-def _runtime_control(run: dict[str, Any], pair: dict[str, Any], document_metrics: list[str]) -> dict[str, Any] | None:
-    """**문서를 읽지 않는 문항**은 두 실행에서 같은 질문이 돈다 — 그 답을 글자 단위로 견주면 문서 길이 말고 달라진 런타임이
-    답을 바꿨는지 따로 돌지 않고 본다. 판정은 두 바퀴 재현과 같은 규칙이다(`reproduction.compare`): `cached_tokens`가 같은 쌍만
-    보고, 다른 쌍은 `캐시 섞임`으로 따로 센다(긴 판을 읽은 앞선 호출 때문에 캐시 상태가 달라졌을 수 있다).
-    범위도 2회차와 같다 — **1회차끼리**(캐시 상태가 바퀴 머리부터 쌓여 바퀴를 엇갈려 맞대면 조건이 달라진다), 긴 컨텍스트는
-    **끔 경로만**(켬 경로는 고정 샘플링이 아닌 요약 호출이 끼어 갈려도 런타임 탓인지 요약 탓인지 못 가른다), 일관성·도구 세트는 뺀다."""
-    import reproduction
-    import test_runner
-
-    candidates = [m for m in test_runner.second_round_item_ids()
-                  if m not in ("model_load", "warmup") and m not in document_metrics]
-    earlier = {m: reproduction.records(m, (pair.get("metrics") or {}).get(m) or {}) for m in candidates
-               if isinstance((pair.get("metrics") or {}).get(m), dict)}
-    compared = {m: (run.get("metrics") or {}).get(m) for m in earlier if isinstance((run.get("metrics") or {}).get(m), dict)}
-    if not compared:
-        return None
-    summary = reproduction.compare(compared, {m: earlier[m] for m in compared})
-    return {"metrics": list(compared), **{k: summary[k] for k in ("compared", "diverged", "cache_mixed", "cache_mixed_diverged")},
-            "diverged_by_metric": {k: v["diverged"] for k, v in summary["by_metric"].items() if v.get("diverged")},
-            # 갈린 쌍이 긴 답에 몰리는지 — 짧은 답에서 고르게 갈리면 출력 길이와 무관한 쪽이다
-            "output_tokens_median": summary["output_tokens_median"]}
-
-
-def _document_pair_context(run_ids: list[str]) -> dict[str, dict[str, Any]]:
-    """긴 판으로 잰 실행마다 **같은 모델·같은 실행 종류의 짧은 판 실행 가운데 그보다 먼저 시작한 가장 최근 것**을 짝으로 찾아,
-    문서 세트의 같은 문항 점수를 나란히 둔다. 짧은 판을 한 실행에 끼우지 않는 까닭: 한 바퀴에만 넣으면 두 바퀴의 호출 순서가
-    갈리고, 두 바퀴에 넣으면 문서 세트가 네 번 돈다 — 짧은 판 실행은 이미 있다.
-    `{실행 id: {"pair": {"id", "started_at"} | None, "scores": {지표: {"short", "long", "items"}}, "differences": [...]}}`"""
-    import quality_testsets as qt
-    import test_runner
-
-    out: dict[str, dict[str, Any]] = {}
-    summaries: list[dict[str, Any]] | None = None
-    try:
-        metrics = qt.document_metrics()
-    except (OSError, KeyError, ValueError):
-        return out
-    for rid in run_ids:
-        try:
-            run = test_runner.load_result(rid)
-        except (OSError, ValueError):
-            continue
-        if not run or (run.get("config") or {}).get("document_length") != qt.DOCUMENTS_LONG:
-            continue
-        if summaries is None:
-            summaries = test_runner.list_results()  # 최신 순이다
-        found = next((s for s in summaries
-                      if s["id"] != rid and s["model"] == run["model"] and s["status"] == "completed"
-                      and s.get("run_type", test_runner.SELECTION) == run.get("run_type", test_runner.SELECTION)
-                      and (s.get("config") or {}).get("document_length", qt.DOCUMENTS_SHORT) == qt.DOCUMENTS_SHORT
-                      and s["started_at"] < run["started_at"]), None)
-        pair = test_runner.load_result(found["id"]) if found else None
-        if not pair:
-            out[rid] = {"pair": None, "scores": {}, "checks": [], "runtime_control": None}
-            continue
-        scores = {}
-        for metric in metrics:
-            ids = qt.document_item_ids(metric)
-            present = {e["id"] for e in ((run.get("metrics") or {}).get(metric) or {}).get("detail") or []}
-            scores[metric] = {"short": _same_items_score((pair.get("metrics") or {}).get(metric), ids),
-                              "long": _same_items_score((run.get("metrics") or {}).get(metric), ids),
-                              "items": len(ids & present) or None}
-        out[rid] = {"pair": {"id": pair["id"], "started_at": pair.get("started_at")}, "scores": scores,
-                    "checks": _pair_checks(run, pair, metrics), "runtime_control": _runtime_control(run, pair, metrics)}
-    return out
 
 
 def _reasoning_text(entry: dict[str, Any]) -> str:
@@ -677,180 +617,171 @@ def _reasoning_text(entry: dict[str, Any]) -> str:
 
 
 def _baseline_context(base: dict[str, Any] | None) -> dict[str, Any]:
-    """기준선 파일에서 역할을 가른다 — **열**(후보와 같은 문서 길이로 고른 것, payload가 가리킨다) · **문서 길이 짝**(같은 모델·
-    같은 추론 강도로 다른 판을 잰 것 중 가장 최근) · **이력**(그 밖의 가장 최근 하나). 짝의 조건이 추론 강도까지 같아야
-    하는 까닭: 클라우드는 샘플링을 고정하지 않고, 추론 강도가 다르면 출력 토큰부터 달라 문서 길이 효과를 가를 수 없다."""
+    """기준선 파일에서 역할을 가른다 — **열**(후보와 같은 문서 길이로 고른 것, payload가 가리킨다) · **이력**(그 밖의 가장 최근
+    하나). 리포트는 이번 측정만 다루므로 앞선 기준선 실행과 값을 견주지 않는다 — 이력은 어느 파일을 썼는지 되짚는 기록이다."""
     import json
 
     import baseline as bl
 
-    out: dict[str, Any] = {"column": None, "pair": None, "history": None, "others": 0}
+    import quality_runner
+
+    out: dict[str, Any] = {"column": None, "history": None, "others": 0}
     if not base or not base.get("id") or not bl.BASELINE_DIR.exists():
         return out
     entries = []
     for path in bl.BASELINE_DIR.glob("*.json"):
         try:
-            entries.append(json.loads(path.read_text(encoding="utf-8")))
+            # 긴 컨텍스트의 옛 모양은 읽을 때 지금 모양으로(`baseline.latest`와 같은 변환)
+            entries.append(quality_runner.current_long_context(json.loads(path.read_text(encoding="utf-8"))))
         except (OSError, json.JSONDecodeError):
             continue
     when = lambda e: e.get("measured_at") or e.get("finished_at") or e.get("started_at") or ""
     column = next((e for e in entries if e.get("id") == base["id"]), None)
     if column is None:
         return out
-    applied = (column.get("config") or {}).get("cloud_reasoning_effort_applied")
-    pairs = [e for e in entries if e is not column and e.get("model") == column.get("model")
-             and bl.document_length_of(e) != bl.document_length_of(column)
-             and (e.get("config") or {}).get("cloud_reasoning_effort_applied") == applied]
-    pair = max(pairs, key=when) if pairs else None
-    rest = sorted((e for e in entries if e is not column and e is not pair), key=when, reverse=True)
-    return {"column": column, "pair": pair, "history": rest[0] if rest else None, "others": max(len(rest) - 1, 0)}
+    rest = sorted((e for e in entries if e is not column), key=when, reverse=True)
+    return {"column": column, "history": rest[0] if rest else None, "others": max(len(rest) - 1, 0)}
 
 
-def _baseline_pair_scores(context: dict[str, Any]) -> dict[str, dict[str, Any]]:
-    """기준선의 짧은 → 긴 — 문서를 읽는 문항끼리. 짝이 없으면 빈 dict."""
-    import baseline as bl
+# ---------------------------------------------------------------------------
+# 인젝션 간접의 지시문 뒤 내용 — 통과한 칸이 문서를 지시문 너머까지 읽었는지, 한 방향으로만 가른다
+# ---------------------------------------------------------------------------
+
+AFTER_INSTRUCTION_ROW_LABEL = "인젝션 간접 · 지시문 뒤 내용 있음 / 통과"
+
+
+def _after_instruction_facts(item: dict[str, Any], length: str | None) -> list[list[str]] | None:
+    """문항의 지시문 뒤 사실 목록 — 긴 판은 공통 목록에 긴 판에만 있는 것을 더한다. 세어 볼 사실이 없으면 None(목록 없음 —
+    0개가 든 것과 다르다)."""
     import quality_testsets as qt
 
-    column, pair = context.get("column"), context.get("pair")
-    if not column or not pair:
-        return {}
-    by_length = {bl.document_length_of(column): column, bl.document_length_of(pair): pair}
-    short, long = by_length.get(qt.DOCUMENTS_SHORT), by_length.get(qt.DOCUMENTS_LONG)
-    if not short or not long:
-        return {}
-    return {m: {"short": _same_items_score((short.get("metrics") or {}).get(m), qt.document_item_ids(m)),
-                "long": _same_items_score((long.get("metrics") or {}).get(m), qt.document_item_ids(m))}
-            for m in qt.document_metrics()}
+    facts = [*(item.get("after_instruction_facts") or []),
+             *((item.get("after_instruction_facts_long") or []) if length == qt.DOCUMENTS_LONG else [])]
+    return facts or None
 
 
-def _document_pair_rows(pairs: dict[str, dict[str, Any]], models: list[dict[str, Any]],
-                        baseline_scores: dict[str, dict[str, Any]] | None = None) -> list[dict[str, Any]]:
-    """측정값 표의 참고 행 — 문서 세트마다 `짧은 → 긴`. 짝이 없는 칸은 까닭을 적는다(짧은 판 실행이 없다 / 긴 판 실행이 아니다).
-    기준선 칸은 기준선의 문서 길이 짝에서 센다(`_baseline_pair_scores`)."""
-    baseline_scores = baseline_scores or {}
-    if not any(p.get("pair") for p in pairs.values()):
-        # 후보 칸이 전부 같은 사유면 `전원 동일` 줄로 넘어가 값처럼 읽힌다 — 기준선 값은 기준선 짝 줄이 싣는다
+def _after_instruction_cell(run: dict[str, Any] | None, items: dict[str, dict[str, Any]]) -> str:
+    """실행 하나의 칸 — 통과한 칸 가운데 지시문 뒤 내용이 답에 든 칸 수 `n/통과`. 지표 값이 없으면(대조군 실패 등) 까닭은 위
+    지표 행이 말해 `—`다. 목록이 없는 문항의 통과 칸은 분모에서 빼되 뺀 수를 적는다 — 조용히 빼면 분모가 통과 칸 수로 읽힌다."""
+    import quality_scoring as qs
+
+    result = ((run or {}).get("metrics") or {}).get("injection_indirect")
+    if not isinstance(result, dict) or result.get("score") is None:
+        return "—"
+    length = (run.get("config") or {}).get("document_length")
+    passed = [e for e in result.get("detail") or [] if (e.get("score") or 0) >= 1.0]
+    if not passed:
+        return "통과 없음"
+    listed = [(e, facts) for e in passed if (facts := _after_instruction_facts(items.get(e["id"]) or {}, length))]
+    if not listed:
+        return "목록 없음"
+    found = sum(qs.facts_present(e.get("response") or "", facts) > 0 for e, facts in listed)
+    unlisted = len(passed) - len(listed)
+    return f"{found}/{len(listed)}" + (f" (목록 없는 칸 {unlisted} 뺌)" if unlisted else "")
+
+
+def _after_instruction_rows(models: list[dict[str, Any]], baseline_entry: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """측정값 표의 참고 행 — 결과 파일에 저장된 응답을 **리포트를 뽑을 때 지금 세트의 목록으로** 센다(모델을 다시 부르지 않고,
+    결과 파일도 고치지 않는다). 세트에 목록이 없거나 인젝션 간접 값이 있는 후보가 없으면 행을 만들지 않는다."""
+    import quality_testsets as qt
+    import test_runner
+
+    try:
+        items = {it["id"]: it for it in qt.load_quality_testset("injection_indirect").get("items") or []}
+    except (OSError, KeyError, ValueError):
         return []
-    metrics = next(p["scores"] for p in pairs.values() if p.get("pair")).keys()
-    rows = []
-    for metric in metrics:
-        raw, n = {}, {}
-        for m in models:
-            entry = pairs.get(m["id"])
-            if entry is None:
-                raw[m["id"]] = "긴 판 실행 아님"
-            elif entry.get("pair") is None:
-                raw[m["id"]] = "짧은 판 실행 없음"
-            else:
-                score = entry["scores"].get(metric) or {}
-                raw[m["id"]] = " → ".join("—" if score.get(k) is None else _pct(score[k]) for k in ("short", "long"))
-                n[m["id"]] = score.get("items")
-        base = baseline_scores.get(metric)
-        base_raw = (" → ".join("—" if base.get(k) is None else _pct(base[k]) for k in ("short", "long"))
-                    if base else "짧은 판 기준선 없음")
-        rows.append({"key": f"document_pair_{metric}", "label": f"{DOCUMENT_PAIR_ROW_PREFIX}{_rule_names([metric])} (짧은 → 긴)",
-                     "raw": raw, "n": n, "n_unit": "문항", "baseline_raw": base_raw,
-                     "baseline_status": "measured" if base else "unrecorded"})
-    return rows
+    if not any(_after_instruction_facts(it, qt.DOCUMENTS_LONG) for it in items.values()):
+        return []
+    raw = {}
+    for m in models:
+        try:
+            run = test_runner.load_result(m["id"])
+        except (OSError, ValueError):
+            run = None
+        raw[m["id"]] = _after_instruction_cell(run, items)
+    if all(v == "—" for v in raw.values()):
+        return []
+    row = {"key": "after_instruction_facts", "label": AFTER_INSTRUCTION_ROW_LABEL, "items": ["injection_indirect"], "raw": raw}
+    if baseline_entry:
+        row["baseline_raw"] = _after_instruction_cell(baseline_entry, items)
+    return [row]
 
 
-def _baseline_pair_line(context: dict[str, Any], with_values: bool = False) -> str | None:
-    """기준선의 문서 길이 짝 — 두 기준선과 대조한 것 전부(추론 강도·채점기). 클라우드는 샘플링을 고정하지 않아 런타임 대조는 하지 않는다.
-    `with_values`면 `짧은 → 긴` 값도 적는다 — 후보 짝이 없어 측정값 표에 참고 행이 없을 때다(값은 한 곳에만)."""
-    import baseline as bl
+COMPRESSED_REFERENCE_LABEL = "압축 켬"
 
-    column, pair = context.get("column"), context.get("pair")
-    if not column:
+
+def _compressed_reference_note(models: list[dict[str, Any]], labels: dict[str, str], base_name: str | None = None) -> str | None:
+    """긴 컨텍스트 `압축 켬` 참고 행의 각주 — 실행마다 요약기가 무엇이었나. 요약기 조건(`summarizer_model`·`summarizer_sampling`)은
+    점수에 들지 않는 이 행에만 걸려 표지 경고가 아니라 여기에 적는다. 옛 실행은 별도 요약 모델로 요약해 후보 자신이 요약한 켬
+    값과 같은 것이 아니다. seed 기록이 없는 실행은 seed를 보낸 적이 없다. 값은 긴 컨텍스트를 낸 실행의 조건에서 읽는다(재실행)."""
+    import test_runner
+
+    groups: dict[str, list[str]] = {}
+    for m in models:
+        try:
+            run = test_runner.load_result(m["id"])
+        except (OSError, ValueError):
+            run = None
+        long_context = ((run or {}).get("metrics") or {}).get("long_context") or {}
+        if all((long_context.get(kind) or {}).get("score_compressed") is None for kind in ("recall", "constraint")):
+            continue
+        config = (((run.get("provenance") or {}).get("long_context") or {}).get("config")) or run.get("config") or {}
+        seed = (config.get("summarizer_sampling") or {}).get("seed")
+        text = f"{config.get('summarizer_model') or '기록 없음'}, seed {seed if seed is not None else '없음'}"
+        groups.setdefault(text, []).append(labels.get(m["id"], m["id"]))
+    if not groups:
         return None
-    if not pair:
-        return f"기준선의 문서 길이 비교 — 같은 추론 강도({_reasoning_text(column)})로 다른 판을 잰 기준선이 없어 견주지 못함."
-    metrics = [m for m in (column.get("scorer_versions") or {})]
-    same_scorer = all((column.get("scorer_versions") or {}).get(m) == (pair.get("scorer_versions") or {}).get(m) for m in metrics)
-    values = ""
-    if with_values:
-        scores = _baseline_pair_scores(context)
-        values = " · ".join(f"{_rule_names([m])} " + " → ".join("—" if s.get(k) is None else _pct(s[k]) for k in ("short", "long"))
-                            for m, s in scores.items())
-        values = f" 문서 문항끼리 짧은 → 긴: {values}." if values else ""
-    where = "기준선 칸은 두 기준선에서 왔다" if not with_values else "두 기준선을 견줬다"
-    return (f"기준선의 문서 길이 비교 — {where}: {bl.document_length_of(column)} "
-            f"{_short_time(column.get('measured_at'))}(열) · {bl.document_length_of(pair)} {_short_time(pair.get('measured_at'))}(짝).{values} "
-            f"대조한 것 — {_reasoning_text(column)} {'동일' if _reasoning_text(column) == _reasoning_text(pair) else '→ ' + _reasoning_text(pair)} · "
-            f"채점기 {'동일' if same_scorer else '달라짐'}. 클라우드는 샘플링을 고정하지 않아 문서를 읽지 않는 문항으로 런타임을 대조하지 않는다.")
+    # 요약기를 앞에 둔다 — 모델 별칭 바로 뒤에 요약 모델 이름이 붙으면 어디까지가 후보인지 안 읽힌다
+    who = " / ".join(f"{text} — {'·'.join(names)}" for text, names in groups.items())
+    line = f"`참고 · {COMPRESSED_REFERENCE_LABEL}` 행 — 점수에 들지 않는다. 요약기: {who}."
+    if len(groups) > 1:
+        line += " 요약기가 다른 실행의 켬 값은 같은 것이 아니다."
+    if base_name:
+        line += f" {base_name}에서는 켬 경로를 돌지 않는다."
+    return line
 
 
-def _document_pair_lines(pairs: dict[str, dict[str, Any]], models: list[dict[str, Any]], labels: dict[str, str]) -> list[str]:
-    """측정 조건 상세 — `문서 길이` 참고 행의 출처가 두 실행이라는 것과, 두 실행에서 문서 길이 말고 다른 것."""
-    paired = [(m, pairs[m["id"]]) for m in models if (pairs.get(m["id"]) or {}).get("pair")]
-    if not paired:
-        return []
-    sources = " · ".join(f"{labels[m['id']]} {_short_time(p['pair']['started_at'])}" for m, p in paired)
-    lines = [f"문서 길이 비교 — `참고 · {DOCUMENT_PAIR_ROW_PREFIX}…` 행은 두 실행에서 왔다: 긴 값은 이 실행, 짧은 값은 같은 모델의 "
-             f"앞선 짧은 판 실행({sources}). 문서를 읽는 문항끼리만 센다."]
-    # 대조한 것 전부 — 같은 결과끼리 모델을 모은다(`모델 digest 동일(A·B·C·D) · Ollama 0.34.0 → 0.34.1(A·B·C·D)`)
-    grouped: dict[str, list[str]] = {}
-    broken = False
-    for m, p in paired:
-        for c in p["checks"]:
-            grouped.setdefault(c["text"], []).append(labels[m["id"]])
-            broken = broken or c["same"] is not True
-    checks = " · ".join(f"{text}({'·'.join(who)})" for text, who in grouped.items())
-    lines.append(f"▲ 두 실행에서 대조한 것 — {checks}. 같지 않은 항목만큼 짧은 → 긴 차이를 문서 길이 탓으로만 읽지 않는다."
-                 if broken else f"두 실행에서 대조한 것 — {checks}. 문서 길이 말고는 같다.")
-    controls = [(m, p["runtime_control"]) for m, p in paired if p.get("runtime_control")]
-    if controls:
-        names = _rule_names(controls[0][1]["metrics"])
-        counts = " · ".join(
-            f"{labels[m['id']]} {c['compared']}쌍 중 {c['diverged']}쌍 갈림"
-            + (f"({', '.join(f'{_rule_names([k])} {v}' for k, v in c['diverged_by_metric'].items())})" if c["diverged_by_metric"] else "")
-            + f"(캐시 섞임 {c['cache_mixed']}쌍)"
-            for m, c in controls)
-        import test_runner
-
-        excluded = _item_names(list(test_runner.SECOND_ROUND_EXCLUDED))
-        head = (f"런타임 대조 — 문서를 읽지 않는 문항({names})의 1회차 답을 두 실행에서 글자 단위로 견줬다"
-                f"(캐시 조건이 같은 쌍만 · 긴 컨텍스트는 압축 끔 경로만 · {excluded} 제외): {counts}.")
-        # 출력 길이는 갈렸든 안 갈렸든 적는다 — 갈린 쪽이 비면 비는 까닭을 적는 재현 요약과 같은 조각이다
-        tokens = " · ".join(f"{labels[m['id']]} {_output_tokens_part(c['output_tokens_median'])}" for m, c in controls
-                            if c["compared"])
-        if any(c["diverged"] for _, c in controls):
-            lines.append(f"▲ {head} 캐시 조건이 같은데 갈린 쌍이 있다 — 문서 길이 말고 런타임 쪽 차이가 답을 바꿨을 수 있다. "
-                         f"갈린 쌍이 긴 답에 몰렸는지: {tokens}.")
-        elif any(c["compared"] for _, c in controls):
-            lines.append(f"{head} 갈린 쌍이 없다 — 이 표본에서는 두 실행의 런타임 차이가 답을 바꾸지 않았다. {tokens}.")
-        else:
-            lines.append(f"{head} 캐시 조건이 같은 쌍이 없어 판정하지 못했다.")
-    missing = [labels[m["id"]] for m in models if m["id"] in pairs and not pairs[m["id"]].get("pair")]
-    if missing:
-        lines.append(f"짧은 판 실행이 없어 견주지 못함: {' · '.join(missing)}")
-    return lines
+# 켬/끔이 압축 전 턴에서 갈리는 원인 — 실험으로 찾았다(모델을 내렸다 올리고 같은 1턴을 여러 앞선 호출 뒤에 보내 대조, 두 번 반복)
+DIVERGENCE_CAUSE = ("찾은 원인 — 앞선 호출이 남긴 캐시 상태가 답을 정한다: 모델을 새로 올린 직후, 같은 턴을 곧바로 다시 보낸 뒤, "
+                    "앞 시나리오의 마지막 턴 뒤가 같은 입력에 서로 다른 답을 냈고(반복해도 같다), 요약 호출을 끼운 뒤는 새로 올린 직후와 "
+                    "답이 같았다 — 요약 호출 자체가 아니라, 켬 경로가 요약이 든 대화를 거쳐 와 끔 경로와 앞선 호출이 달랐던 것이다.")
 
 
 def _divergence_line(models: list[dict[str, Any]], labels: dict[str, str],
                      divergence: dict[str, list[dict[str, Any]]]) -> str | None:
     """고정 샘플링인데 압축이 걸릴 수 없는 턴에서 켬/끔 두 경로가 갈린 실행 — 압축 설명 줄의 `까닭을 가를 수 없다`에
     실제로 재현되지 않은 실행이 있었다는 근거를 잇는다. 없으면 적지 않는다(갈리지 않았다는 것은 기록으로 말할 수 없다).
-    **그 자리의 캐시 값까지 싣는다** — 이름만 적으면 압축만 배제된 것으로 읽히는데, 캐시가 같은 채 갈렸다는 값이 있으면
-    캐시도 배제된다. 판정은 캐시로만 한다: 같으면 캐시로도 설명되지 않고, 다르면 캐시로 설명될 수 있다."""
+    **그 자리의 캐시 값까지 싣는다.** 원인은 실험으로 찾았다 — 앞선 호출이 남긴 캐시 상태가 답을 정한다. `cached_tokens` 수가
+    같아도 바로 앞에 보낸 호출이 다르면 같은 입력에 다른 답이 나왔고, 요약 호출 자체는 답을 바꾸지 않았다. 그래서 캐시 수가 같은
+    자리도 이 원인으로 설명되고, 수가 다른 자리는 상태가 다른 것이 수에도 드러난 것이다. 수를 모르는 자리로는 말하지 않는다.
+    시나리오마다 모델을 다시 올린 실행(`reloaded`)은 두 경로가 같은 상태에서 시작해 이 원인이 걸리지 않는다 — 거기서 갈리면
+    원인을 모른다고 따로 적는다."""
     import summarizer
 
     found = [f"{labels[m['id']]} {'·'.join(_split_text(s) for s in divergence[m['id']])}" for m in models if divergence.get(m["id"])]
     if not found:
         return None
     turns = summarizer.KEEP_RECENT_TURNS
-    states = {_cache_state(s) for m in models for s in divergence.get(m["id"]) or []}
+    splits = [(m, s) for m in models for s in divergence.get(m["id"]) or []]
+    states = {_cache_state(s) for _, s in splits if not s.get("reloaded")}
     reading = ["이 실행들의 켬/끔 차이는 압축 탓만으로 읽지 않는다."]
+    if states & {True, False}:
+        reading.append(DIVERGENCE_CAUSE)
     if True in states:
-        reading.append("캐시가 같은 채 갈린 자리는 캐시로도 설명되지 않는다 — 원인은 찾지 않았다.")
+        reading.append("캐시 수가 같은 자리도 이것으로 설명된다 — 수가 같다고 상태가 같은 것은 아니다.")
     if False in states:
-        reading.append("캐시가 다른 자리는 캐시 차이로 설명될 수 있다.")
+        reading.append("캐시 수가 다른 자리는 상태가 다른 것이 수에도 드러났다.")
+    if reloaded := list(dict.fromkeys(labels[m["id"]] for m, s in splits if s.get("reloaded"))):
+        reading.append(f"시나리오마다 모델을 다시 올려 두 경로가 같은 상태에서 시작한 실행({' · '.join(reloaded)})에서도 갈렸다 — "
+                       "앞선 호출이 남긴 상태로는 설명되지 않고, 원인은 찾지 않았다.")
     return (f"고정 샘플링인데도 같은 입력에 다른 답이 나온 실행이 있다 — 최근 {turns}턴은 원본 그대로 보내 {turns}턴까지는 압축이 "
             f"걸릴 수 없는데, 그 안에서 이미 켬/끔 두 경로가 갈렸다: {' · '.join(found)}. {' '.join(reading)}")
 
 
 def _divergence_context(run_ids: list[str]) -> dict[str, list[dict[str, Any]]]:
     """실행 파일(재실행 병합 뷰)에서 압축 전 켬/끔이 갈린 시나리오와 그 자리의 값을 모은다 — 턴별 답이 payload에 없어
-    백엔드가 읽는다. 샘플링을 고정하지 않는 경로는 갈리는 것이 당연해 세지 않는다."""
+    백엔드가 읽는다. 샘플링을 고정하지 않는 경로는 갈리는 것이 당연해 세지 않는다. 그 값을 잰 실행(재실행이면 재실행)이
+    시나리오마다 모델을 다시 올렸으면 자리마다 `reloaded`를 단다."""
     import quality_runner
     import test_runner
 
@@ -863,7 +794,31 @@ def _divergence_context(run_ids: list[str]) -> dict[str, list[dict[str, Any]]]:
         if not result or providers.applies_fixed_sampling(result.get("provider_name")) is False:
             continue
         if splits := quality_runner.split_before_compression(((result.get("metrics") or {}).get("long_context")) or {}):
-            out[rid] = splits
+            config = (((result.get("provenance") or {}).get("long_context") or {}).get("config")) or result.get("config") or {}
+            out[rid] = [{**s, "reloaded": True} for s in splits] if config.get("long_context_reload") else splits
+    return out
+
+
+REPEAT_OUTSIDE = "재현 검사 밖"
+# 2회차 밖이면 측정값 표에 표시하는 항목 — 종합 점수에 드는데 재현 검사를 돌지 않은 것. 일관성은 샘플링을 일부러 흔드는 세트라
+# 글자 일치 재현이 뜻이 없어 표시하지 않는다(두 바퀴 절이 까닭을 적는다)
+_REPEAT_MARKED_ITEMS = frozenset({"tool_calling"})
+
+
+def _outside_repeat(payload: dict[str, Any], models: list[dict[str, Any]], labels: dict[str, str],
+                    repeat: dict[str, dict[str, Any]]) -> dict[str, str]:
+    """측정값 표에서 재현 검사 밖인 지표 — `{지표 키: 표시}`. 2회차를 돈 실행인데 그 지표의 항목이 2회차에 없으면 밖이다.
+    2회차가 없는 실행은 세지 않는다(모든 지표가 밖이라 이 표시로 가를 것이 없다 — 두 바퀴 절이 말한다). 일부 실행만 밖이면 누구인지 붙인다."""
+    ran = [m for m in models if (repeat.get(m["id"]) or {}).get("second_items") is not None]
+    out: dict[str, str] = {}
+    for met in payload.get("metrics") or []:
+        items = set(met.get("items") or [])
+        if not items & _REPEAT_MARKED_ITEMS:
+            continue
+        outside = [m for m in ran if not items & set(repeat[m["id"]]["second_items"])]
+        if outside:
+            names = "·".join(labels.get(m["id"], m["id"]) for m in outside)
+            out[met["key"]] = REPEAT_OUTSIDE if len(outside) == len(ran) else f"{REPEAT_OUTSIDE}: {names}"
     return out
 
 
@@ -883,6 +838,8 @@ def _repeat_context(run_ids: list[str]) -> dict[str, dict[str, Any]]:
         metrics = result.get("metrics") or {}
         second = result.get("second_round") or {}
         long_context = metrics.get("long_context") or {}
+        # 긴 컨텍스트 값을 잰 실행의 조건 — 재실행이면 재실행의 것
+        lc_config = (((result.get("provenance") or {}).get("long_context") or {}).get("config")) or result.get("config") or {}
         out[rid] = {
             "repeat": (result.get("config") or {}).get("repeat"),
             "summarizer_sampling": (result.get("config") or {}).get("summarizer_sampling"),
@@ -890,9 +847,15 @@ def _repeat_context(run_ids: list[str]) -> dict[str, dict[str, Any]]:
             "load_first": metrics.get("load_time_sec"),
             "load_second": (second.get("model_load") or {}).get("load_time_sec"),
             "failed_second": [i["id"] for i in second.get("items") or [] if i.get("status") == "failed"],
+            # 2회차에서 실제로 돈 항목 — 2회차가 없는 실행은 None(재현 검사 밖 표시는 2회차를 돈 실행에서만 센다)
+            "second_items": [i["id"] for i in second.get("items") or []] if second.get("items") else None,
             "loaded_context_length": metrics.get("loaded_context_length"),
             "summarizer_loaded": long_context.get("summarizer_loaded"),
             "all_turns": isinstance(long_context.get("turns"), list),
+            "long_context_reload": bool(lc_config.get("long_context_reload")),
+            # 1회차가 무엇을 어떤 차례로 돌았나 — 바로 앞 호출이 답을 바꾸므로 차례가 곧 조건이다
+            "items": [i["id"] for i in result.get("items") or []],
+            "reload_after_skipped": bool((result.get("config") or {}).get("reload_after_skipped")),
         }
     return out
 
@@ -945,6 +908,9 @@ def _context_line(alias: str, info: dict[str, Any]) -> str:
     loaded = info.get("summarizer_loaded")
     if not loaded:
         return f"{head} · 요약 모델 기록 없음"
+    if loaded.get("self"):
+        # 요약기가 후보 자신이면 따로 올라간 요약 모델이 없다 — 컨텍스트는 앞의 후보 컨텍스트다
+        return f"{head} · 요약은 후보 자신(요약 {loaded.get('summaries', 0)}회)"
     if not loaded.get("summaries"):
         return f"{head} · 요약이 한 번도 걸리지 않아 요약 모델이 올라가지 않았다"
     if not loaded.get("loaded"):
@@ -962,6 +928,60 @@ def _item_names(keys: list[str]) -> str:
     return ", ".join(_rule_names([key]) if key in rules else items.get(key, key).split(" (")[0] for key in keys)
 
 
+def _summary_sampling_sentence(infos: list[tuple[str, dict[str, Any]]]) -> str:
+    """켬 경로의 요약 호출이 고정 샘플링인가 — 코드의 지금 값이 아니라 **실행마다 기록된 seed**로 가른다. seed를 보내기 전 실행은
+    기록이 `None`이거나 샘플링 기록 자체가 없다(그때는 seed를 보낸 적이 없다). 실행끼리 다르면 무리마다 이름을 댄다 — 하나로 적으면
+    다른 쪽 실행의 조건을 틀리게 말한다."""
+    # seed로만 무리를 짓는다 — 샘플링 기록이 없는 옛 실행을 온도 기록이 있는 seed 없음 실행과 다른 조건으로 세지 않는다
+    groups: dict[int | None, list[tuple[str, dict[str, Any]]]] = {}
+    for alias, info in infos:
+        sampling = info.get("summarizer_sampling") or {}
+        groups.setdefault(sampling.get("seed"), []).append((alias, sampling))
+
+    def phrase(seed: int | None, members: list[tuple[str, dict[str, Any]]]) -> str:
+        temperature = next((s["temperature"] for _, s in members if s.get("temperature") is not None), None)
+        head = f"temperature {temperature}·" if temperature is not None else ""
+        return f"{head}seed {seed}" if seed is not None else f"{head}seed 없음"
+
+    if len(groups) == 1:
+        (seed, members), = groups.items()
+        tail = "로 고정 샘플링이다" if seed is not None else "이라 그 경로는 고정 샘플링이 아니다"
+        return f"켬 경로의 요약 호출은 {phrase(seed, members)}{tail}."
+    parts = " · ".join(f"{phrase(seed, members)}({', '.join(alias for alias, _ in members)})" for seed, members in groups.items())
+    return f"켬 경로의 요약 호출 조건이 실행마다 다르다 — {parts}. seed가 없는 실행의 켬 경로는 고정 샘플링이 아니다."
+
+
+def _round_one_order(infos: list[tuple[str, dict[str, Any]]]) -> str | None:
+    """1회차 항목 차례 한 줄 — 바로 앞에 보낸 호출이 같은 입력의 답을 바꾸므로, 무엇을 어떤 차례로 돌았는지가 다시 재려면 필요하다.
+    실행마다 차례가 다르면 적지 않는다(한 줄로 말할 수 없다). `↻`는 그 앞에서 모델을 다시 올린 자리다."""
+    import test_runner
+
+    orders = {tuple(info.get("items") or []) for _, info in infos}
+    if len(orders) != 1 or not (order := next(iter(orders))):
+        return None
+    reloads = set(test_runner.reload_points(list(order))) if all(info.get("reload_after_skipped") for _, info in infos) else set()
+    marked = " → ".join(f"↻{i}" if i in reloads else i for i in order)
+    tail = " (`↻`는 그 앞에서 모델을 내렸다 올린 자리)" if reloads else ""
+    return f"1회차 항목 차례 — {marked}.{tail}"
+
+
+def _long_context_start_sentence(infos: list[tuple[str, dict[str, Any]]]) -> str:
+    """긴 컨텍스트 두 경로가 어떤 상태에서 시작했나 — 바로 앞 호출이 남긴 상태가 같은 입력의 답을 바꿔(실측), 시작 상태가 곧 조건이다.
+    시나리오마다 다시 올린 실행은 두 경로가 같은 상태에서 시작해 압축 전 턴의 입력과 상태가 같고, 이어서 돈 실행은 켬 경로가 앞
+    경로를 거쳐 온 상태에서 시작한다. 둘이 섞이면 누가 어느 쪽인지 붙인다 — 시작 상태가 달라 두 경로 값을 서로 나란히 읽지 않는다."""
+    turns = [(alias, info) for alias, info in infos if info.get("all_turns")]
+    reloaded = [alias for alias, info in turns if info.get("long_context_reload")]
+    continued = [alias for alias, info in turns if not info.get("long_context_reload")]
+    if not reloaded:
+        return ("긴 컨텍스트는 압축 끔 경로를 먼저 돈다 — 켬 경로의 캐시 상태가 순서를 바꾸기 전 실행과 달라, 켬 경로 값은 그 실행들과 "
+                "나란히 읽지 않는다.")
+    if not continued:
+        return ("긴 컨텍스트는 압축 끔 경로를 먼저 돌고, 두 경로 모두 시나리오마다 모델을 다시 올려 같은 상태에서 시작한다 — 압축이 걸리기 "
+                "전 턴은 두 경로의 입력과 시작 상태가 같다. 시작 상태가 바뀌어, 끔·켬 두 경로 값 모두 다시 올리기 전 실행과 나란히 읽지 않는다.")
+    return (f"긴 컨텍스트는 압축 끔 경로를 먼저 돈다. 시나리오마다 모델을 다시 올려 두 경로가 같은 상태에서 시작한 실행({'·'.join(reloaded)})과 "
+            f"앞 시나리오에 이어서 돈 실행({'·'.join(continued)})은 시작 상태가 달라, 끔·켬 두 경로 값을 서로 나란히 읽지 않는다.")
+
+
 def _repeat_lines(models: list[dict[str, Any]], labels: dict[str, str], context: dict[str, dict[str, Any]]) -> list[str]:
     """두 바퀴 절 — 규칙(한 번), 모델마다 재현 요약과 올라간 컨텍스트. 2회차를 돈 실행이 하나도 없으면 싣지 않는다."""
     infos = [(labels[m["id"]], context[m["id"]]) for m in models if m["id"] in context]
@@ -975,12 +995,11 @@ def _repeat_lines(models: list[dict[str, Any]], labels: dict[str, str], context:
     skipped = " · ".join(f"{_item_names(keys)}({why})" for why, keys in excluded.items())
     lines = [f"2회차 — {repeat['rule']}. 다시 돌지 않은 것: {skipped}. 긴 컨텍스트는 {repeat['long_context']}.",
              f"{repeat['metering_rule']}.", f"재현 판정 — {repeat['reproduction_rule']}."]
+    if order := _round_one_order(infos):
+        lines.append(order)
     lines += [_reproduction_line(alias, info) for alias, info in infos]
     if any(info.get("all_turns") for _, info in infos):
-        sampling = next((info["summarizer_sampling"] for _, info in infos if info.get("summarizer_sampling")), None)
-        temperature = f"temperature {sampling['temperature']}·seed 없음" if sampling else "seed 없음"
-        lines.append("긴 컨텍스트는 압축 끔 경로를 먼저 돈다 — 켬 경로의 캐시 상태가 순서를 바꾸기 전 실행과 달라, 켬 경로 값은 그 실행들과 "
-                     f"나란히 읽지 않는다. 켬 경로의 요약 호출은 {temperature}이라 그 경로는 고정 샘플링이 아니다.")
+        lines.append(f"{_long_context_start_sentence(infos)} {_summary_sampling_sentence(infos)}")
         lines += [_context_line(alias, info) for alias, info in infos]
     # 두 바퀴를 돌지 않은 실행이 섞였으면 그 사실을 적는다 — 없는 요약을 `갈림 0`으로 읽지 않게
     single = [alias for alias, info in infos if not info.get("repeat")]
@@ -1031,6 +1050,29 @@ def _purity_lines(meta: dict[str, Any], labels: dict[str, str], evidence: set[st
 # ---------------------------------------------------------------------------
 
 
+def _fingerprint_digests(entry: dict[str, Any]) -> str | None:
+    """지문 한 벌을 값으로 — `일치한다`만 적으면 무엇과 무엇이 같았는지 뒤에 확인할 수 없다. 규칙 판과 범위별 짧은 해시를 적는다
+    (문항 내용이 아니라 해시라 세트는 드러나지 않는다). 도구 고정값은 도구 정의와 따로 적는다 — 세트가 같아도 고정값만 바뀔 수 있다."""
+    import hashlib
+    import json
+
+    rules = (entry or {}).get("rules") or {}
+    if not rules:
+        return None
+    version = sorted(rules, key=lambda v: int(v) if str(v).isdigit() else 0)[-1]
+    short = lambda m: hashlib.sha256(json.dumps(m, sort_keys=True, ensure_ascii=False).encode()).hexdigest()[:8]
+    parts = []
+    for scope, label in _SCOPE_LABELS.items():
+        scoped = (rules[version] or {}).get(scope)
+        if not scoped:
+            continue
+        fixture = {k: v for k, v in scoped.items() if k.startswith("fixture:")}
+        parts.append(f"{label} {short({k: v for k, v in scoped.items() if k not in fixture})}")
+        if fixture:
+            parts.append(f"도구 고정값 {short(fixture)}")
+    return f"규칙 v{version} · {' · '.join(parts)}" if parts else None
+
+
 def _fingerprint_lines(meta: dict[str, Any], models: list[dict[str, Any]], labels: dict[str, str]) -> tuple[list[str], list[str]]:
     """(본문 줄, 각주 줄). 첫 모델(종합 1위)의 지문을 기준으로 다른 실행과 기준선을 범위별로
     대조한다 — 판정·원인은 baseline.compare_entries가 정한다. `기록 없음`·`비교 불가`는 경고가
@@ -1039,7 +1081,7 @@ def _fingerprint_lines(meta: dict[str, Any], models: list[dict[str, Any]], label
     runs = fp.get("runs") or {}
     participants: list[tuple[str, dict[str, Any]]] = [(labels.get(m["id"], m["id"]), runs.get(m["id"]) or {}) for m in models]
     if fp.get("baseline"):
-        participants.append((f"기준선({(meta.get('baseline') or {}).get('model', '?')})", fp["baseline"]))
+        participants.append((_baseline_name(meta), fp["baseline"]))
 
     lines: list[str] = []
     footnotes: list[str] = []
@@ -1079,12 +1121,14 @@ def _fingerprint_lines(meta: dict[str, Any], models: list[dict[str, Any]], label
             else:
                 unsettled += 1
                 footnotes.append(f"※ {head}")
+    if digests := _fingerprint_digests((ref or {}).get("fingerprints") or {}):
+        footnotes.append(f"※ 지문 값({ref_name}) — {digests}")
     if matched and not lines and not unsettled:
         everyone = len(recorded) == len(participants)
-        who = ("모든 후보·기준선" if base_name else "모든 후보") if everyone else f"지문이 기록된 {len(recorded)}개 실행"
+        who = (f"모든 후보·{base_name}" if base_name else "모든 후보") if everyone else f"지문이 기록된 {len(recorded)}개 실행"
         # 기준선은 속도·도구를 재지 않아 대조 범위가 후보끼리보다 좁다 — 같은 한 줄에 그 사실을 적는다
         narrower = scopes_of.get(base_name) if base_name else None
-        tail = f" — 기준선은 {' · '.join(s for s in scopes if s in narrower)}만" if narrower and narrower != set(scopes) else ""
+        tail = f" — {base_name}에서는 {' · '.join(s for s in scopes if s in narrower)}만" if narrower and narrower != set(scopes) else ""
         lines.append(f"{who}의 세트 지문이 일치한다({' · '.join(scopes)}{tail})")
     elif matched:
         lines.append(f"그 밖의 대조 {matched}건은 일치한다")
@@ -1115,7 +1159,16 @@ _AHEAD_ALSO = {
 
 def _version_source_names(meta: dict[str, Any], models: list[dict[str, Any]], labels: dict[str, str]) -> dict[str, str]:
     return {**{m["id"]: labels.get(m["id"], m["id"]) for m in models},
-            _BASELINE_KEY: f"기준선({(meta.get('baseline') or {}).get('model', '?')})"}
+            _BASELINE_KEY: _baseline_name(meta)}
+
+
+def _composite_definition_line(meta: dict[str, Any]) -> str:
+    """종합 점수를 만든 정의의 판 — 계산은 프런트가 하고 판도 거기 있다(payload로 온다). 판이 다르면 같은 실행도 종합 점수가
+    달라지므로 채점기 버전 곁에 늘 찍는다. 판을 싣기 전에 만든 리포트 데이터면 그렇다고 적는다."""
+    definition = meta.get("composite_definition") or {}
+    if not definition.get("version"):
+        return "합산 정의 — 기록이 실리지 않았다(합산 정의의 판을 싣기 전에 만든 리포트 데이터다)."
+    return f"합산 정의 v{definition['version']} — {definition.get('summary') or '설명 없음'}"
 
 
 def _scorer_version_record_lines(meta: dict[str, Any], models: list[dict[str, Any]], labels: dict[str, str]) -> list[str]:
@@ -1245,24 +1298,43 @@ def _scorer_version_lines(meta: dict[str, Any], models: list[dict[str, Any]],
     return warnings, footnotes
 
 
+_FLOW_TOP = 0.90  # 흐름이 쪽마다 쓰기 시작하는 높이
+
+
 class _Flow:
     """위에서 아래로 텍스트·표를 흘려 쓰다가 자리가 모자라면 같은 장의 다음 쪽을 연다."""
 
     def __init__(self, chapter: str):
         self.chapter = chapter
         self.pages: list[Page] = []
+        # 그린 뒤 아직 본문이 따라오지 않은 소제목 — (글자 artist, 제목, 그린 뒤의 y)
+        self._heading: tuple[Any, str, float] | None = None
         self.new_page()
 
     def new_page(self) -> None:
         fig = _new_fig()
         ax = fig.add_axes([0, 0, 1, 1])
         ax.axis("off")
-        self.fig, self.ax, self.y = fig, ax, 0.90
+        self.fig, self.ax, self.y = fig, ax, _FLOW_TOP
         self.pages.append(Page(fig, self.chapter))
 
     def ensure(self, height: float) -> None:
         if self.y - height < _PAGE_BOTTOM:
             self.new_page()
+
+    def _carry_heading(self, height: float) -> None:
+        """소제목 바로 뒤의 글·표가 이 쪽에 안 들어가면 소제목도 다음 쪽으로 옮긴다 — 소제목만 쪽 끝에 남으면 빈 절로 읽힌다.
+        소제목 뒤에 다른 것을 그렸으면(y가 움직였다) 옮기지 않는다 — 옮기면 그것이 머리 없이 남는다."""
+        pending, self._heading = self._heading, None
+        if pending is None:
+            return
+        artist, title, y_after = pending
+        if self.y != y_after or self.y - height >= _PAGE_BOTTOM:
+            return
+        artist.remove()
+        self.new_page()
+        self.heading(title)
+        self._heading = None
 
     def text(self, text: str, *, size: float = 9.5, color: str = "black", weight: str = "normal",
              wrap: bool = True, gap: float = 0.019) -> None:
@@ -1271,18 +1343,23 @@ class _Flow:
             (text,) = _gloss([text])
         wrapped = _wrap(text, size, indent="   ", weight=weight, wrap=wrap)
         n = wrapped.count("\n") + 1
+        self._carry_heading(gap * n)
         self.ensure(gap * n)
-        self.ax.text(_TEXT_LEFT, self.y, wrapped, fontsize=size, color=color, fontweight=weight, va="top",
-                     transform=self.ax.transAxes, linespacing=1.45)
+        self._last = self.ax.text(_TEXT_LEFT, self.y, wrapped, fontsize=size, color=color, fontweight=weight, va="top",
+                                  transform=self.ax.transAxes, linespacing=1.45)
         self.y -= gap * n + 0.003
 
     def heading(self, text: str) -> None:
         self.ensure(0.06)
+        at_top = self.y == _FLOW_TOP
         self.y -= 0.01
         self.text(text, size=11, weight="bold", wrap=False, gap=0.024)
+        # 쪽 머리에 선 소제목은 옮겨도 나아지지 않는다(본문이 한 쪽보다 길다)
+        self._heading = None if at_top else (self._last, text, self.y)
 
     def table(self, rows: list[list[str]], headers: list[str], col_widths: list[float], *, row_h: float = 0.026) -> None:
         height = row_h * (len(rows) + 1)
+        self._carry_heading(height + 0.01)
         self.ensure(height + 0.01)
         table = self.ax.table(cellText=rows, colLabels=headers, cellLoc="left", colLoc="left",
                               colWidths=col_widths, bbox=[0.07, self.y - height, 0.86, height])
@@ -1291,7 +1368,8 @@ class _Flow:
         self.y -= height + 0.015
 
 
-_GATE_QUIET = {"kept", "in_progress"}
+# 경고 색이 아닌 게이트 상태 — 판정 진행 중도 이제 순위에서 일관성을 빼므로(순위를 바꾸는 상태) 경고로 찍는다
+_GATE_QUIET = {"kept"}
 _GATE_FAILED = "error"
 # 게이트 조회에 실패하면 싣지 않는 장 — 종합 점수에서 나온 값을 쓰는 장 전부다(장 이름이 아니라 값으로 가른다)
 _COMPOSITE_CHAPTERS = (CH_RANKING, CH_BREAKDOWN, CH_WEIGHTS)
@@ -1386,7 +1464,7 @@ def _selection_section(flow: "_Flow", payload: dict[str, Any], labels: dict[str,
     selection = payload.get("selection")
     if not selection:
         return
-    flow.heading("결론 — 이 규칙을 적용하면")
+    flow.heading("결론")
     pick = selection.get("pick")
     if pick:
         # 갈린 자리는 규칙 번호(`2b`)가 아니라 이름으로 — 이름 없는 옛 payload는 번호로 그린다
@@ -1437,20 +1515,28 @@ def _page_cover(payload: dict[str, Any], models: list[dict[str, Any]], labels: d
     meta = payload["meta"]
     flow = _Flow(CH_COVER)
     generated = meta.get("generated_at")
-    flow.text(f"생성 시각: {_short_time(generated)} ({_zone_label(generated)} — 이 리포트의 시각은 모두 이 시간대)")
+    flow.text(f"생성 시각: {_short_time(generated)} ({_zone_label(generated)} — 이 리포트의 시각은 모두 이 시간대)"
+              f"{_tool_commit_text()}")
     unused = " (종합 점수를 싣지 않아 쓰이지 않았다)" if _composite_withheld(payload) else ""
     flow.text(f"적용 가중치: {meta.get('weight_preset') or '알 수 없음'}{unused}")
     base = meta.get("baseline")
     flow.text(
-        f"기준선: {base['model']} (측정일 {_short_time(base.get('measured_at'))}, {base.get('metric_count', '?')}개 지표로 계산)"
-        if base else ("기준선: 없음 — " + meta["baseline_unmatched"] if meta.get("baseline_unmatched") else "기준선: 없음")
+        f"비교 대상: {base['model']} (측정일 {_short_time(base.get('measured_at'))}, {base.get('metric_count', '?')}개 지표로 계산)"
+        if base else ("비교 대상: 없음 — " + meta["baseline_unmatched"] if meta.get("baseline_unmatched") else "비교 대상: 없음")
     )
 
     _selection_section(flow, payload, labels, gate_evidence)
 
     flow.heading("반드시 읽어야 할 경고")
     warned = False
-    for line, warn in _consistency_gate_lines(meta):
+    gate_lines = _consistency_gate_lines(meta)
+    # 빠진 장은 경고가 아니라 사실이지만 모르고 읽으면 안 된다 — 같은 말(판정 진행 중)을 하는 게이트 줄에 붙여 한 줄로 둔다
+    if consistency_blind and gate_lines:
+        line, warn = gate_lines[0]
+        gate_lines[0] = (f"{line} 판정이 끝나기 전이라 일관성 상세 장도 싣지 않는다 — 가림이 풀린 뒤에 다시 뽑으면 실린다.", warn)
+    elif consistency_blind:
+        gate_lines = [("판정 진행 중이라 일관성 상세를 싣지 않는다 — 가림이 풀린 뒤에 다시 뽑으면 실린다.", False)]
+    for line, warn in gate_lines:
         flow.text(line, size=9, color=_WARN if warn else _MUTED, weight="bold" if warn else "normal")
         warned = True
     # 같은 경고를 표지에서 두 번 하지 않는다 — 선정 규칙이 그 게이트로 떨어뜨린 모델은 위 탈락 줄이 이미 말했다
@@ -1474,10 +1560,6 @@ def _page_cover(payload: dict[str, Any], models: list[dict[str, Any]], labels: d
     for line in version_warnings:
         flow.text(line, size=9, color=_WARN, weight="bold")
         warned = True
-    if consistency_blind:
-        # 빠진 장은 경고가 아니라 사실이지만, 없는 것을 모르고 읽으면 안 되므로 같은 면에 둔다
-        flow.text("판정 진행 중이라 일관성 상세를 싣지 않는다 — 가림이 풀린 뒤에 다시 뽑으면 실린다.", size=9, color=_MUTED)
-        warned = True
     mixed = [labels.get(r["id"], r["model"]) for r in meta.get("runs", []) if r.get("mixed")]
     if mixed:
         flow.text(f"▲ 혼합 실행 — {', '.join(mixed)}: 지표마다 값을 낸 실행이 다르다(출처는 측정 조건 상세 장에).",
@@ -1490,22 +1572,1014 @@ def _page_cover(payload: dict[str, Any], models: list[dict[str, Any]], labels: d
     elif not warned:
         flow.text("없음 — 게이트·강등·조건 불일치·채점기 버전 모두 걸린 것이 없다.", size=9, color=_MUTED)
     if len(flow.pages) > 1:
-        # 표지 = 결론 면 — 넘친 판은 넘친 쪽 머리에 그렇게 찍는다(장 제목과 본문 사이). 테스트는 가장 꽉 찬 픽스처만
-        # 보고 이 줄은 실제로 뽑은 판을 본다. **줄이지 않는다** — 자동으로 줄이면 깨진 원칙을 다시 조용하게 만든다
-        flow.pages[1].fig.text(_TEXT_LEFT, 0.925, _cover_overflow_line(len(flow.pages)), fontsize=8.5, color=_WARN,
-                               fontweight="bold", va="top")
+        # 표지 = 결론 면 — 넘치면 PDF에 경고를 찍지 않고 **조립을 실패시킨다**. 찍어 두면 넘친 판이 그대로 제출된다.
+        # **줄이지 않는다** — 자동으로 줄이면 깨진 원칙을 다시 조용하게 만든다
+        raise RuntimeError(_cover_overflow_line(len(flow.pages)))
     return flow.pages
+
+
+def _commit_text(commit: dict[str, Any] | None) -> str | None:
+    """커밋 한 조각 — `df242ca` 또는 손댄 것이 있으면 `df242ca+dirty`. 기록이 없으면 None."""
+    sha = (commit or {}).get("sha")
+    return f"{sha}+dirty" if sha and commit.get("dirty") else sha
+
+
+def _tool_commit_text() -> str:
+    """이 리포트를 그린 도구의 커밋 — 같은 결과 파일이어도 코드가 다르면 다른 리포트가 나온다. 못 읽으면 적지 않는다."""
+    import machine_info
+
+    commit = _commit_text(machine_info.git_commit())
+    return f" · 도구 커밋 {commit}" if commit else ""
 
 
 def _cover_overflow_line(pages: int) -> str:
     return f"▲ 표지가 {pages}쪽으로 넘쳤다 — 결론 면은 한 쪽이어야 한다. 무엇을 뺄지 정해야 한다."
 
 
+# 한 질문 → 한 응답 → JSON 저장까지를 가장 짧게 밟는 경로 — 채점자가 이 리포트의 조건을 직접 재현할 때 첫 걸음이다
+_MINIMAL_PATH = "assignment/01_ollama_chat.py"
+
+
+def _reproduction_source_lines(meta: dict[str, Any], models: list[dict[str, Any]], labels: dict[str, str]) -> list[str]:
+    """이 리포트의 값이 어느 파일에서 나왔고 어떻게 다시 밟나 — 값을 다시 읽을 수 있어야 리포트가 검증 가능하다.
+    결과 파일은 저장소에 올리지 않는다(개인 데이터와 세트가 드러난다) — 그 까닭까지 적는다."""
+    files = " · ".join(f"{labels[m['id']]} backend/test-results/{m['id']}.json" for m in models)
+    if base := meta.get("baseline"):
+        files += f" · {_baseline_name(meta)} backend/test-results/baseline/{base.get('id', '?')}.json"
+    return [f"원본 결과 파일 — {files}. 저장소에는 올리지 않는다(문항 세트와 답 전문이 들어 있다) — 값은 이 파일에서 다시 읽는다.",
+            f"최소 재현 경로 — {_MINIMAL_PATH}: 한 질문 → 한 응답 → JSON 저장. 앱 없이 호출만 확인하는 자리다."]
+
+
+def _model_digest_line(meta: dict[str, Any], models: list[dict[str, Any]], labels: dict[str, str]) -> str | None:
+    """실제로 부른 모델의 digest — `일치한다`가 아니라 값이라야 나중에 같은 모델을 다시 부를 수 있다. 표에 넣으면 이름 칸이
+    좁아져 잘리므로 표 아래 한 줄로 적는다. 기준선은 모델 버전 문자열이 있으면 그것을, 없으면 기록 없음."""
+    runs = {r["id"]: r for r in meta.get("runs") or []}
+    short = lambda d: (d or "")[:12] or "기록 없음"
+    parts = [f"{labels[m['id']]} {short((runs.get(m['id']) or {}).get('digest'))}" for m in models if m["id"] in runs]
+    if base := meta.get("baseline"):
+        parts.append(f"{_baseline_name(meta)} {base.get('model_version') or '기록 없음'}")
+    return f"※ 모델 digest — {' · '.join(parts)}" if parts else None
+
+
+CATALOG_PATH = Path(__file__).parent / "model_catalog.json"
+# 값을 못 채운 칸 — 0도 빈칸도 아니다(과제의 `측정 불가를 0으로 채우지 않는다`와 같은 규율)
+UNCONFIRMED = "확인 못 함"
+
+
+def _load_catalog() -> dict[str, Any]:
+    """모델 카드가 말하는 정적 정보 — 코드는 읽기만 한다. 파일이 없거나 깨졌으면 빈 카탈로그다(리포트는 그 사실을 칸에 적는다)."""
+    import json
+
+    try:
+        return json.loads(CATALOG_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def _gb(value: int | None) -> str:
+    """받은 파일 크기·메모리 — 측정값 표와 같은 10진 GB로 적는다(표마다 단위가 다르면 같은 값이 달라 보인다)."""
+    return f"{value / 1000 ** 3:.2f}GB" if value else f"{UNCONFIRMED} — 기록 없음"
+
+
+def _model_card_context(run_ids: list[str], baseline_entry: dict[str, Any] | None) -> dict[str, dict[str, Any]]:
+    """실행 파일이 말하는 식별값과 적재 상태 — **카탈로그에서 읽지 않는다**(태그·digest·파라미터·양자화·컨텍스트의 원천은 실행이다).
+    카탈로그는 태그로만 이어 붙이고, 이어 붙지 않으면 그 사실을 남긴다."""
+    import test_runner
+
+    catalog = _load_catalog()
+    out: dict[str, dict[str, Any]] = {}
+    for rid in run_ids:
+        try:
+            result = test_runner.load_result(rid)
+        except (OSError, ValueError):
+            continue
+        if not result:
+            continue
+        config, metrics = result.get("config") or {}, result.get("metrics") or {}
+        identity = config.get("model_identity") or {}
+        tag = identity.get("tag") or result.get("model")
+        out[rid] = {"identity": identity, "tag": tag, "metrics": metrics,
+                    "ram_bytes": ((config.get("hardware") or {}).get("ram_bytes")),
+                    "catalog": (catalog.get("models") or {}).get(tag),
+                    "catalog_tags": list((catalog.get("models") or {})), "kind": "run"}
+    if baseline_entry:
+        model = baseline_entry.get("model")
+        out["baseline"] = {"identity": {"tag": model}, "tag": model, "metrics": baseline_entry.get("metrics") or {},
+                           "ram_bytes": None, "catalog": (catalog.get("baseline") or {}).get(model),
+                           "catalog_tags": list((catalog.get("baseline") or {})), "kind": "baseline"}
+    return out
+
+
+_MODEL_CARD_ROWS: tuple[tuple[str, Any], ...] = (
+    ("전체 태그", lambda e: e["tag"] or f"{UNCONFIRMED} — 기록 없음"),
+    ("digest (앞 12자)", lambda e: (e["identity"].get("digest") or "")[:12]
+     or ("해당 없음 — 외부 API" if e["kind"] == "baseline" else f"{UNCONFIRMED} — 기록 없음")),
+    ("파라미터", lambda e: e["identity"].get("parameter_size")
+     or ("해당 없음 — 외부 API" if e["kind"] == "baseline" else f"{UNCONFIRMED} — 기록 없음")),
+    ("양자화", lambda e: e["identity"].get("quantization_level")
+     or ("해당 없음 — 외부 API" if e["kind"] == "baseline" else f"{UNCONFIRMED} — 기록 없음")),
+    ("받은 파일 크기", lambda e: "해당 없음 — 외부 API" if e["kind"] == "baseline" else _gb(e["identity"].get("download_bytes"))),
+    ("문서상 최대 컨텍스트", lambda e: f"{e['identity']['max_context_length']:,}" if e["identity"].get("max_context_length")
+     else ("해당 없음 — 외부 API" if e["kind"] == "baseline" else f"{UNCONFIRMED} — 기록 없음")),
+    ("실제로 올라간 컨텍스트", lambda e: f"{e['metrics']['loaded_context_length']:,}" if e["metrics"].get("loaded_context_length")
+     else ("해당 없음 — 외부 API" if e["kind"] == "baseline" else "측정 안 됨")),
+    ("VRAM", lambda e: _gb(e["metrics"].get("vram_bytes")) if e["metrics"].get("vram_bytes")
+     else ("해당 없음 — 외부 API" if e["kind"] == "baseline" else "측정 안 됨")),
+    ("시스템 RAM 몫", lambda e: _ram_share_text(e)),
+)
+
+
+def _ram_share_text(entry: dict[str, Any]) -> str:
+    """모델이 시스템 RAM에 올라간 몫 — VRAM에 다 올라갔으면 `0 — 전부 GPU`다. 총 RAM을 함께 적어 크기를 읽을 수 있게 한다."""
+    if entry["kind"] == "baseline":
+        return "해당 없음 — 외부 API"
+    memory, vram = entry["metrics"].get("memory_bytes"), entry["metrics"].get("vram_bytes")
+    if memory is None or vram is None:
+        return "측정 안 됨"
+    share = memory - vram
+    total = f" (기계 총 RAM {_gb(entry['ram_bytes'])})" if entry.get("ram_bytes") else ""
+    return f"0 — 전부 GPU{total}" if share <= 0 else f"{_gb(share)}{total}"
+
+
+def _model_card_table(context: dict[str, dict[str, Any]], models: list[dict[str, Any]],
+                      labels: dict[str, str]) -> tuple[list[list[str]], list[str]] | None:
+    """행은 값, 열은 모델 — 열이 열 개가 넘는 표는 칸이 좁아 글이 잘린다."""
+    columns = [(labels[m["id"]], context[m["id"]]) for m in models if m["id"] in context]
+    if "baseline" in context:
+        columns.append((context["baseline"].get("tag") or "기준선", context["baseline"]))
+    if not columns:
+        return None
+    rows = [[name, *[_wrap_cell(read(entry), _VALUE_CELL_WIDTH, 3) for _, entry in columns]] for name, read in _MODEL_CARD_ROWS]
+    return rows, ["실행이 말하는 값", *[name for name, _ in columns]]
+
+
+def _catalog_lines(context: dict[str, dict[str, Any]], models: list[dict[str, Any]], labels: dict[str, str]) -> list[str]:
+    """모델 카드가 말하는 값 — 모델마다 한 문단. 표로 만들면 URL과 문장이 좁은 칸에서 잘린다.
+    **카탈로그에 그 태그가 없으면 값을 지어내지 않고 경고를 적는다.**"""
+    order = [(labels[m["id"]], context[m["id"]]) for m in models if m["id"] in context]
+    if "baseline" in context:
+        order.append((context["baseline"].get("tag") or "기준선", context["baseline"]))
+    out: list[str] = []
+    for name, entry in order:
+        card = entry.get("catalog")
+        if not card:
+            known = ", ".join(entry.get("catalog_tags") or []) or "없음"
+            out.append(f"▲ {name} — 카탈로그에 이 태그가 없다({entry['tag']}). 카탈로그의 태그: {known}. "
+                       f"모델 카드 쪽 값은 {UNCONFIRMED} — 태그를 맞춰야 채워진다.")
+            continue
+        license_ = card.get("license") or {}
+        api_terms = " (모델 라이선스가 아니라 API 이용약관이다)" if entry["kind"] == "baseline" else ""
+        out.append(f"{name} · {card.get('display_name') or entry['tag']}")
+        out.append(f"  라이선스 — {license_.get('name') or UNCONFIRMED} · 상업적 사용 {license_.get('commercial_use') or UNCONFIRMED}"
+                   f"{api_terms}. {license_.get('conditions') or ''}".rstrip())
+        for label, value in (("라이선스 원문", license_.get("url")), ("Model Card", card.get("model_card"))):
+            urls = value if isinstance(value, list) else [value] if value else []
+            out.append(f"  {label} — {' · '.join(urls) if urls else UNCONFIRMED}")
+        out.append(f"  아키텍처 — {card.get('architecture') or UNCONFIRMED}")
+        out.append(f"  지원 언어 — {card.get('languages') or UNCONFIRMED}")
+        marks = card.get("benchmarks") or []
+        scores = " · ".join(f"{b.get('name')} {b.get('score')}" for b in marks) if marks else UNCONFIRMED
+        out.append(f"  모델 카드가 말하는 벤치마크 — {scores}"
+                   + (f" (출처: {card['benchmarks_source']})" if card.get("benchmarks_source") else "")
+                   + " — 우리가 잰 값이 아니다")
+        if highlights := card.get("highlights"):
+            out.append(f"  주요 특징 — {highlights if isinstance(highlights, str) else ' · '.join(highlights)}")
+        # 기준선은 후보가 아니다 — 그 줄을 묻지 않고, 대신 제공자와 가격 출처가 있으면 적는다
+        if entry["kind"] == "baseline":
+            if provider := card.get("provider"):
+                out.append(f"  제공자 — {provider}")
+        else:
+            out.append(f"  후보로 고른 이유 — {card.get('why_candidate') or UNCONFIRMED}")
+        for note in card.get("notes") or []:
+            out.append(f"  ※ {note}")
+        out.append(f"  확인일 — {card.get('checked') or UNCONFIRMED}")
+    return out
+
+
+# 호출 집계 — 과제가 요구하는 `성공 수 / 시도 수`. **모집단이 다른 수를 한 열에 넣지 않는다**: 채점 칸은 1회차, 계측 호출은 두 바퀴다
+_CALL_TALLY_ROWS: tuple[tuple[str, Any], ...] = (
+    ("채점 칸 (1회차)", lambda e: f"{e['scored']:,}"),
+    ("└ 답이 온 칸", lambda e: f"{e['answered']:,} ({_pct(e['answered'] / e['scored'])})" if e["scored"] else "측정 안 됨"),
+    ("└ 빈 응답 (조건 쪽·원인 미확인)", lambda e: f"{e['empty_condition']:,} · {e['empty_unknown']:,}"),
+    ("└ 길이 한도로 잘린 답", lambda e: f"{e['truncated']:,}"),
+    ("└ 거절", lambda e: f"{e['refused']:,}"),
+    # 이름은 칸에 넣으면 잘린다 — 수만 칸에 두고 이름은 표 아래 줄이 적는다
+    ("실행 실패 항목", lambda e: f"{len(e['failed_items'])}개" if e["failed_items"] else "없음"),
+    ("능력 부재로 값이 빠진 지표", lambda e: f"{len(e['incapable_items'])}개" if e["incapable_items"] else "없음"),
+    ("호출 (두 바퀴·계측 구간)", lambda e: f"{e['calls']:,}" if e["calls"] is not None else "측정 안 됨"),
+    ("응답 시간 중앙값 (그 호출들)", lambda e: f"{e['elapsed_median']:.2f}초" if e["elapsed_median"] is not None else "측정 안 됨"),
+)
+
+
+def _call_tally_context(run_ids: list[str]) -> dict[str, dict[str, Any]]:
+    """실행마다 호출이 몇 번 갔고 그중 답이 온 칸이 몇인가 — `성공률 100%` 같은 비율만으로는 시도 수를 알 수 없다.
+    **채점 칸(1회차)과 계측 구간 호출(두 바퀴)은 모집단이 다르다** — 한 열에 섞지 않고 따로 센다."""
+    import test_runner
+
+    out: dict[str, dict[str, Any]] = {}
+    for rid in run_ids:
+        try:
+            result = test_runner.load_result(rid)
+        except (OSError, ValueError):
+            continue
+        if not result:
+            continue
+        health = (result.get("response_health") or {}).values()
+        totals = {key: sum(h.get(key) or 0 for h in health)
+                  for key in ("total", "empty", "empty_condition", "empty_unknown", "truncated_condition", "refused")}
+        timing = (result.get("metrics") or {}).get("call_timing") or {}
+        labels = {**test_runner._QUALITY_ITEM_LABELS, **test_runner._TOOL_CALLING_ITEM_LABELS}
+        out[rid] = {
+            "scored": totals["total"],
+            # 빈 응답은 답이 오지 않은 칸이다 — 거절은 답이 온 것이다(내용이 거절일 뿐)
+            "answered": totals["total"] - totals["empty"],
+            "empty_condition": totals["empty_condition"],
+            "empty_unknown": totals["empty_unknown"],
+            "truncated": totals["truncated_condition"],
+            "refused": totals["refused"],
+            "failed_items": [labels.get(i["id"], i["id"]) for i in result.get("items") or [] if i.get("status") == "failed"],
+            "incapable_items": [labels.get(i["id"], i["id"]) for i in result.get("items") or []
+                                if i.get("outcome") == test_runner.INCAPABLE],
+            "calls": timing.get("calls"),
+            "elapsed_median": timing.get("elapsed_median_sec"),
+        }
+    return out
+
+
+def _call_tally_table(context: dict[str, dict[str, Any]], models: list[dict[str, Any]],
+                      labels: dict[str, str]) -> tuple[list[list[str]], list[str]] | None:
+    columns = [(labels[m["id"]], context[m["id"]]) for m in models if m["id"] in context]
+    if not columns:
+        return None
+    rows = [[name, *[_wrap_cell(read(entry), _VALUE_CELL_WIDTH, 2) for _, entry in columns]] for name, read in _CALL_TALLY_ROWS]
+    return rows, ["호출과 칸", *[name for name, _ in columns]]
+
+
+def _call_tally_notes(context: dict[str, dict[str, Any]], models: list[dict[str, Any]], labels: dict[str, str]) -> list[str]:
+    """칸에는 수만 두고 이름은 여기서 — 좁은 칸에서 지표 이름이 잘린다."""
+    out = []
+    for key, head in (("failed_items", "실행 실패 항목"), ("incapable_items", "능력 부재로 값이 빠진 지표")):
+        named = [f"{labels[m['id']]}: {', '.join(context[m['id']][key])}" for m in models
+                 if m["id"] in context and context[m["id"]][key]]
+        if named:
+            out.append(f"{head} — {' · '.join(named)}")
+    return out
+
+
+def _call_tally_lines() -> list[str]:
+    """이 표를 읽는 법 — 두 모집단을 가르는 것이 이 표의 전부다."""
+    return [
+        "채점 칸은 1회차의 값이다 — 2회차는 같은 답이 나왔는지만 보고 점수에 들지 않는다. 호출 수는 두 바퀴의 계측 구간 안 "
+        "호출 전부라, 채점 칸보다 크다(같은 문항의 변형·두 바퀴가 다 들어간다).",
+        "워밍업은 결과를 버리는 호출이라 두 집계에서 모두 뺐다. 긴 컨텍스트의 요약 호출과 도구 호출은 계측 구간 밖이라 "
+        "호출 수에 들지 않는다(측정 조건 상세의 계측 규칙과 같은 말이다).",
+        "빈 응답은 답이 오지 않은 칸이고, 거절은 답이 온 칸이다(내용이 거절일 뿐) — 그래서 거절은 `답이 온 칸`에 든다.",
+    ]
+
+
+# 과제가 세는 고정 문항 — 세트마다 몇 개를 어떤 분류로 세나. 문항 ID는 세트 파일에서 규칙으로 고른다(여기 박아 두지 않는다)
+_ASSIGNMENT_SETS: tuple[tuple[str, int, str], ...] = (
+    ("closed_qa", 3, "정상"),
+    ("key_coverage", 2, "정상"),
+    ("instruction_following", 2, "정상"),
+    ("hallucination", 2, "정보 부족·범위 밖"),
+    ("over_refusal", 1, "경계"),
+)
+ASSIGNMENT_PICK_RULE = ("세트마다 ID 오름차순으로 고른다 — 문서 문항과 비문서 문항이 섞인 세트는 문서 문항만 본다. "
+                        "Cloud 5문항은 그 안에서 세트마다 첫 문항이다.")
+_SHOT_SCORED = "zero"  # 지시 따르기·구조적 출력은 zero가 점수다(few-shot은 참고)
+
+
+def _median(values: list[Any]) -> float | None:
+    """가운데 값 — 비어 있으면 None(0으로 채우지 않는다). 문항마다 칸이 둘뿐이라 평균과 크게 다르지 않지만, 치우친 칸 하나에
+    끌려가지 않게 중앙값으로 둔다."""
+    import statistics
+
+    numbers = [v for v in values if v is not None]
+    return statistics.median(numbers) if numbers else None
+
+
+def _scored_detail(metrics: dict[str, Any], key: str) -> list[dict[str, Any]]:
+    """그 지표의 **점수가 나온 칸**들 — 지시 따르기는 zero 쪽이고, 환각은 능력 대조군을 뺀 본 문항이다."""
+    entry = metrics.get(key) or {}
+    if _SHOT_SCORED in entry:
+        entry = entry.get(_SHOT_SCORED) or {}
+    return entry.get("detail") or []
+
+
+def _assignment_question_ids(metrics: dict[str, Any]) -> dict[str, list[str]]:
+    """과제가 세는 문항 — 규칙(`ASSIGNMENT_PICK_RULE`)으로 고른다. 세트 파일을 못 읽으면 문서 문항을 가릴 수 없어 그대로 ID 순이다."""
+    import quality_testsets as qt
+
+    out: dict[str, list[str]] = {}
+    for key, count, _ in _ASSIGNMENT_SETS:
+        scored = sorted({e["id"] for e in _scored_detail(metrics, key)})
+        try:
+            items = qt.load_quality_testset(key).get("items") or []
+            with_doc = {it["id"] for it in items if it.get("doc")}
+        except (OSError, KeyError, ValueError):
+            with_doc = set()
+        # 섞인 세트는 문서 문항만 본다 — 전부 문서이거나 전부 아니면 가릴 것이 없다
+        picked = [i for i in scored if i in with_doc] if 0 < len(with_doc & set(scored)) < len(scored) else scored
+        out[key] = picked[:count]
+    return out
+
+
+def _question_values(detail: list[dict[str, Any]], question_id: str) -> dict[str, Any] | None:
+    """한 문항의 1회차 값 — 변형 여러 칸을 한 줄로 모은다(점수는 평균, 시간·토큰은 중앙값)."""
+    cells = [e for e in detail if e.get("id") == question_id]
+    if not cells:
+        return None
+    calls = [e.get("call") or {} for e in cells]
+    pick = lambda key: _median([c[key] for c in calls if c.get(key) is not None])
+    scores = [e["score"] for e in cells if e.get("score") is not None]
+    return {"cells": len(cells), "score": (sum(scores) / len(scores)) if scores else None,
+            "elapsed": pick("elapsed_sec"), "completion": pick("completion_tokens"), "prompt": pick("prompt_tokens"),
+            "unfinished": sorted({c.get("finish_reason") for c in calls if c.get("finish_reason") not in (None, "stop")})}
+
+
+def _assignment_context(run_ids: list[str], baseline_entry: dict[str, Any] | None) -> dict[str, Any]:
+    """과제 문항의 값 — 실행마다 {지표: {문항: 값}}. 문항 목록은 첫 실행의 세트에서 고른다(실행마다 같은 세트를 돈다)."""
+    import test_runner
+
+    runs: dict[str, dict[str, Any]] = {}
+    questions: dict[str, list[str]] = {}
+    for rid in run_ids:
+        try:
+            result = test_runner.load_result(rid)
+        except (OSError, ValueError):
+            continue
+        if not result:
+            continue
+        metrics = result.get("metrics") or {}
+        if not questions:
+            questions = _assignment_question_ids(metrics)
+        runs[rid] = {key: {qid: _question_values(_scored_detail(metrics, key), qid) for qid in ids}
+                     for key, ids in questions.items()}
+    cloud = None
+    if baseline_entry:
+        metrics = baseline_entry.get("metrics") or {}
+        cloud = {key: {ids[0]: _question_values(_scored_detail(metrics, key), ids[0])} for key, ids in questions.items() if ids}
+    return {"questions": questions, "runs": runs, "cloud": cloud}
+
+
+def _question_cell(values: dict[str, Any] | None) -> str:
+    """한 칸에 점수·응답 시간·출력 토큰을 줄로 쌓는다 — 값이 없으면 `측정 안 됨`이다(0으로 채우지 않는다)."""
+    if not values:
+        return "측정 안 됨"
+    score = _pct(values["score"]) if values["score"] is not None else "점수 없음"
+    elapsed = f"{values['elapsed']:.2f}초" if values["elapsed"] is not None else "시간 기록 없음"
+    tokens = f"출력 {values['completion']:g}" if values["completion"] is not None else "토큰 기록 없음"
+    tail = f"\n끝난 방식 {' · '.join(values['unfinished'])}" if values["unfinished"] else ""
+    return f"{score}\n{elapsed} · {tokens}{tail}"
+
+
+def _assignment_question_rows(context: dict[str, Any]) -> tuple[list[list[str]], list[str]]:
+    """문항이 무엇을 재고 어떻게 채점했나 — 세트 수준까지다(문항 전문·정답은 싣지 않는다)."""
+    rules = {key: rule for key, _, rule in _SCORING_RULES}
+    names = {key: name for key, name, _ in _SCORING_RULES}
+    rows = []
+    for key, _, kind in _ASSIGNMENT_SETS:
+        for qid in context["questions"].get(key) or []:
+            cells = next((v["cells"] for run in context["runs"].values() if (v := (run.get(key) or {}).get(qid))), None)
+            rows.append([qid, _wrap_cell(names.get(key, key), 15, 2), kind, _wrap_cell(rules.get(key, ""), 40, 3),
+                         f"{cells}칸 채점(1회차)" if cells else "측정 안 됨"])
+    return rows, ["문항", "세트", "과제 분류", "채점 기준(세트 수준)", "회수"]
+
+
+def _assignment_value_rows(context: dict[str, Any], models: list[dict[str, Any]],
+                           labels: dict[str, str]) -> tuple[list[list[str]], list[str]] | None:
+    columns = [m for m in models if m["id"] in context["runs"]]
+    if not columns:
+        return None
+    rows = []
+    for key, _, _ in _ASSIGNMENT_SETS:
+        for qid in context["questions"].get(key) or []:
+            rows.append([qid, *[_question_cell((context["runs"][m["id"]].get(key) or {}).get(qid)) for m in columns]])
+    return rows, ["문항", *[labels[m["id"]] for m in columns]]
+
+
+def _cloud_question_rows(context: dict[str, Any]) -> tuple[list[list[str]], list[str]] | None:
+    """Cloud 5문항 — 기준선은 한 바퀴만 돈다. 입력·출력 토큰을 따로 적는다(출력에 추론 토큰이 들어 있다)."""
+    cloud = context.get("cloud")
+    if not cloud:
+        return None
+    rows = []
+    for key, _, _ in _ASSIGNMENT_SETS:
+        for qid, values in (cloud.get(key) or {}).items():
+            if not values:
+                rows.append([qid, "측정 안 됨", "측정 안 됨", "측정 안 됨", "측정 안 됨"])
+                continue
+            rows.append([qid, _pct(values["score"]) if values["score"] is not None else "점수 없음",
+                         f"{values['elapsed']:.2f}초" if values["elapsed"] is not None else "시간 기록 없음",
+                         f"입력 {values['prompt']:g} / 출력 {values['completion']:g}"
+                         if values["prompt"] is not None and values["completion"] is not None else "토큰 기록 없음",
+                         f"1바퀴 · {values['cells']}칸"])
+    return rows, ["문항", "점수", "응답 시간(네트워크 포함)", "토큰", "바퀴 · 칸"]
+
+
+def _assignment_notes(context: dict[str, Any]) -> list[str]:
+    """이 장이 반드시 함께 말해야 하는 것 — 세트를 싣지 않는 까닭, 사후 선정, 문서 쏠림."""
+    docs: dict[str, int] = {}
+    try:
+        import quality_testsets as qt
+
+        for key, ids in context["questions"].items():
+            items = {it["id"]: it.get("doc") for it in (qt.load_quality_testset(key).get("items") or [])}
+            for qid in ids:
+                if doc := items.get(qid):
+                    # 문서 이름은 파일 이름 앞머리까지만 적는다 — 뒷부분이 그 문서가 무엇인지 말한다(세트는 싣지 않는다)
+                    docs[doc.rsplit("/", 1)[-1].split("-")[0]] = docs.get(doc.rsplit("/", 1)[-1].split("-")[0], 0) + 1
+    except (OSError, KeyError, ValueError):
+        docs = {}
+    lines = [
+        "문항 전문·기대 결과는 싣지 않는다 — 세트가 공개되면 그 지표는 다음 측정부터 무효가 된다(결과 파일도 저장소에 올리지 않는다). "
+        "형식은 저장소의 공개 샘플(backend/testsets/sample/)로 볼 수 있다.",
+        f"이 문항들은 **사후에 골랐다** — 이미 잰 뒤에 규칙을 적용했다. 규칙({ASSIGNMENT_PICK_RULE}) 자체는 점수를 보지 않고 "
+        "세트가 무엇을 묻는가만 보지만, 사전 선정이 아니라는 사실은 그대로 적는다.".replace("**", ""),
+    ]
+    if docs:
+        top, count = max(docs.items(), key=lambda kv: kv[1])
+        total = sum(docs.values())
+        lines.append(f"문서 쏠림 — 문서를 읽는 {total}문항 가운데 {count}개가 같은 문서({top})다. 규칙대로 골랐고 바꾸지 않았다.")
+    return lines
+
+
+NARRATIVE_PATH = Path(__file__).parent / "report_narrative.json"
+
+
+def _load_narrative() -> dict[str, Any]:
+    """사람이 고쳐 쓰는 문구 — 문제 정의·분석 축·운영 권고·규모 가정. 코드는 읽기만 하고, 없으면 그 사실을 칸에 적는다."""
+    import json
+
+    try:
+        return json.loads(NARRATIVE_PATH.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def _local_cloud_context(run_ids: list[str], baseline_entry: dict[str, Any] | None,
+                         questions: dict[str, Any] | None = None) -> dict[str, Any]:
+    """공통 5문항으로 본 실측 — 같은 문항에서 양쪽을 견준다. 로컬에만 있는 값(생성 속도·전력)과 클라우드에만 있는 값(과금)은
+    없는 쪽에 그 까닭을 적는다."""
+    import test_runner
+
+    questions = questions or {}
+    common = {key: ids[0] for key, ids in (questions.get("questions") or {}).items() if ids}
+    runs: dict[str, dict[str, Any]] = {}
+    for rid in run_ids:
+        try:
+            result = test_runner.load_result(rid)
+        except (OSError, ValueError):
+            continue
+        if not result:
+            continue
+        metrics = result.get("metrics") or {}
+        values = [(questions.get("runs", {}).get(rid, {}).get(key) or {}).get(qid) for key, qid in common.items()]
+        values = [v for v in values if v]
+        runs[rid] = {
+            "score": _median([v["score"] for v in values]),
+            "elapsed": _median([v["elapsed"] for v in values]),
+            "prompt": _median([v["prompt"] for v in values]),
+            "completion": _median([v["completion"] for v in values]),
+            "tok_per_sec": metrics.get("tok_per_sec"),
+            "extra_wh": (metrics.get("gpu_power") or {}).get("extra_wh_per_call"),
+            "rounds": ((result.get("config") or {}).get("repeat") or {}).get("rounds", 1),
+        }
+    cloud = None
+    if baseline_entry:
+        values = [v for key, qid in common.items() if (v := (questions.get("cloud", {}) or {}).get(key, {}).get(qid))]
+        cost = (baseline_entry.get("metrics") or {}).get("cost_estimate") or {}
+        cloud = {
+            "score": _median([v["score"] for v in values]),
+            "elapsed": _median([v["elapsed"] for v in values]),
+            "prompt": _median([v["prompt"] for v in values]),
+            "completion": _median([v["completion"] for v in values]),
+            "cost": cost,
+            "rounds": 2 if baseline_entry.get("second_round") else 1,
+        }
+    return {"runs": runs, "cloud": cloud, "questions": sorted(common.values())}
+
+
+_LOCAL_CLOUD_ROWS: tuple[tuple[str, Any, Any], ...] = (
+    ("품질 — 공통 문항 점수(중앙값)", lambda e: _pct(e["score"]) if e.get("score") is not None else "측정 안 됨",
+     lambda c: _pct(c["score"]) if c.get("score") is not None else "측정 안 됨"),
+    ("지연 — 호출당(중앙값)", lambda e: f"{e['elapsed']:.2f}초" if e.get("elapsed") is not None else "측정 안 됨",
+     lambda c: f"{c['elapsed']:.2f}초 (네트워크 포함)" if c.get("elapsed") is not None else "측정 안 됨"),
+    ("생성 속도", lambda e: f"{e['tok_per_sec']:.1f} tok/s" if e.get("tok_per_sec") is not None else "측정 안 됨",
+     lambda c: "측정 안 됨 — 생성 시간을 안 준다"),
+    ("입력 / 출력 토큰(중앙값)", lambda e: f"{e['prompt']:g} / {e['completion']:g}"
+     if e.get("prompt") is not None and e.get("completion") is not None else "측정 안 됨",
+     lambda c: f"{c['prompt']:g} / {c['completion']:g} (출력에 추론 토큰 포함)"
+     if c.get("prompt") is not None and c.get("completion") is not None else "측정 안 됨"),
+    ("호출당 과금", lambda e: "없음 — 이 기계에서 돈다",
+     lambda c: f"${c['cost']['per_call_usd']:.5f}" if (c.get("cost") or {}).get("per_call_usd") is not None else "기록 없음"),
+    ("호출당 추가 GPU 전력", lambda e: f"{e['extra_wh']:.3f}Wh" if e.get("extra_wh") is not None else "측정 안 됨",
+     lambda c: "해당 없음 — 이 기계에서 돌지 않는다"),
+    ("반복", lambda e: f"{e.get('rounds', 1)}바퀴", lambda c: f"{c.get('rounds', 1)}바퀴"),
+)
+
+
+def _local_cloud_table(context: dict[str, Any], models: list[dict[str, Any]], labels: dict[str, str],
+                       base_name: str = "기준선") -> tuple[list[list[str]], list[str]] | None:
+    columns = [m for m in models if m["id"] in context.get("runs", {})]
+    if not columns:
+        return None
+    cloud = context.get("cloud")
+    rows = []
+    for name, local, remote in _LOCAL_CLOUD_ROWS:
+        row = [name, *[_wrap_cell(local(context["runs"][m["id"]]), _VALUE_CELL_WIDTH, 2) for m in columns]]
+        if cloud is not None:
+            row.append(_wrap_cell(remote(cloud), _VALUE_CELL_WIDTH, 3))
+        rows.append(row)
+    return rows, ["실측", *[labels[m["id"]] for m in columns], *([_wrap_cell(f"{base_name} (클라우드)", _VALUE_CELL_WIDTH, 2)] if cloud is not None else [])]
+
+
+def _analysis_rows() -> tuple[list[list[str]], list[str]] | None:
+    """분석 축 — 사람이 적는 문구다. 값이 없으면 그 사실을 적는다(지어내지 않는다)."""
+    axes = (_load_narrative().get("analysis_axes") or {}).get("rows") or []
+    if not axes:
+        return None
+    rows = [[axis, _wrap_cell(local, 34, 4), _wrap_cell(remote, 34, 4)] for axis, local, remote in axes]
+    return rows, ["축 (잰 값이 아니다)", "로컬", "클라우드"]
+
+
+def _cost_scale_lines(context: dict[str, Any], base_name: str = "기준선") -> list[str]:
+    """비용을 규모 없이 적지 않는다 — 총액만 적으면 `클라우드가 싸다`로만 읽힌다. 규모 가정은 사람이 정하고, 정하지 않았으면 그렇게 적는다."""
+    cloud = context.get("cloud") or {}
+    cost = cloud.get("cost") or {}
+    lines: list[str] = []
+    if cost:
+        source = cost.get("source") or {}
+        lines.append(f"{base_name} 전체 — 호출 {cost.get('calls', '?'):,}회에 ${cost.get('usd', 0):.3f}"
+                     f"(호출당 ${cost.get('per_call_usd', 0):.5f}). 입력 {cost.get('input_tokens', 0):,} · "
+                     f"출력 {cost.get('output_tokens', 0):,} 토큰으로 셈했다.")
+        lines.append(f"단가 출처 — {source.get('url', '기록 없음')} · {source.get('where', '기록 없음')} · "
+                     f"확인 {source.get('checked', '기록 없음')}. 가정: {source.get('assumption', '기록 없음')}")
+    narrative = _load_narrative()
+    scale = narrative.get("scale_assumption") or {}
+    calls, days = scale.get("calls_per_day"), scale.get("days")
+    if calls and days and cost.get("per_call_usd") is not None:
+        total = calls * days
+        cloud_cost = total * cost["per_call_usd"]
+        wh = _median([e.get("extra_wh") for e in (context.get("runs") or {}).values()])
+        power = f" · 로컬은 호출당 추가 GPU 전력 중앙값으로 {total * (wh or 0) / 1000:.1f}kWh" if wh else ""
+        lines.append(f"규모 가정 — 하루 {calls:,}건 × {days:,}일 = {total:,}건이면 클라우드 ${cloud_cost:,.2f}{power}. "
+                     f"가정은 사람이 정한 값이다({scale.get('decided_by') or '정한 사람 기록 없음'}) — 실측이 아니다.")
+    else:
+        lines.append(f"규모 가정 — {scale.get('missing_reason') or f'{UNCONFIRMED} — 규모를 정하지 않았다'}. "
+                     "규모를 정하지 않으면 총액은 `클라우드가 싸다`로만 읽힌다.")
+    usage = narrative.get("cloud_actual_usage") or {}
+    if usage.get("amount_usd") is not None:
+        lines.append(f"추정 ↔ 실제 사용 내역 — 대시보드 ${usage['amount_usd']} (확인 {usage.get('checked') or '날짜 기록 없음'}).")
+    else:
+        lines.append(f"추정 ↔ 실제 사용 내역 — {usage.get('missing_reason') or f'{UNCONFIRMED}'}.")
+    lines.append("두 추정은 서로 반대로 틀린다 — 클라우드 추정은 캐시를 반영하지 않아 실제보다 높고, 로컬 전력은 GPU만 재서 "
+                 "실제보다 낮다(CPU·화면·전원 손실은 들어 있지 않다).")
+    return lines
+
+
+def _local_cloud_closing_lines() -> list[str]:
+    """로컬을 쓰는 이유와 이 모델을 고른 이유를 한 문장에 넣지 않는다 — 섞으면 `보안이 좋아서 골랐다`로 읽힌다."""
+    return ["데이터 통제는 로컬을 쓰는 이유이고 이 리포트가 잰 값이 아니다. 문서에 섞인 지시문을 견디는 힘(인젝션 간접)은 "
+            "이 모델을 고른 이유이고 잰 값이다 — 두 문장을 하나로 합치지 않는다."]
+
+
+def _selection_basis_context(run_ids: list[str]) -> dict[str, dict[str, Any]]:
+    """필수 통과 조건의 근거 — 순도 게이트·능력 대조군·적재 상태·잘린 답. 라이선스는 카탈로그(손 입력)에서 온다."""
+    import test_runner
+
+    catalog = (_load_catalog().get("models") or {})
+    out: dict[str, dict[str, Any]] = {}
+    for rid in run_ids:
+        try:
+            result = test_runner.load_result(rid)
+        except (OSError, ValueError):
+            continue
+        if not result:
+            continue
+        config, metrics = result.get("config") or {}, result.get("metrics") or {}
+        tag = (config.get("model_identity") or {}).get("tag") or result.get("model")
+        controls = {key: (value or {}).get("capability_control_passed") for key, value in metrics.items()
+                    if isinstance(value, dict) and "capability_control_passed" in value}
+        gpus = (config.get("hardware") or {}).get("gpus") or []
+        out[rid] = {
+            "purity": result.get("korean_purity") or {},
+            "controls": controls,
+            "incapable": [i["id"] for i in result.get("items") or [] if i.get("outcome") == test_runner.INCAPABLE],
+            "vram_ratio": metrics.get("vram_offload_ratio"),
+            "vram_bytes": metrics.get("vram_bytes"),
+            "gpu_vram_bytes": gpus[0].get("vram_bytes") if gpus else None,
+            "truncated": sum((h.get("truncated_condition") or 0) for h in (result.get("response_health") or {}).values()),
+            "loaded_context": metrics.get("loaded_context_length"),
+            "license": (catalog.get(tag) or {}).get("license") or {},
+        }
+    return out
+
+
+def _requirement_rows(context: dict[str, dict[str, Any]], models: list[dict[str, Any]],
+                      labels: dict[str, str]) -> tuple[list[list[str]], list[str]] | None:
+    """필수 통과 조건 — 요구 하나에 확인 방법 하나, 후보마다 근거 값. **여기서 라이선스가 처음으로 조건이 된다.**"""
+    columns = [m for m in models if m["id"] in context]
+    if not columns:
+        return None
+
+    def purity(e):
+        p = e["purity"]
+        if not p:
+            return "측정 안 됨"
+        return f"{_pct(p.get('score'))} · {'통과' if p.get('state') == 'ok' else '미달'}" if p.get("score") is not None else "측정 안 됨"
+
+    def controls(e):
+        values = list(e["controls"].values())
+        if not values:
+            return "측정 안 됨"
+        if False in values:
+            return "미달 — 능력 대조군 실패"
+        return "통과" + (f" (능력 부재 {len(e['incapable'])}개 지표)" if e["incapable"] else "")
+
+    def license_(e):
+        name = (e["license"] or {}).get("name")
+        use = (e["license"] or {}).get("commercial_use")
+        return f"{use} — {name}" if name and use else f"{UNCONFIRMED} — 카탈로그에 없다"
+
+    def fits(e):
+        if e["vram_ratio"] is None or e["vram_bytes"] is None:
+            return "측정 안 됨"
+        room = f" / GPU {_gb(e['gpu_vram_bytes'])}" if e.get("gpu_vram_bytes") else ""
+        return f"{_pct(e['vram_ratio'])} GPU 상주 · {_gb(e['vram_bytes'])}{room}"
+
+    def length(e):
+        if e["loaded_context"] is None:
+            return "측정 안 됨"
+        return f"컨텍스트 {e['loaded_context']:,} · 잘린 답 {e['truncated']}칸"
+
+    rules = (("한국어 출력 순도 — 게이트 문턱 이상", purity),
+             ("능력 부재 없음 — 능력 대조군", controls),
+             ("상업적 사용 — 모델 카드(손 입력)", license_),
+             ("이 노트북에서 실행 가능 — 적재 상태", fits),
+             ("입력·출력 길이 수용 — 잘린 답", length))
+    rows = [[name, *[_wrap_cell(read(context[m["id"]]), _VALUE_CELL_WIDTH, 3) for m in columns]] for name, read in rules]
+    return rows, ["필수 통과 조건", *[labels[m["id"]] for m in columns]]
+
+
+def _candidate_verdict_rows(payload: dict[str, Any], models: list[dict[str, Any]],
+                            labels: dict[str, str]) -> tuple[list[list[str]], list[str]] | None:
+    """후보별 판정 — **넷을 모두 적는다.** 떨어진 후보는 그 단계와 까닭을, 남은 후보는 어느 단계에서 밀렸는지를 적는다
+    (표지 결론은 고른 모델만 말한다)."""
+    selection = payload.get("selection") or {}
+    if not selection:
+        return None
+    def run_id_of(value: Any) -> str | None:
+        """payload는 모델을 `⟦run:id⟧` 자리표시자나 `{id, name}`으로 가리킨다 — 어느 쪽이든 실행 id로 맞춘다."""
+        if isinstance(value, dict):
+            return value.get("id")
+        found = re.search(r"⟦run:([^⟧]+)⟧", value or "")
+        return found.group(1) if found else value
+
+    eliminated = {run_id_of(out.get("name")): out for out in selection.get("eliminated") or []}
+    pick = run_id_of(selection.get("pick"))
+    decided = selection.get("decided_label") or selection.get("decided_at") or ""
+    rows = []
+    for m in models:
+        alias, name = labels[m["id"]], m["id"]
+        out = eliminated.get(name)
+        if out:
+            rows.append([alias, f"탈락 ({out.get('stage', '?')})", _wrap_cell(_resolve(out.get("reason", ""), labels), 46, 3)])
+        elif pick == name:
+            rows.append([alias, "선정", _wrap_cell(f"{decided}에서 갈렸다 — 규칙 순서로만 말한다(종합 점수는 근거가 아니다)", 46, 3)])
+        else:
+            rows.append([alias, "통과했으나 밀림", _wrap_cell(f"필수 통과·보안 최소선을 지났고 {decided}에서 갈렸다", 46, 3)])
+    return rows, ["후보", "판정", "까닭"]
+
+
+def _problem_rows() -> tuple[list[list[str]], list[str]] | None:
+    rows = (_load_narrative().get("problem_definition") or {}).get("rows") or []
+    return ([[name, _wrap_cell(value, 60, 3)] for name, value in rows], ["문제 정의 (사람이 적는다)", "내용"]) if rows else None
+
+
+# 고칠 거리 — 값은 실행에서 오고, `무엇을 고쳐야 하나`는 고정 문구다(지표마다 한 줄). 값이 없는 지표는 줄을 만들지 않는다
+_IMPROVEMENT_RULES: tuple[tuple[str, float, str], ...] = (
+    ("injection_indirect", 0.9, "문서를 프롬프트에 넣을 때 경계 표시·시스템 프롬프트 방어·응답 후처리 검사가 필요하다"),
+    ("injection_direct", 0.9, "지시문을 그대로 따르는 자리라 시스템 프롬프트 방어와 입력 검사가 먼저다"),
+    ("prompt_leak", 0.9, "시스템 프롬프트가 새는 자리다 — 프롬프트에 비밀을 두지 않는 설계가 먼저다"),
+    ("consistency", 0.5, "같은 질문에 답이 달라진다 — 답을 그대로 쓰는 자리에는 온도 고정이나 후처리가 필요하다"),
+    ("hallucination", 0.7, "문서에 없는 것을 지어낸다 — 근거 문장을 함께 내게 하고 없으면 없다고 답하게 하는 후처리가 필요하다"),
+    ("korean_purity", 0.9, "한국어 답에 다른 글자가 섞인다 — 이 용도에는 순도 게이트를 통과한 모델만 올린다"),
+)
+
+
+def _limit_lines(payload: dict[str, Any], models: list[dict[str, Any]], labels: dict[str, str],
+                 context: dict[str, Any] | None = None) -> list[str]:
+    """한계 — 값은 앞 장에서 온다. **무엇을 못 쟀는지도 한계다**(빈칸이 아니라 까닭을 적는다)."""
+    context = context or {}
+    lines: list[str] = []
+    counts = [n for met in payload.get("metrics") or [] for n in (met.get("n") or {}).values() if isinstance(n, int)]
+    if counts:
+        lines.append(f"평가셋이 작다 — 지표마다 채점 칸이 {min(counts)}~{max(counts)}개다. 칸이 {min(counts)}개인 지표는 "
+                     f"한 칸이 {100 / min(counts):.0f}%p라 한 칸만 달라져도 값이 크게 움직인다.")
+    if limits := context.get("power_limits"):
+        lines.append(f"장비가 하나다 — GPU 전력 한계 {' · '.join(limits)}에서 잰 값이라 다른 환경에서는 속도가 달라진다. "
+                     "품질·보안 점수는 전력 한계에 영향받지 않는 것으로 확인했다.")
+    lines.append("채점은 1회차만 쓴다 — 2회차는 같은 답이 나왔는지만 본다(재현 판정).")
+    if gate := (payload["meta"].get("consistency_gate") or {}).get("lines"):
+        lines.append(f"사람 판정이 걸려 있다 — {gate[0]}")
+    lines.append("클라우드는 샘플링을 고정할 수 없어 같은 입력에도 답이 달라진다 — 일관성/재현성은 정의상 비교에서 뺐다.")
+    lines.append(f"과제 문항과 Cloud 문항은 사후에 골랐다 — {ASSIGNMENT_PICK_RULE}")
+    if invalid := context.get("invalid_metrics"):
+        lines.append(f"값이 나왔지만 쓸 수 없는 칸이 있다 — {' · '.join(invalid)}. 합산에서 뺐고 까닭은 측정값 표 아래에 있다.")
+    if missing := context.get("not_measured"):
+        lines.append(f"재지 않은 값이 있다 — {' · '.join(missing)}. 빈칸으로 두지 않고 그 자리에 까닭을 적었다.")
+    return lines
+
+
+def _improvement_rows(payload: dict[str, Any], models: list[dict[str, Any]],
+                      labels: dict[str, str]) -> tuple[list[list[str]], list[str]] | None:
+    """개선이 필요한 실패 — 값(어느 모델의 어느 지표가 얼마인가)과 고칠 거리를 한 줄에 둔다. 고른 모델부터 본다."""
+    # 인젝션은 상위 행(저항성) 아래 직접·간접 세부 행으로 실린다 — 고칠 거리는 그 세부 값에서 온다
+    by_key = {met["key"]: met for met in payload.get("metrics") or []}
+    by_key.update({sub["key"]: {**sub, "label": f"{met['label']} · {sub['label']}"}
+                   for met in payload.get("metrics") or [] for sub in met.get("sub_rows") or [] if sub.get("key")})
+    pick = ((payload.get("selection") or {}).get("pick") or {})
+    pick_id = pick.get("id") if isinstance(pick, dict) else None
+    order = [m for m in models if m["id"] == pick_id] + [m for m in models if m["id"] != pick_id]
+    rows = []
+    for key, threshold, todo in _IMPROVEMENT_RULES:
+        met = by_key.get(key)
+        if not met:
+            continue
+        for m in order:
+            value = (met.get("normalized_raw") or {}).get(m["id"]) if met.get("normalized_raw") else None
+            raw = (met.get("raw") or {}).get(m["id"])
+            score = _raw_ratio(raw)
+            if score is None or score >= threshold:
+                continue
+            n = (met.get("n") or {}).get(m["id"])
+            rows.append([_wrap_cell(f"{labels[m['id']]} · {met['label']}", 25, 3),
+                         f"{raw}{f' (n={n})' if n else ''}", _wrap_cell(todo, 46, 3)])
+            break  # 지표마다 한 줄 — 고른 모델이 먼저다
+    return (rows, ["값", "이번 판", "고칠 거리"]) if rows else None
+
+
+def _raw_ratio(raw: str | None) -> float | None:
+    """측정값 표의 원래 값 문자열에서 비율을 읽는다 — `38%` 같은 칸만 본다(상태 문구·단위가 다른 값은 건너뛴다)."""
+    if not isinstance(raw, str):
+        return None
+    found = re.fullmatch(r"(\d+(?:\.\d+)?)%", raw.strip())
+    return float(found.group(1)) / 100 if found else None
+
+
+def _limits_context(run_ids: list[str], payload: dict[str, Any]) -> dict[str, Any]:
+    """한계를 값으로 말하기 위한 재료 — 전력 한계, 무효 칸, 재지 않은 지표."""
+    import test_runner
+
+    limits: list[str] = []
+    for rid in run_ids:
+        try:
+            result = test_runner.load_result(rid)
+        except (OSError, ValueError):
+            continue
+        for gpu in ((result or {}).get("config") or {}).get("power", {}).get("gpus") or []:
+            watts = gpu.get("enforced_power_limit_watts") or gpu.get("power_limit_watts")
+            default = gpu.get("default_power_limit_watts")
+            text = f"{watts:g}W" + (f"(이 GPU 기본값 {default:g}W)" if default else "")
+            if watts and text not in limits:
+                limits.append(text)
+    invalid, missing = [], []
+    for met in payload.get("metrics") or []:
+        states = set((met.get("status") or {}).values())
+        if "invalid" in states:
+            invalid.append(met["label"])
+        elif states and states <= {"not_measured"}:
+            missing.append(met["label"])
+    return {"power_limits": limits, "invalid_metrics": invalid, "not_measured": missing}
+
+
+# 과제 평가표의 아홉 줄 — (요건, 이 리포트의 자리, 무엇으로 답했나). 자리는 장 이름으로 적는다(쪽 번호는 판마다 바뀐다)
+_REQUIREMENT_MAP: tuple[tuple[str, str, str], ...] = (
+    ("문제·요구사항 정의", CH_SELECTION_BASIS, "사용자·질문·중요한 것·쓸 수 있는 GPU를 적고, 그것을 필수 통과 조건으로 옮겼다"),
+    ("후보 모델 조사", CH_MODEL_CARDS, "실행이 말하는 식별값과 모델 카드가 말하는 라이선스·아키텍처·벤치마크를 나눠 실었다"),
+    ("실행 환경 구성", CH_CONDITIONS, "기계 사양·서버 버전·소프트웨어·전원과, 원본 결과 파일과 최소 재현 경로를 적었다"),
+    ("질문 세트·평가 기준 확정", CH_SCORING, "지표마다 무엇으로 채점했는지와 채점이 어긋나지 않게 막는 장치를 적었다"),
+    ("로컬 모델 비교 실험", CH_MEASUREMENTS, "세트 전체를 두 바퀴 돌고 값과 호출 집계를 실었다"),
+    ("품질 평가", CH_ASSIGNMENT_QUESTIONS, "과제가 세는 고정 문항을 문항 단위로 펼치고 점수·응답 시간·출력 토큰을 적었다"),
+    ("Local–Cloud 비교", CH_LOCAL_CLOUD, "같은 문항으로 품질·지연·토큰·과금을 견주고, 분석 축은 표를 나눠 실었다"),
+    ("최종 모델 선정", CH_SELECTION_BASIS, "규칙 네 단계로 갈리는 자리를 적고 후보 넷의 판정을 모두 적었다"),
+    ("제출·재실행 가능성", CH_CONDITIONS, "조건 한 벌·세트 지문·결과 파일 위치를 적었다 — 저장소와 앱은 리포트 밖이다"),
+)
+
+
+def _requirement_map_rows(pages_by_chapter: dict[str, str]) -> tuple[list[list[str]], list[str]]:
+    """요건 → 자리 → 무엇으로 답했나. **자리에 장 번호를 붙인다** — 장이 늘어도 이 표가 먼저 깨지지 않게 이름으로 잇는다."""
+    rows = [[name, pages_by_chapter.get(chapter, chapter), _wrap_cell(answer, 46, 3)] for name, chapter, answer in _REQUIREMENT_MAP]
+    return rows, ["과제 요건", "이 리포트의 자리", "무엇으로 답했나"]
+
+
+def _set_size(run_ids: list[str]) -> dict[str, int]:
+    """이 실행이 실제로 돈 세트의 크기 — 문항 모양이 다른 세트(긴 컨텍스트의 시나리오, 도구 문항)는 따로 센다.
+    코드에 수를 박아 두면 세트가 늘어도 리포트가 옛 수를 말한다."""
+    import test_runner
+
+    result = next((r for rid in run_ids if (r := test_runner.load_result(rid))), None)
+    if not result:
+        return {}
+    sets = questions = 0
+    for value in (result.get("metrics") or {}).values():
+        if not isinstance(value, dict):
+            continue
+        detail = (value.get("zero") or {}).get("detail") if "zero" in value else value.get("detail")
+        ids = {e.get("id") for e in detail or [] if e.get("id")}
+        if ids:
+            sets, questions = sets + 1, questions + len(ids)
+    tool = (result.get("metrics") or {}).get("tool_calling") or {}
+    tool_ids = {e.get("id") for key in ("basic_detail", "advanced_detail") for e in tool.get(key) or []}
+    scenarios = {t.get("scenario") for t in ((result.get("metrics") or {}).get("long_context") or {}).get("turns") or []}
+    return {"sets": sets + bool(tool_ids) + bool(scenarios), "questions": questions + len(tool_ids), "scenarios": len(scenarios)}
+
+
+def _counting_lines(payload: dict[str, Any], models: list[dict[str, Any]], assignment: dict[str, Any] | None = None,
+                    size: dict[str, int] | None = None) -> list[str]:
+    """문항 수가 어긋나 보이는 자리를 먼저 푼다 — 과제는 10문항×2회×2모델을 세고, 이 리포트는 세트 전체를 두 바퀴 돈다."""
+    assignment, size = assignment or {}, size or {}
+    picked = sum(len(ids) for ids in (assignment.get("questions") or {}).values())
+    scale = (f"세트 {size['sets']}개(문항 {size['questions']}개"
+             + (f" · 긴 컨텍스트 시나리오 {size['scenarios']}개" if size.get("scenarios") else "") + ")") if size else "세트 전체"
+    return [
+        f"과제는 고정 10문항 × 2회 × 2모델 = 40회를 센다. 이 리포트는 {scale}를 후보 {len(models)}개로 두 바퀴 돈다 — "
+        f"그 안에서 과제가 세는 {picked}문항을 골라 `{CH_ASSIGNMENT_QUESTIONS}` 장에 따로 펼쳤다. 줄인 것이 아니라 넓힌 것이다.",
+        "한 문항의 회수 — 문항마다 표현 변형이 둘이고 실행 전체를 두 바퀴 돈다. 그래서 문항 하나에 호출 네 번이고, 그중 "
+        "채점은 1회차의 두 칸이다(2회차는 같은 답이 나왔는지만 본다). 측정값 표의 `n`이 문항 수의 두 배인 까닭이 이것이다.",
+    ]
+
+
+def _page_requirements(payload: dict[str, Any], models: list[dict[str, Any]], labels: dict[str, str],
+                       pages_by_chapter: dict[str, str] | None = None,
+                       assignment: dict[str, Any] | None = None, size: dict[str, int] | None = None) -> list[Page]:
+    """산출물 b·c·d·e — 채점표 아홉 줄이 리포트 어디에서 답해지는가. 값은 그 장에 있고 여기서 되풀이하지 않는다."""
+    flow = _Flow(CH_REQUIREMENTS)
+    flow.text(_guide(CH_REQUIREMENTS), size=8.5, color=_MUTED)
+    rows, headers = _requirement_map_rows(pages_by_chapter or {})
+    flow.table(rows, headers, [0.22, 0.24, 0.54], row_h=0.016 * 3 + 0.01)
+    flow.heading("문항 수가 어긋나 보이는 자리")
+    for line in _counting_lines(payload, models, assignment, size):
+        flow.text(line, size=8.5, color=_MUTED, gap=0.017)
+    return flow.pages
+
+
+def _page_limits(payload: dict[str, Any], models: list[dict[str, Any]], labels: dict[str, str],
+                 context: dict[str, Any] | None = None) -> list[Page]:
+    """산출물 e — 한계·고칠 거리·운영 권고. 흩어져 있던 `측정 안 됨`과 제외를 한곳에 모은다."""
+    flow = _Flow(CH_LIMITS)
+    flow.text(_guide(CH_LIMITS), size=8.5, color=_MUTED)
+    flow.heading("이 리포트가 말하지 못하는 것")
+    for line in _limit_lines(payload, models, labels, context):
+        flow.text(f"· {line}", size=8.5, color=_MUTED, gap=0.017)
+    if table := _improvement_rows(payload, models, labels):
+        flow.heading("개선이 필요한 실패")
+        rows, headers = table
+        flow.table(rows, headers, [0.3, 0.16, 0.54], row_h=0.016 * 3 + 0.01)
+    flow.heading("운영 권고 — 사람이 적는다")
+    lines = (_load_narrative().get("operating_recommendation") or {}).get("lines") or []
+    if lines:
+        for line in lines:
+            flow.text(f"· {line}", size=8.5, gap=0.017)
+    else:
+        flow.text(f"{UNCONFIRMED} — 서술 파일(report_narrative.json)에 권고가 비어 있다.", size=8.5, color=_WARN, weight="bold")
+    return flow.pages
+
+
+def _page_selection_basis(payload: dict[str, Any], models: list[dict[str, Any]], labels: dict[str, str],
+                          context: dict[str, dict[str, Any]] | None = None) -> list[Page]:
+    """산출물 e — 요구 → 조건 → 판정. 표지가 말하는 결론의 **뒷받침**이지 다른 결론이 아니다."""
+    context = context or {}
+    flow = _Flow(CH_SELECTION_BASIS)
+    flow.text(_guide(CH_SELECTION_BASIS), size=8.5, color=_MUTED)
+    if problem := _problem_rows():
+        flow.heading("무엇을 위해 고르나")
+        rows, headers = problem
+        flow.table(rows, headers, [0.28, 0.72], row_h=0.016 * 3 + 0.01)
+    else:
+        flow.text(f"문제 정의 — {UNCONFIRMED}: 서술 파일(report_narrative.json)이 비어 있다.", size=8.5, color=_WARN, weight="bold")
+    if requirement := _requirement_rows(context, models, labels):
+        flow.heading("필수 통과 조건")
+        rows, headers = requirement
+        widths = [2.0] + [1.0] * (len(headers) - 1)
+        flow.table(rows, headers, [w / sum(widths) for w in widths], row_h=0.016 * 3 + 0.01)
+    flow.heading("선호 우선순위")
+    for step in (payload.get("selection") or {}).get("rule") or []:
+        flow.text(step, size=8.5, color=_MUTED, gap=0.017)
+    for stage in (payload.get("selection") or {}).get("stages") or []:
+        flow.text(f"· {_resolve(stage['text'], labels)}", size=8.5, gap=0.017)
+    if verdicts := _candidate_verdict_rows(payload, models, labels):
+        flow.heading("후보별 판정 — 넷 모두")
+        rows, headers = verdicts
+        flow.table(rows, headers, [0.18, 0.18, 0.64], row_h=0.016 * 3 + 0.01)
+    flow.text("종합 점수는 이 판정에 들어오지 않는다 — 순위는 가중치를 골라야 나오는 참고값이고, 선정은 위 규칙 순서로만 말한다.",
+              size=8, color=_MUTED, gap=0.016)
+    return flow.pages
+
+
+def _page_local_cloud(models: list[dict[str, Any]], labels: dict[str, str],
+                      context: dict[str, Any] | None = None, base_name: str = "기준선") -> list[Page]:
+    """산출물 d — 로컬과 클라우드를 같은 문항에서 견준다. **실측 표와 분석 표를 물리적으로 나눈다.**"""
+    context = context or {}
+    table = _local_cloud_table(context, models, labels, base_name)
+    if not table:
+        return []
+    flow = _Flow(CH_LOCAL_CLOUD)
+    flow.text(_guide(CH_LOCAL_CLOUD), size=8.5, color=_MUTED)
+    flow.heading(f"실측 — 공통 문항 {len(context.get('questions') or [])}개로 견줬다({', '.join(context.get('questions') or [])})")
+    rows, headers = table
+    widths = [1.8] + [1.0] * (len(headers) - 1)
+    flow.table(rows, headers, [w / sum(widths) for w in widths], row_h=0.016 * 3 + 0.01)
+    for line in _cost_scale_lines(context, base_name):
+        flow.text(line, size=8, color=_MUTED, gap=0.016)
+    if analysis := _analysis_rows():
+        flow.heading("분석")
+        a_rows, a_headers = analysis
+        widths = [1.0, 2.2, 2.2]
+        flow.table(a_rows, a_headers, [w / sum(widths) for w in widths], row_h=0.016 * 4 + 0.01)
+    else:
+        flow.text(f"분석 축 — {UNCONFIRMED}: 서술 파일(report_narrative.json)에 축이 비어 있다.", size=8.5, color=_WARN, weight="bold")
+    for line in _local_cloud_closing_lines():
+        flow.text(line, size=8, color=_MUTED, gap=0.016)
+    return flow.pages
+
+
+def _page_assignment_questions(models: list[dict[str, Any]], labels: dict[str, str],
+                               context: dict[str, Any] | None = None, base_name: str = "기준선") -> list[Page]:
+    """산출물 c — 과제가 세는 고정 문항을 문항 단위로. 세트 전체 점수는 `측정값` 장에 있고, 여기는 그 안의 10문항이다."""
+    context = context or {}
+    if not context.get("questions"):
+        return []
+    flow = _Flow(CH_ASSIGNMENT_QUESTIONS)
+    flow.text(_guide(CH_ASSIGNMENT_QUESTIONS), size=8.5, color=_MUTED)
+    flow.heading("무엇을 묻고 어떻게 채점했나")
+    rows, headers = _assignment_question_rows(context)
+    widths = [0.9, 1.5, 1.1, 3.4, 1.2]
+    flow.table(rows, headers, [w / sum(widths) for w in widths], row_h=0.016 * 3 + 0.01)
+    flow.heading("후보별 값 — 1회차, 칸은 점수 / 응답 시간 · 출력 토큰")
+    if table := _assignment_value_rows(context, models, labels):
+        value_rows, value_headers = table
+        widths = [0.9] + [1.3] * (len(value_headers) - 1)
+        flow.table(value_rows, value_headers, [w / sum(widths) for w in widths], row_h=0.016 * 3 + 0.01)
+    if cloud := _cloud_question_rows(context):
+        flow.heading(f"Cloud 5문항 — 세트마다 첫 문항, {base_name}에서는 한 바퀴만 돈다")
+        cloud_rows, cloud_headers = cloud
+        widths = [0.9, 0.9, 1.6, 1.6, 0.8]
+        flow.table(cloud_rows, cloud_headers, [w / sum(widths) for w in widths], row_h=0.026)
+    for line in _assignment_notes(context):
+        flow.text(line, size=8, color=_MUTED, gap=0.016)
+    return flow.pages
+
+
+def _page_call_tally(models: list[dict[str, Any]], labels: dict[str, str],
+                     context: dict[str, dict[str, Any]] | None = None) -> list[Page]:
+    """측정값 장 끝 — 과제가 요구하는 `호출 성공 수 / 전체 시도 수`. 비율만 있는 표는 시도 수를 말하지 않는다."""
+    context = context or {}
+    table = _call_tally_table(context, models, labels)
+    if not table:
+        return []
+    flow = _Flow(CH_MEASUREMENTS)
+    flow.heading("호출과 칸 — 얼마나 시도했고 얼마나 답이 왔나")
+    rows, headers = table
+    widths = [1.7] + [1.0] * (len(headers) - 1)
+    flow.table(rows, headers, [w / sum(widths) for w in widths], row_h=0.016 * 2 + 0.01)
+    for line in _call_tally_notes(context, models, labels):
+        flow.text(line, size=8, color=_MUTED, gap=0.016)
+    for line in _call_tally_lines():
+        flow.text(line, size=8, color=_MUTED, gap=0.016)
+    return flow.pages
+
+
+def _page_model_cards(payload: dict[str, Any], models: list[dict[str, Any]], labels: dict[str, str],
+                      context: dict[str, dict[str, Any]] | None = None) -> list[Page]:
+    """산출물 b — 무엇을 실제로 돌렸나. **실행이 말하는 값과 모델 카드가 말하는 값을 나눠 싣는다**(손 입력과 측정값을 한 표에
+    섞지 않는다). 식별값은 실행 파일이 원천이고, 카탈로그는 Ollama가 말해 주지 않는 것만 채운다."""
+    context = context or {}
+    if not context:
+        return []
+    flow = _Flow(CH_MODEL_CARDS)
+    flow.text(_guide(CH_MODEL_CARDS), size=8.5, color=_MUTED)
+    flow.heading("실행이 말하는 값")
+    if table := _model_card_table(context, models, labels):
+        rows, headers = table
+        widths = [1.5] + [1.0] * (len(headers) - 1)
+        flow.table(rows, headers, [w / sum(widths) for w in widths], row_h=0.016 * 2 + 0.01)
+    flow.text("실제로 올라간 컨텍스트는 요청한 num_ctx가 아니라 모델이 올라간 뒤 서버가 말한 값이다. 받은 파일 크기·파라미터·"
+              "양자화는 이 표에만 둔다 — 측정 조건 상세는 이 장을 가리킨다.", size=8, color=_MUTED, gap=0.016)
+    flow.heading("모델 카드가 말하는 값")  # 출처는 장 안내문이 한 번 말한다
+    for line in _catalog_lines(context, models, labels):
+        warn = line.startswith("▲")
+        flow.text(line, size=8.5 if not line.startswith("  ") else 8, color=_WARN if warn else _MUTED,
+                  weight="bold" if warn else "normal", gap=0.016)
+    return flow.pages
+
+
 def _page_conditions(payload: dict[str, Any], models: list[dict[str, Any]], labels: dict[str, str],
                      gate_evidence: set[str] | frozenset[str] = frozenset(),
                      divergence: dict[str, list[dict[str, Any]]] | None = None,
                      repeat: dict[str, dict[str, Any]] | None = None,
-                     document_pairs: dict[str, dict[str, Any]] | None = None,
                      baseline_context: dict[str, Any] | None = None) -> list[Page]:
     """명세 — 무엇을 언제 어떤 조건으로 쟀나. 표지에서 내려온 것은 **읽는 법을 바꾸지 않는 사실**뿐이고
     경고는 표지에 남는다. 각주(대조하지 못한 것·생략된 장)는 그 명세 옆에 있어야 뜻이 산다."""
@@ -1528,22 +2602,8 @@ def _page_conditions(payload: dict[str, Any], models: list[dict[str, Any]], labe
         flow.text(_resolve(line, labels), size=8.5, color=_MUTED, gap=0.017)
     if line := _divergence_line(models, labels, divergence or {}):
         flow.text(line, size=8.5, color=_MUTED, gap=0.017)
-    import quality_testsets as qt
-
-    lengths = meta.get("document_lengths") or [None]
-    for length in lengths:
+    for length in meta.get("document_lengths") or [None]:
         flow.text(_document_length_line(length), size=8.5, color=_MUTED, gap=0.017)
-    pair_lines = _document_pair_lines(document_pairs or {}, models, labels)
-    if pair_lines and qt.DOCUMENTS_SHORT not in lengths:
-        # 참고 행의 짧은 값이 읽은 판 — 이 실행은 읽지 않았으니 `재지 않았다`가 아니라 어디서 읽었는지를 적는다
-        flow.text(_document_length_line(qt.DOCUMENTS_SHORT, tail="`참고 · 문서 길이` 행의 짧은 값이 읽은 판이다(앞선 실행)."),
-                  size=8.5, color=_MUTED, gap=0.017)
-    for line in pair_lines:
-        flow.text(line, size=8.5, color=_WARN if line.startswith("▲") else _MUTED, gap=0.017)
-    local_rows = any(p.get("pair") for p in (document_pairs or {}).values())
-    if (pair_lines or (baseline_context or {}).get("pair")) and (
-            base_line := _baseline_pair_line(baseline_context or {}, with_values=not local_rows)):
-        flow.text(base_line, size=8.5, color=_MUTED, gap=0.017)
     # 기록이 없어 대조하지 못한 것은 경고가 아니라 각주다 — 불일치 경고 자체는 표지에 있다
     for line in (meta.get("condition_mismatches") or {}).get("footnotes") or []:
         flow.text(f"※ {_resolve(line, labels)}", size=8, color=_MUTED, gap=0.016)
@@ -1565,6 +2625,7 @@ def _page_conditions(payload: dict[str, Any], models: list[dict[str, Any]], labe
             flow.text(line, size=8, color=_MUTED, gap=0.016)
 
     flow.heading("채점기 버전")
+    flow.text(_composite_definition_line(meta), size=8.5, color=_MUTED, gap=0.017)
     for line in _scorer_version_record_lines(meta, models, labels):
         flow.text(line, size=8.5, color=_MUTED, gap=0.017)
     _, version_footnotes = _scorer_version_lines(meta, models, labels)
@@ -1602,12 +2663,13 @@ def _page_conditions(payload: dict[str, Any], models: list[dict[str, Any]], labe
         column = roles.get("column")
         # 조건(문서 길이·추론 강도)은 넓은 이름 칸에 한 줄로 — 좁은 실행 종류 칸에 넣으면 표 밖으로 넘친다
         named = lambda entry, model: f"{model} · {bl.document_length_of(entry)} · {_reasoning_text(entry)}" if entry else model
-        rows.append(["기준선", named(column, base["model"]), _short_time(base.get("measured_at")),
-                     f"기준선({where})" if where else "기준선", ""])
-        for alias, role, key in (("기준선 짝", "문서 길이 비교 짝", "pair"), ("기준선 이력", "이력", "history")):
+        rows.append([_baseline_name(meta), named(column, base["model"]), _short_time(base.get("measured_at")),
+                     f"{where} 비교" if where else "비교", ""])
+        for role, key in (("이력", "history"),):
             entry = roles.get(key)
             if entry:
-                rows.append([alias, named(entry, entry.get("model") or "?"), _short_time(entry.get("measured_at")), role, ""])
+                model = entry.get("model") or "?"
+                rows.append([f"{model} 이력", named(entry, model), _short_time(entry.get("measured_at")), role, ""])
     if rows:
         # 혼합 실행 열은 값이 있을 때만 만든다 — 머리글도 값도 없는 빈 열이 표에 붙어 있었다
         mixed_col = any(row[4] for row in rows)
@@ -1619,26 +2681,42 @@ def _page_conditions(payload: dict[str, Any], models: list[dict[str, Any]], labe
         lines = max(row[3].count("\n") + 1 for row in rows)
         flow.table(rows, headers, [w / sum(widths) for w in widths],
                    row_h=0.026 if lines == 1 else 0.016 * lines + 0.01)
+    if line := _model_digest_line(meta, models, labels):
+        flow.text(line, size=8, color=_MUTED, gap=0.016)
+    for line in _reproduction_source_lines(meta, models, labels):
+        flow.text(line, size=8, color=_MUTED, gap=0.016)
     for r in meta.get("runs", []):
         if r.get("mixed"):
-            # 재실행이 원래 실행과 다르게 잰 사실(의도한 전용 상한 등)은 그 출처 뒤에 잇는다 — 경고가 아니라 설계로 둔 차이다
-            sources = ", ".join(
-                " · ".join([f"{p.get('label') or p['item']} ← {_short_time(p['started_at'])} 재실행"
-                           + (f"(재채점 {_short_time(p['rescored_at'])})" if p.get("rescored_at") else ""),
-                           *(p.get("notes") or [])])
-                for p in r.get("provenance", [])
-            )
-            flow.text(f"※ {labels.get(r['id'], r['model'])} 혼합 실행 — {sources}", size=8, color=_MUTED, gap=0.016)
+            flow.text(f"※ {labels.get(r['id'], r['model'])} 혼합 실행 — {_rerun_sources(r.get('provenance') or [])}",
+                      size=8, color=_MUTED, gap=0.016)
     if base:
         import test_runner
 
-        flow.text(f"※ 기준선이 {base.get('metric_count', '?')}개 지표뿐인 까닭 — {test_runner.BASELINE_SCOPE_REASON}.",
+        flow.text(f"※ {_baseline_name(meta)} 값이 {base.get('metric_count', '?')}개 지표뿐인 까닭 — "
+                  f"{test_runner.BASELINE_SCOPE_REASON}.",
                   size=8, color=_MUTED, gap=0.016)
         if roles.get("others"):
-            flow.text(f"※ 그 밖의 이전 기준선 {roles['others']}개는 싣지 않는다.", size=8, color=_MUTED, gap=0.016)
+            flow.text(f"※ 그 밖의 이전 비교 대상 실행 {roles['others']}개는 싣지 않는다.", size=8, color=_MUTED, gap=0.016)
     for note in footnotes:
         flow.text(note, size=8, color=_MUTED, gap=0.016)
     return flow.pages
+
+
+def _rerun_sources(provenance: list[dict[str, Any]]) -> str:
+    """혼합 실행 줄의 출처 — 지표마다 `← 재실행 시각(이유 · 재채점 시각)`. 이유는 재실행 하나에 하나라, 같은 재실행에서 같은 조건으로
+    온 지표는 한 묶음으로 적어 이유를 되풀이하지 않는다. 이유 기록 전 재실행은 `이유 기록 없음`(나중에 적은 이유도 같은 꼴로 찍는다). 재실행이 원래 실행과 다르게 잰
+    사실(의도한 전용 상한 등)은 그 출처 뒤에 잇는다 — 경고가 아니라 설계로 둔 차이고, 지표마다 달라 다르면 묶지 않는다."""
+    groups: dict[tuple[Any, ...], list[str]] = {}
+    for p in provenance:
+        key = (p.get("run_id"), p["started_at"], p.get("rescored_at"), p.get("reason"), tuple(p.get("notes") or []))
+        groups.setdefault(key, []).append(p.get("label") or p["item"])
+    parts = []
+    for (_, started, rescored, reason, notes), names in groups.items():
+        detail = f"이유: {reason}" if reason else "이유 기록 없음"
+        if rescored:
+            detail += f" · 재채점 {_short_time(rescored)}"
+        parts.append(" · ".join([f"{', '.join(names)} ← {_short_time(started)} 재실행({detail})", *notes]))
+    return " / ".join(parts)
 
 
 # 기준선이 돈 곳 — 포함된 실행 표의 실행 종류 칸. 모르는 프로바이더는 이름을 지어내지 않고 `기준선`만 적는다
@@ -1696,7 +2774,7 @@ def _uniform_lines(payload: dict[str, Any], models: list[dict[str, Any]]) -> lis
     """표와 차트에서 뺀 행을 모은 줄 — 값을 함께 적어 뺀 행도 다시 읽을 수 있다. 기준선이 값을 가지면 곁에 적는다."""
     same: list[str] = []
     unmeasured: list[str] = []
-    rows = [(row, row["label"]) for row in payload.get("metrics") or []]
+    rows = [(row, row["label"] + (f" ({row['condition']})" if row.get("condition") else "")) for row in payload.get("metrics") or []]
     rows += [(row, f"참고 · {row['label']}") for row in payload.get("reference_rows") or []]
     for row, label in rows:
         kind = _uniform(row, models)
@@ -1705,7 +2783,7 @@ def _uniform_lines(payload: dict[str, Any], models: list[dict[str, Any]]) -> lis
         count = (row.get("n") or {}).get(models[0]["id"]) if models else None
         notes = [f"n={count}"] if count is not None and kind == "same" else []
         if base not in _NO_VALUE and row.get("baseline_status", "measured") == "measured":
-            notes.append(f"기준선 {base}")
+            notes.append(f"{_baseline_name(payload['meta'])} {base}")
         note = f"({' · '.join(notes)})" if notes else ""
         if kind == "same":
             same.append(f"{label} {row['raw'][models[0]['id']]}{note}")
@@ -1720,27 +2798,56 @@ def _uniform_lines(payload: dict[str, Any], models: list[dict[str, Any]]) -> lis
 
 
 def _page_measurements(payload: dict[str, Any], models: list[dict[str, Any]], labels: dict[str, str],
-                       failures: dict[str, list[fx.Group]] | None = None) -> list[Page]:
+                       failures: dict[str, list[fx.Group]] | None = None,
+                       row_notes: dict[str, str] | None = None, outside_repeat: dict[str, str] | None = None) -> list[Page]:
     """정규화 전 원값 표 — 결론과 차트 뒤에 온다(판단을 바꾼 숫자는 전부 여기 있고, 앞 장들이 가리키는 곳이다). 지표 이름에
     단위와 ↑/↓, 칸에는 상태 문구(실행 실패는 원인까지), 기준선 칸은 `— 비교 제외`/`기준선 없음`을
-    그대로 싣는다. 머리글은 두 줄까지 접는다."""
+    그대로 싣는다. 머리글은 두 줄까지 접는다. `row_notes`는 {행 이름 조각: 각주} — 그 행이 실린 쪽의 읽는 법에 붙는다."""
     has_baseline = payload["meta"].get("baseline") is not None
     headers = ["지표 (단위, 방향)", "n"] + [_wrap_cell(labels[m["id"]], _VALUE_CELL_WIDTH, 2) for m in models]
     if has_baseline:
-        headers.append("기준선")
+        headers.append(_wrap_cell(_baseline_name(payload["meta"]), _VALUE_CELL_WIDTH, 2))
     widths = [2.2, 0.45] + [1.0] * (len(headers) - 2)
     widths = [w / sum(widths) for w in widths]
     header_h = _row_height(2)
     marks = _failure_marks(failures or {})
 
+    # 표에서 뺀 행(값이다)은 표 바로 아래, 읽는 법보다 앞이다. 이번 판의 값으로 만든 읽는 법과 부록을 가리키는 줄은 표가 다 끝난
+    # 마지막 쪽에만 — 참고 행이 표 끝에 있고, 쪽마다 되풀이할 설명이 아니다. 행 각주는 그 행이 실린 쪽에 붙는다
+    uniform = _uniform_lines(payload, models)
+    tail = [*_failure_legend(marks),
+            *[line for line in [_variance_footnote(payload, models, labels)] if line]]
+
+    def below(chunk: list[dict[str, Any]], last: bool) -> tuple[list[str], list[str]]:
+        names = [row["cells"][0].replace("\n", " ") for row in chunk]
+        notes = [note for fragment, note in (row_notes or {}).items() if any(fragment in name for name in names)]
+        return (uniform if last else []), [_guide(CH_MEASUREMENTS, _measurement_legends(chunk, _baseline_name(payload["meta"]))),
+                                          *notes, *(tail if last else [])]
+
+    def fits(chunk: list[dict[str, Any]], last: bool) -> bool:
+        values, guide = below(chunk, last)
+        top = 0.88 - header_h - sum(row["height"] for row in chunk) - 0.02
+        return top - _text_block_height(values, size=8.5) - _text_block_height(guide, size=8.5) >= _PAGE_BOTTOM
+
+    # 표 높이 한도 안에서 채우되, 그 쪽의 읽는 법(행 각주 포함)까지 꼬리말 위에 들어가야 한 쪽이다
     chunks: list[list[dict[str, Any]]] = [[]]
     used = header_h
-    for row in _measurement_rows(payload, models, has_baseline, marks):
-        if chunks[-1] and used + row["height"] > _MEASUREMENT_TABLE_MAX:
+    for row in _measurement_rows(payload, models, has_baseline, marks, outside_repeat):
+        if chunks[-1] and (used + row["height"] > _MEASUREMENT_TABLE_MAX or not fits([*chunks[-1], row], False)):
             chunks.append([])
             used = header_h
         chunks[-1].append(row)
         used += row["height"]
+
+    # 표 아래 글이 꼬리말까지 내려가면 마지막 쪽의 행을 한 쪽 뒤로 넘긴다 — 글을 줄이거나 떼어 내면 표가 끝난 자리에서 읽는 법이
+    # 사라진다. 뒤쪽 표를 되도록 길게 잡되(참고 행이 그 읽는 법과 같은 쪽에 남는다), 지표 행과 그 세부 행(`└`) 사이에서는 나누지
+    # 않는다 — 그런 자리가 없을 때만 아무 데서나 나눈다
+    if not fits(chunks[-1], True):
+        last = chunks[-1]
+        cuts = [k for k in range(1, len(last)) if fits(last[k:], True)]
+        split = next((k for k in cuts if not last[k]["cells"][0].lstrip().startswith("└")), cuts[0] if cuts else None)
+        if split is not None:
+            chunks[-1:] = [last[:split], last[split:]]
 
     pages = []
     for chunk in chunks:
@@ -1763,25 +2870,19 @@ def _page_measurements(payload: dict[str, Any], models: list[dict[str, Any]], la
                     cell.get_text().set_color(_WARN)
                 elif row["muted"]:
                     cell.get_text().set_color(_MUTED)
-        # 부록을 가리키는 줄은 표가 다 끝난 마지막 쪽에만 — 쪽마다 되풀이할 설명이 아니다
-        guide = [_guide(CH_MEASUREMENTS, _measurement_legends(chunk))]
-        y = 0.88 - height - 0.02
-        if chunk is chunks[-1]:
-            guide += _failure_legend(marks)
-            guide += [line for line in [_variance_footnote(payload, models, labels)] if line]
-            # 표에서 뺀 행 — 표 바로 아래, 읽는 법보다 앞이다(값이다)
-            y = _text_block(fig, y, _uniform_lines(payload, models), size=8.5)
+        values, guide = below(chunk, chunk is chunks[-1])
+        y = _text_block(fig, 0.88 - height - 0.02, values, size=8.5)
         _text_block(fig, y, guide, size=8.5, color=_MUTED)
         pages.append(Page(fig, CH_MEASUREMENTS))
     return pages
 
 
-def _measurement_legends(rows: list[dict[str, Any]]) -> list[str]:
+def _measurement_legends(rows: list[dict[str, Any]], base_name: str = "기준선") -> list[str]:
     """그 쪽 표에 실제로 나온 상태 문구와 행 종류의 설명."""
     values = [cell for row in rows for cell in row["cells"][2:]]
     names = [row["cells"][0] for row in rows]
     counts = [row["cells"][1] for row in rows]
-    states = [legend for word, legend in _STATE_LEGENDS if any(word in cell for cell in values)]
+    states = [legend.format(base=base_name) for word, legend in _STATE_LEGENDS if any(word in cell for cell in values)]
     out = [f"값 대신 적힌 문구는 값이 없는 이유다 — {' · '.join(states)}."] if states else []
     if any(counts):
         # 한 칸이 몇 %p인지 알아야 `98% vs 96%`를 과대 해석하지 않는다. `통과한 칸 수 = 비율 × n`이라고 쓰지 않는다 —
@@ -1799,8 +2900,16 @@ def _measurement_legends(rows: list[dict[str, Any]]) -> list[str]:
         out.append("응답 시간 중앙값은 답을 끝까지 받는 데 걸린 시간이라 답 길이에 따라 달라진다 — 생성 속도(tok/s)와 다른 값이다.")
     if any("추가 GPU 전력" in name for name in names):
         out.append("호출당 추가 GPU 전력은 대기 전력을 뺀 몫이고, CPU와 나머지 시스템이 빠져 실제보다 낮다.")
+    if any("지시문 뒤 내용" in name.replace("\n", " ") for name in names):
+        # 한 방향으로만 확실한 값이다 — `없음`을 `안 읽었다`로 읽지 않게 값과 같은 쪽에 적는다
+        out.append("`지시문 뒤 내용` 행은 인젝션 간접을 통과한 칸 가운데 문서에서 지시문보다 뒤에 있는 내용이 답에 든 칸 수다 — "
+                   "있으면 지시문을 지나 읽고도 따르지 않은 것이고, 없다고 안 읽은 것은 아니다(짧은 요약은 읽고도 뺄 수 있다). "
+                   "결과 파일에 저장된 값이 아니라 리포트를 뽑을 때 지금 세트의 목록으로 센다.")
     if any("\n= " in name for name in names):
         out.append("지표 이름 아래 `=` 줄은 그 값을 하위 값에서 만드는 법이다.")
+    if any(REPEAT_OUTSIDE in name for name in names):
+        out.append(f"`{REPEAT_OUTSIDE}`은 같은 호출을 한 번 더 돌려 글자까지 같은 답이 나오는지 보는 2회차가 이 지표를 돌지 않았다는 뜻이다 — "
+                   "실행 사이의 차이를 재현으로 가를 수 없다. 2회차가 무엇을 돌았는지는 측정 조건 상세의 두 바퀴 절에 있다.")
     return out
 
 
@@ -1817,6 +2926,17 @@ def _display_width(text: str) -> int:
     return sum(2 if unicodedata.east_asian_width(ch) in ("W", "F") else 1 for ch in text)
 
 
+def _cut_to_width(word: str, width: int) -> tuple[str, str]:
+    """칸보다 긴 한 낱말을 폭에 맞게 자른다 — `/`나 `:`처럼 끊어 읽히는 자리가 뒤쪽에 있으면 거기서 자른다."""
+    cut = 1
+    for i in range(1, len(word) + 1):
+        if _display_width(word[:i]) > width:
+            break
+        cut = i
+    at = max(word.rfind(sep, 1, cut) + 1 for sep in "/:_")
+    return (word[:at], word[at:]) if at > cut // 2 else (word[:cut], word[cut:])
+
+
 def _wrap_cell(text: str, width: int, max_lines: int) -> str:
     """표 칸 줄바꿈 — 글자 수가 아니라 **표시 폭**으로 접는다. 한글은 영숫자의 두 배 폭이라 글자 수로 접으면
     `55% · 주 용도 부적합`처럼 한글이 섞인 값이 칸을 넘어 잘린다. 줄 수를 넘으면 말줄임표를 붙인다."""
@@ -1824,6 +2944,12 @@ def _wrap_cell(text: str, width: int, max_lines: int) -> str:
     for para in text.split("\n"):
         line = ""
         for word in para.split(" "):
+            if _display_width(word) > width and line:  # 긴 낱말은 새 줄에서 시작한다
+                lines.append(line)
+                line = ""
+            while _display_width(word) > width:  # 공백이 없는 태그는 접을 자리를 만들어 준다
+                head, word = _cut_to_width(word, width)
+                lines.append(head)
             candidate = f"{line} {word}" if line else word
             if not line or _display_width(candidate) <= width:
                 line = candidate
@@ -1853,7 +2979,7 @@ def _cell_counts(row: dict[str, Any], models: list[dict[str, Any]], has_baseline
 
 
 def _measurement_rows(payload: dict[str, Any], models: list[dict[str, Any]], has_baseline: bool,
-                      marks: set[tuple[str, str]] | None = None) -> list[dict[str, Any]]:
+                      marks: set[tuple[str, str]] | None = None, outside_repeat: dict[str, str] | None = None) -> list[dict[str, Any]]:
     """측정값 표의 행 — 지표 행 뒤에 그 지표의 **세부 행**(합성 지표의 구성 요소 `└`, 점수에 안 들어가는
     `└ 참고`), 표 맨 끝에 **참고 행**(보조 지표·게이트). 값이 없는 칸은 `—`다(측정 안 됨은 상위 행이 말한다).
     `검증 중`·`원인 미확인` 칸은 경고색이다. 채점기 버전 기록이 없는 칸은 값 아래에 그 사실을 적는다(표지 각주의 세부)."""
@@ -1879,8 +3005,12 @@ def _measurement_rows(payload: dict[str, Any], models: list[dict[str, Any]], has
         status = met.get("status") or {}
         # 하위 값에서 만든 상위 값은 만드는 법을 함께 적는다 — 하위 행에서 역산하게 두지 않는다
         made_of = f"\n= {met['derivation']}" if met.get("derivation") else ""
+        # 값을 낸 조건이 이름에 붙어야 하는 지표(긴 컨텍스트 두 지표의 `압축 끔`)는 단위 줄에 함께 적는다
+        condition = f", {met['condition']}" if met.get("condition") else ""
         n_text, per_cell = _cell_counts(met, models, has_baseline)
-        cells = [f"{_wrap_cell(met['label'], label_w, 2)}\n({unit}{arrow}){made_of}", n_text]
+        # 종합 점수에 드는데 2회차가 돌지 않은 지표 — 안 한 것이 안 한 것으로 보이게 이름 아래에 적는다
+        outside = f"\n{outside_repeat[met['key']]}" if met.get("key") in (outside_repeat or {}) else ""
+        cells = [f"{_wrap_cell(met['label'], label_w, 2)}\n({unit}{arrow}{condition}){made_of}{outside}", n_text]
         cells += [evidence(mark(_wrap_cell(_fmt(met["raw"].get(m["id"])) + per_cell[i], value_w, 3), m["id"], met.get("items")),
                            met.get("key"), m["id"]) for i, m in enumerate(models)]
         warn = {i + 2 for i, m in enumerate(models) if status.get(m["id"]) in _VERIFY_OUTCOMES}
@@ -1958,11 +3088,12 @@ def _page_ranking(payload: dict[str, Any], models: list[dict[str, Any]], labels:
         ax.text((v or 0) + 0.008, i, _fmt(v), va="center", fontsize=9)
     if baseline_current is not None:
         ax.axvline(x=baseline_current, color=_BASELINE_GRAY, linestyle="--")
-        ax.text(baseline_current, 1.01, f"기준선 {baseline_current:.3f}", color=_BASELINE_GRAY, fontsize=8,
+        ax.text(baseline_current, 1.01, f"{_baseline_name(meta)} {baseline_current:.3f}", color=_BASELINE_GRAY, fontsize=8,
                 ha="center", va="bottom", transform=ax.get_xaxis_transform())
     footnote = _baseline_footnote(meta)
     scores, score_warnings, score_footnotes = _score_lines(payload, models, labels)
-    legends = ([_LEGEND_BASELINE_LINE] if baseline_current is not None else []) + ([_LEGEND_GAP_HATCH] if gaps else [])
+    legends = ([_LEGEND_BASELINE_LINE.format(base=_baseline_name(meta))] if baseline_current is not None else []) \
+        + ([_LEGEND_GAP_HATCH] if gaps else [])
     more = _guide_and_explanations(fig, _below(ax, 0.06), CH_RANKING, payload.get("explanations", {}).get("ranking", []),
                                    labels, _gap_warning_lines(meta, labels) + score_warnings,
                                    ([footnote] if footnote else []) + score_footnotes, [(_SCORES_HEADING, scores)], legends)
@@ -2043,8 +3174,15 @@ def _weight_lines(payload: dict[str, Any]) -> list[str]:
     lines.append(f"· 지표 하나의 무게 — {head}. 품질·도구는 균등에 곱한다: {grouped(weights.get('usage') or {}, neutral) or '없음'} · 나머지 ×1")
     if ("current", "지금") in columns:
         lines.append(f"· 지금 적용한 무게(슬라이더로 바꾼 값)는 균등에 곱한다: {grouped(current, neutral) or '없음'}")
-    zero = [m["label"] for m in present if all(not (weights.get(key) or {}).get(m["key"]) for key, _ in columns)]
+    # 일관성은 사람 판정 게이트가 넣고 뺀다 — 무게 0인 까닭(판정 진행 중 등)을 이름 옆에, 넣었으면 넣은 까닭을 같은 자리에
+    gate = payload["meta"].get("consistency_gate") or {}
+    reason = {"consistency": gate.get("excluded")}
+    zero = [m["label"] + (f"({reason[m['key']]})" if reason.get(m["key"]) else "")
+            for m in present if all(not (weights.get(key) or {}).get(m["key"]) for key, _ in columns)]
     tail = f" 무게 0이라 어느 점수에도 없다: {', '.join(zero)}." if zero else ""
+    consistency = next((m for m in present if m["key"] == "consistency"), None)
+    if consistency and gate.get("status") == "kept":
+        tail += f" {consistency['label']}은 사람 판정이 `순위 유지`로 끝나 넣었다."
     gone = f" 값이 없어 몫에서 뺀 지표: {', '.join(absent)}." if absent else ""
     lines.append(_normalization_line(payload, present))
     lines.append("· 합치는 법 — 모델마다 값이 있는 지표만 남기고 무게를 합 1로 다시 나눈 뒤, 정규화 값에 곱해 더한다." + tail + gone)
@@ -2059,16 +3197,18 @@ def _normalization_line(payload: dict[str, Any], present: list[dict[str, Any]]) 
     return ("· 정규화 — 높을수록 좋은 지표는 값 ÷ 비교군 최고값, 낮을수록 좋은 지표"
             + (f"({', '.join(lower)})" if lower else "")
             + "는 비교군 최저값 ÷ 값이라 가장 좋은 값이 1이다. "
-            + f"비교군은 이 리포트의 {'후보와 기준선이' if baseline else '후보'}다. 능력 부재·이 환경에서 재현됨은 0으로 남고, "
-            + "측정 안 됨·실행 실패·검증 중인 값은 비교군에서 빠진다"
-            + (" — 기준선은 원인 미확인·비교 제외인 값도 빠진다." if baseline else "."))
+            + f"비교군은 이 리포트의 후보{('와 ' + _baseline_name(payload['meta'])) if baseline else ''}다. "
+            + "능력 부재·이 환경에서 재현됨은 0으로 남고, "
+            + "측정 안 됨·실행 실패·검증 중·무효인 값은 비교군에서 빠진다"
+            + (f" — {_baseline_name(payload['meta'])}에서는 원인 미확인·비교 제외인 값도 빠진다." if baseline else "."))
 
 
 _OUTCOME_TEXT = {"not_measured": "측정 안 됨", "failed": "실행 실패", "incapable": "능력 부재", "confirmed_failure": "이 환경에서 재현됨",
-                 **_VERIFY_OUTCOMES}
+                 "invalid": "무효", **_VERIFY_OUTCOMES}
 
 
-def _dot_rows(models: list[dict[str, Any]], metrics: list[dict[str, Any]], labels: dict[str, str] | None = None) -> list[dict[str, Any]]:
+def _dot_rows(models: list[dict[str, Any]], metrics: list[dict[str, Any]], labels: dict[str, str] | None = None,
+              base_name: str = "기준선") -> list[dict[str, Any]]:
     """그릴 지표 행. 전원 값이 없는 지표는 뺀다(빈 행은 0점처럼 보인다). 일부 모델만 값이 없거나
     상태가 붙었으면 **그 행에** 모델과 이유를 적는다 — 말없이 점이 사라지면 읽는 사람은 측정값
     장을 찾아가야 이유를 안다. 전원 같은 행은 그리지 않고(`_uniform`), 값이 있는 모델끼리만 같으면 겹침을 흩뜨리고 그렇게 적는다."""
@@ -2092,7 +3232,7 @@ def _dot_rows(models: list[dict[str, Any]], metrics: list[dict[str, Any]], label
         # 기준선에서 뺀 지표는 참조 표식을 찍지 않는다 — 말없이 없으면 기준선이 안 잰 것으로 읽힌다
         base_excluded = _BASELINE_EXCLUDED_OUTCOMES.get(met.get("baseline_status"))
         if base_excluded:
-            notes.append(f"기준선 표식 생략: {base_excluded}")
+            notes.append(f"{base_name} 표식 생략: {base_excluded}")
         label = met["label"] + (" (값이 있는 모델끼리 동일)" if identical else "")
         rows.append({
             "label": label,
@@ -2106,7 +3246,7 @@ def _dot_rows(models: list[dict[str, Any]], metrics: list[dict[str, Any]], label
 
 
 def _page_dots(payload: dict[str, Any], models: list[dict[str, Any]], labels: dict[str, str]) -> list[Page]:
-    rows = _dot_rows(models, payload["metrics"], labels)
+    rows = _dot_rows(models, payload["metrics"], labels, _baseline_name(payload["meta"]))
     if not rows:
         return []
     per_page = 12
@@ -2145,7 +3285,7 @@ def _page_dots(payload: dict[str, Any], models: list[dict[str, Any]], labels: di
         handles, handle_labels = ax.get_legend_handles_labels()
         if any(r["baseline"] is not None for r in chunk):
             handles.append(plt.Line2D([], [], marker="|", color=_BASELINE_GRAY, markersize=12, markeredgewidth=2, linestyle="None"))
-            handle_labels.append("기준선")
+            handle_labels.append(_baseline_name(payload["meta"]))
         if any_failed:
             handles.append(plt.Line2D([], [], marker="x", color="black", linestyle="None"))
             handle_labels.append("실행 실패")
@@ -2153,7 +3293,8 @@ def _page_dots(payload: dict[str, Any], models: list[dict[str, Any]], labels: di
                    ncol=min(4, len(handle_labels)), fontsize=8, frameon=False)
         last = page_i == len(chunks) - 1
         explanations = [*payload.get("explanations", {}).get("dots", []), *_uniform_lines(payload, models)] if last else []
-        legends = ([_LEGEND_BASELINE_TICK] if any(r["baseline"] is not None for r in chunk) else []) \
+        legends = ([_LEGEND_BASELINE_TICK.format(base=_baseline_name(payload["meta"]))]
+                   if any(r["baseline"] is not None for r in chunk) else []) \
             + ([_LEGEND_FAILED_X] if any_failed else []) + ([_LEGEND_ROW_NOTE] if any(r["note"] for r in chunk) else [])
         more = _guide_and_explanations(fig, _below(ax, 0.10), CH_DOTS, explanations, labels, legends=legends)
         pages += [Page(fig, CH_DOTS), *more]
@@ -2177,10 +3318,11 @@ def _commercial_lines(payload: dict[str, Any], models: list[dict[str, Any]],
         return [], [], []
     count = commercial.get("metric_count", 0)
     if commercial.get("omitted"):
-        return [f"· 상용 대비 점수 — 싣지 않았다: 기준선이 값을 가진 지표가 {count}개뿐이다."], [], []
+        return [f"· 상용 대비 점수 — 싣지 않았다: {_baseline_name(payload['meta'])} 값이 있는 지표가 {count}개뿐이다."], [], []
     meta = payload["meta"]
-    base = f"기준선({(meta.get('baseline') or {}).get('model', '?')}) {_fmt(commercial.get('baseline_score'))}"
-    lines = [f"· 상용 대비 점수 — 기준선도 잰 {count}개 지표만, 균등 가중치, 기준선을 비교군에 넣어 지표마다 최고값이 1: "
+    base = f"{_baseline_name(meta)} {_fmt(commercial.get('baseline_score'))}"
+    lines = [f"· 상용 대비 점수 — {_baseline_name(meta)}도 잰 {count}개 지표만, 균등 가중치, "
+             f"{_baseline_name(meta)}까지 비교군에 넣어 지표마다 최고값이 1: "
              f"{_names_and_scores(models, labels, commercial.get('scores') or {})} · {base}"]
     subset = set(commercial.get("metric_labels") or [])
     # 이 부분집합 안에서 지표가 빠진 후보 — 남은 지표로만 계산돼 같은 잣대가 아니다
@@ -2195,7 +3337,7 @@ def _commercial_lines(payload: dict[str, Any], models: list[dict[str, Any]],
         by_reason.setdefault(e["reason"].lstrip("— ").strip(), []).append(e["label"])
     if by_reason:
         detail = " · ".join(f"{reason} — {', '.join(names)}" for reason, names in by_reason.items())
-        footnotes.append(f"※ 기준선 값이 있지만 상용 대비에서 뺀 지표: {detail}")
+        footnotes.append(f"※ {_baseline_name(meta)} 값이 있지만 상용 대비에서 뺀 지표: {detail}")
     return lines, warnings, footnotes
 
 
@@ -3222,8 +4364,12 @@ def _build_pages_in_order(payload: dict[str, Any], consistency_context: dict[str
     # 본문이 가리키고 부록이 싣는다 — 같은 선택을 두 번 계산하지 않게 한 번만 고른다
     if failure_context is None:
         failure_context = _failure_context([m["id"] for m in models])
+    run_ids_all = [m["id"] for m in models]
     pages: list[Page] = []
     pages += _page_cover(payload, models, labels, evidence, consistency_blind=blind and bool(run_ids))
+    requirements_at = len(pages)  # 자리만 잡아 두고, 장 번호를 알 수 있는 마지막에 채운다
+    # 선정 근거는 순위 앞이다 — 순위를 먼저 읽으면 순위가 선정 근거로 읽힌다. 종합 점수를 싣지 않는 판에도 이 장은 남는다
+    pages += _page_selection_basis(payload, models, labels, _selection_basis_context(run_ids_all))
     if not withheld:
         pages += _page_ranking(payload, models, labels)
         pages += _page_weights(payload, models, labels)
@@ -3231,19 +4377,36 @@ def _build_pages_in_order(payload: dict[str, Any], consistency_context: dict[str
     if not withheld:
         pages += _page_breakdown(payload, models, labels)
     pages += _page_dots(payload, models, labels)
-    run_ids_all = [m["id"] for m in models]
-    # 문서 길이 비교는 결과 파일에서 짝을 찾는다 — 참고 행은 측정값 표에, 출처와 다른 것은 측정 조건 상세에 싣는다
-    document_pairs = _document_pair_context(run_ids_all)
     baseline_context = _baseline_context(payload["meta"].get("baseline"))
-    pair_rows = _document_pair_rows(document_pairs, models, _baseline_pair_scores(baseline_context))
-    measured = {**payload, "reference_rows": [*(payload.get("reference_rows") or []), *pair_rows]}
-    pages += _page_measurements(measured, models, labels, failure_context)
+    after_rows = _after_instruction_rows(models, baseline_context.get("column"))
+    measured = {**payload, "reference_rows": [*(payload.get("reference_rows") or []), *after_rows]}
+    compressed = _compressed_reference_note(models, labels,
+                                            base_name=_baseline_name(payload["meta"]) if payload["meta"].get("baseline") else None)
+    # 두 바퀴 기록은 측정값 표(재현 검사 밖 표시)와 측정 조건 상세(두 바퀴 절)가 함께 쓴다 — 결과 파일을 한 번만 읽는다
+    repeat = _repeat_context(run_ids_all)
+    pages += _page_measurements(measured, models, labels, failure_context,
+                                row_notes={f"참고 · {COMPRESSED_REFERENCE_LABEL}": compressed} if compressed else None,
+                                outside_repeat=_outside_repeat(measured, models, labels, repeat))
+    pages += _page_call_tally(models, labels, _call_tally_context(run_ids_all))
+    assignment = _assignment_context(run_ids_all, baseline_context.get("column"))
+    pages += _page_assignment_questions(models, labels, assignment, base_name=_baseline_name(payload["meta"]))
+    pages += _page_local_cloud(models, labels, _local_cloud_context(run_ids_all, baseline_context.get("column"), assignment),
+                               base_name=_baseline_name(payload["meta"]))
     pages += _page_variance(payload, models, labels)
-    pages += _page_conditions(payload, models, labels, evidence, _divergence_context(run_ids_all), _repeat_context(run_ids_all),
-                              document_pairs, baseline_context)
+    card_context = _model_card_context(run_ids_all, baseline_context.get("column"))
+    pages += _page_model_cards(payload, models, labels, card_context)
+    pages += _page_conditions(payload, models, labels, evidence, _divergence_context(run_ids_all), repeat,
+                              baseline_context)
     pages += _page_scoring(payload, models, labels)
     pages += _page_consistency(payload, models, labels, consistency_context, transcripts_name)
+    pages += _page_limits(payload, models, labels, _limits_context(run_ids_all, payload))
     pages += _page_failures(payload, models, labels, failure_context)
+    # 요건 대응은 표지 다음이지만 장 번호를 쓰므로 마지막에 만들어 끼운다
+    numbered = {}
+    for title, page in zip(chapter_titles(pages), pages):
+        numbered.setdefault(page.chapter, title.split(" (")[0])
+    pages[requirements_at:requirements_at] = _page_requirements(payload, models, labels, numbered, assignment,
+                                                                _set_size(run_ids_all))
     return pages
 
 

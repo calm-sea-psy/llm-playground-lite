@@ -16,12 +16,15 @@ placeholder다. 실제 값은 `num_ctx`(16384)가 확정된 뒤 토큰 기준으
 
 from typing import Any
 
+import bench_config as cfg
 import ollama_client
 
 SUMMARY_TRIGGER_CHARS = 2000
 KEEP_RECENT_TURNS = 3  # 최근 N턴(사용자+어시스턴트 쌍)은 원본 그대로 보낸다
-# 요약 호출의 온도 — seed는 보내지 않는다. 요약이 끼는 경로는 그래서 고정 샘플링이 아니다(측정 조건에 이 값을 적는다)
+# 요약 호출의 샘플링 — 온도는 두고 seed를 측정과 같은 값으로 고정한다. 요약이 끼는 경로(긴 컨텍스트 켬)도 같은 입력이면 같은
+# 요약을 받아 고정 샘플링이 된다. 두 값 모두 측정 조건에 적는다
 SUMMARY_TEMPERATURE = 0.3
+SUMMARY_SEED = cfg.SAMPLING["seed"]
 
 _SUMMARY_PROMPT = """다음은 지금까지의 대화 요약이다(없으면 "(없음)"):
 {prior_summary}
@@ -94,7 +97,8 @@ def _summarize(model: str, prior_summary: str | None, turns: list[dict[str, Any]
     )
     parts = [
         chunk.get("message", {}).get("content", "")
-        for chunk in ollama_client.app_chat(model, [{"role": "user", "content": prompt}], temperature=SUMMARY_TEMPERATURE)
+        for chunk in ollama_client.app_chat(model, [{"role": "user", "content": prompt}], temperature=SUMMARY_TEMPERATURE,
+                                            seed=SUMMARY_SEED)
     ]
     return "".join(parts).strip()
 

@@ -1,0 +1,5682 @@
+{
+  "notes": {
+    "recorded_at": "2026-09-17T13:51:16.439413+00:00",
+    "how": "maintenance.py record-tool-fixtures가 실제 도구 넷(현재 시각·공휴일·대기질·설치된 모델)을 한 번에 불러 응답을 그대로 적었다. 현재 시각은 기록한 순간이고 공휴일·대기질도 같은 때 받은 값이라 서로 맞는다.",
+    "holidays_years": [
+      2025,
+      2026,
+      2027
+    ],
+    "unrecorded": "기록에 없는 연도·시도를 부르면 도구 결과가 오류로 간다(실시간 값으로 채우지 않는다).",
+    "hand_edits": []
+  },
+  "now": "2026-09-17T13:51:16.439413+00:00",
+  "list_models": [
+    "bge-m3:latest",
+    "llama3.2:3b",
+    "hf.co/unsloth/gemma-4-E4B-it-GGUF:Q4_K_M",
+    "qwen3:4b-instruct-2507-q4_K_M",
+    "gemma3:4b"
+  ],
+  "holidays": {
+    "2025": {
+      "1": [
+        {
+          "date": "2025-01-01",
+          "name": "1월1일",
+          "is_holiday": true
+        },
+        {
+          "date": "2025-01-27",
+          "name": "임시공휴일",
+          "is_holiday": true
+        },
+        {
+          "date": "2025-01-28",
+          "name": "설날",
+          "is_holiday": true
+        },
+        {
+          "date": "2025-01-29",
+          "name": "설날",
+          "is_holiday": true
+        },
+        {
+          "date": "2025-01-30",
+          "name": "설날",
+          "is_holiday": true
+        }
+      ],
+      "2": [],
+      "3": [
+        {
+          "date": "2025-03-01",
+          "name": "삼일절",
+          "is_holiday": true
+        },
+        {
+          "date": "2025-03-03",
+          "name": "대체공휴일",
+          "is_holiday": true
+        }
+      ],
+      "4": [],
+      "5": [
+        {
+          "date": "2025-05-05",
+          "name": "어린이날",
+          "is_holiday": true
+        },
+        {
+          "date": "2025-05-05",
+          "name": "부처님오신날",
+          "is_holiday": true
+        },
+        {
+          "date": "2025-05-06",
+          "name": "대체공휴일",
+          "is_holiday": true
+        }
+      ],
+      "6": [
+        {
+          "date": "2025-06-03",
+          "name": "임시공휴일(제21대 대통령 선거)",
+          "is_holiday": true
+        },
+        {
+          "date": "2025-06-06",
+          "name": "현충일",
+          "is_holiday": true
+        }
+      ],
+      "7": [],
+      "8": [
+        {
+          "date": "2025-08-15",
+          "name": "광복절",
+          "is_holiday": true
+        }
+      ],
+      "9": [],
+      "10": [
+        {
+          "date": "2025-10-03",
+          "name": "개천절",
+          "is_holiday": true
+        },
+        {
+          "date": "2025-10-05",
+          "name": "추석",
+          "is_holiday": true
+        },
+        {
+          "date": "2025-10-06",
+          "name": "추석",
+          "is_holiday": true
+        },
+        {
+          "date": "2025-10-07",
+          "name": "추석",
+          "is_holiday": true
+        },
+        {
+          "date": "2025-10-08",
+          "name": "대체공휴일",
+          "is_holiday": true
+        },
+        {
+          "date": "2025-10-09",
+          "name": "한글날",
+          "is_holiday": true
+        }
+      ],
+      "11": [],
+      "12": [
+        {
+          "date": "2025-12-25",
+          "name": "기독탄신일",
+          "is_holiday": true
+        }
+      ]
+    },
+    "2026": {
+      "1": [
+        {
+          "date": "2026-01-01",
+          "name": "1월1일",
+          "is_holiday": true
+        }
+      ],
+      "2": [
+        {
+          "date": "2026-02-16",
+          "name": "설날",
+          "is_holiday": true
+        },
+        {
+          "date": "2026-02-17",
+          "name": "설날",
+          "is_holiday": true
+        },
+        {
+          "date": "2026-02-18",
+          "name": "설날",
+          "is_holiday": true
+        }
+      ],
+      "3": [
+        {
+          "date": "2026-03-01",
+          "name": "삼일절",
+          "is_holiday": true
+        },
+        {
+          "date": "2026-03-02",
+          "name": "대체공휴일(삼일절)",
+          "is_holiday": true
+        }
+      ],
+      "4": [],
+      "5": [
+        {
+          "date": "2026-05-01",
+          "name": "노동절",
+          "is_holiday": true
+        },
+        {
+          "date": "2026-05-05",
+          "name": "어린이날",
+          "is_holiday": true
+        },
+        {
+          "date": "2026-05-24",
+          "name": "부처님오신날",
+          "is_holiday": true
+        },
+        {
+          "date": "2026-05-25",
+          "name": "대체공휴일(부처님오신날)",
+          "is_holiday": true
+        }
+      ],
+      "6": [
+        {
+          "date": "2026-06-03",
+          "name": "전국동시지방선거",
+          "is_holiday": true
+        },
+        {
+          "date": "2026-06-06",
+          "name": "현충일",
+          "is_holiday": true
+        }
+      ],
+      "7": [
+        {
+          "date": "2026-07-17",
+          "name": "제헌절",
+          "is_holiday": true
+        }
+      ],
+      "8": [
+        {
+          "date": "2026-08-15",
+          "name": "광복절",
+          "is_holiday": true
+        },
+        {
+          "date": "2026-08-17",
+          "name": "대체공휴일(광복절)",
+          "is_holiday": true
+        }
+      ],
+      "9": [
+        {
+          "date": "2026-09-24",
+          "name": "추석",
+          "is_holiday": true
+        },
+        {
+          "date": "2026-09-25",
+          "name": "추석",
+          "is_holiday": true
+        },
+        {
+          "date": "2026-09-26",
+          "name": "추석",
+          "is_holiday": true
+        }
+      ],
+      "10": [
+        {
+          "date": "2026-10-03",
+          "name": "개천절",
+          "is_holiday": true
+        },
+        {
+          "date": "2026-10-05",
+          "name": "대체공휴일(개천절)",
+          "is_holiday": true
+        },
+        {
+          "date": "2026-10-09",
+          "name": "한글날",
+          "is_holiday": true
+        }
+      ],
+      "11": [],
+      "12": [
+        {
+          "date": "2026-12-25",
+          "name": "기독탄신일",
+          "is_holiday": true
+        }
+      ]
+    },
+    "2027": {
+      "1": [
+        {
+          "date": "2027-01-01",
+          "name": "1월1일",
+          "is_holiday": true
+        }
+      ],
+      "2": [
+        {
+          "date": "2027-02-06",
+          "name": "설날",
+          "is_holiday": true
+        },
+        {
+          "date": "2027-02-07",
+          "name": "설날",
+          "is_holiday": true
+        },
+        {
+          "date": "2027-02-08",
+          "name": "설날",
+          "is_holiday": true
+        },
+        {
+          "date": "2027-02-09",
+          "name": "대체공휴일(설날)",
+          "is_holiday": true
+        }
+      ],
+      "3": [
+        {
+          "date": "2027-03-01",
+          "name": "삼일절",
+          "is_holiday": true
+        }
+      ],
+      "4": [],
+      "5": [
+        {
+          "date": "2027-05-01",
+          "name": "노동절",
+          "is_holiday": true
+        },
+        {
+          "date": "2027-05-03",
+          "name": "대체공휴일(노동절)",
+          "is_holiday": true
+        },
+        {
+          "date": "2027-05-05",
+          "name": "어린이날",
+          "is_holiday": true
+        },
+        {
+          "date": "2027-05-13",
+          "name": "부처님오신날",
+          "is_holiday": true
+        }
+      ],
+      "6": [
+        {
+          "date": "2027-06-06",
+          "name": "현충일",
+          "is_holiday": true
+        }
+      ],
+      "7": [
+        {
+          "date": "2027-07-17",
+          "name": "제헌절",
+          "is_holiday": true
+        },
+        {
+          "date": "2027-07-19",
+          "name": "대체공휴일(제헌절)",
+          "is_holiday": true
+        }
+      ],
+      "8": [
+        {
+          "date": "2027-08-15",
+          "name": "광복절",
+          "is_holiday": true
+        },
+        {
+          "date": "2027-08-16",
+          "name": "대체공휴일(광복절)",
+          "is_holiday": true
+        }
+      ],
+      "9": [
+        {
+          "date": "2027-09-14",
+          "name": "추석",
+          "is_holiday": true
+        },
+        {
+          "date": "2027-09-15",
+          "name": "추석",
+          "is_holiday": true
+        },
+        {
+          "date": "2027-09-16",
+          "name": "추석",
+          "is_holiday": true
+        }
+      ],
+      "10": [
+        {
+          "date": "2027-10-03",
+          "name": "개천절",
+          "is_holiday": true
+        },
+        {
+          "date": "2027-10-04",
+          "name": "대체공휴일(개천절)",
+          "is_holiday": true
+        },
+        {
+          "date": "2027-10-09",
+          "name": "한글날",
+          "is_holiday": true
+        },
+        {
+          "date": "2027-10-11",
+          "name": "대체공휴일(한글날)",
+          "is_holiday": true
+        }
+      ],
+      "11": [],
+      "12": [
+        {
+          "date": "2027-12-25",
+          "name": "기독탄신일",
+          "is_holiday": true
+        },
+        {
+          "date": "2027-12-27",
+          "name": "대체공휴일(기독탄신일)",
+          "is_holiday": true
+        }
+      ]
+    }
+  },
+  "air_quality": {
+    "전국": [
+      {
+        "station": "구성동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "8",
+        "khai_grade": null
+      },
+      {
+        "station": "노은동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "상대동(대전)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "관평동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "2",
+        "khai_grade": "2"
+      },
+      {
+        "station": "지족동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "대흥동1",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "6",
+        "khai_grade": "1"
+      },
+      {
+        "station": "성남동1",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "대성동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "8",
+        "pm25": "2",
+        "khai_grade": "1"
+      },
+      {
+        "station": "정림동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "둔산동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "월평동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "비래동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "봉명동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "사천동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "11",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "삼진로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "경화동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "5",
+        "khai_grade": null
+      },
+      {
+        "station": "월영동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "하동읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "금성면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "10",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "동상동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "삼방동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "26",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "장유동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "14",
+        "khai_grade": "2"
+      },
+      {
+        "station": "진영읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "김해대로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "진례면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "저구리",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "아주동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "고현동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "사천읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "향촌동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "8",
+        "pm25": "1",
+        "khai_grade": "2"
+      },
+      {
+        "station": "대산면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "옥포항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "29",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "북부동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "삼호동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "10",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "물금읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "화산리",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "-",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "상남리",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "농소동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "삼남읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "약사동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "웅촌면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "18",
+        "khai_grade": "2"
+      },
+      {
+        "station": "범서읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "북부순환도로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "송정동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "전하동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "산업로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "방어진순환도로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "내일동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "무전동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "고성읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "거창읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "8",
+        "pm25": "11",
+        "khai_grade": "2"
+      },
+      {
+        "station": "가야읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "24",
+        "pm25": "6",
+        "khai_grade": "1"
+      },
+      {
+        "station": "함양읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "26",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "남해읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "-",
+        "khai_grade": null
+      },
+      {
+        "station": "산청읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "6",
+        "khai_grade": "1"
+      },
+      {
+        "station": "남상면",
+        "measured_at": "2026-09-17 23:00",
+        "pm10": "-",
+        "pm25": "10",
+        "khai_grade": null
+      },
+      {
+        "station": "의령읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "창녕읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "합천읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "7",
+        "khai_grade": "1"
+      },
+      {
+        "station": "마산항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "울산항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "하동항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "삼천포항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "14",
+        "khai_grade": "2"
+      },
+      {
+        "station": "진해항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "15",
+        "khai_grade": "2"
+      },
+      {
+        "station": "서석동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "농성동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "치평동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "노대동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "8",
+        "khai_grade": "1"
+      },
+      {
+        "station": "유촌동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "두암동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "운암동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "8",
+        "khai_grade": "1"
+      },
+      {
+        "station": "건국동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "26",
+        "pm25": "12",
+        "khai_grade": "2"
+      },
+      {
+        "station": "일곡동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "오선동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "우산동(광주)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "평동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "36",
+        "pm25": "29",
+        "khai_grade": "2"
+      },
+      {
+        "station": "주월동",
+        "measured_at": "2026-09-17 21:00",
+        "pm10": "21",
+        "pm25": "12",
+        "khai_grade": "2"
+      },
+      {
+        "station": "노송동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "9",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "용당동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "-",
+        "khai_grade": null
+      },
+      {
+        "station": "부흥동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "서강동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "-",
+        "pm25": "-",
+        "khai_grade": null
+      },
+      {
+        "station": "월내동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "25",
+        "pm25": "2",
+        "khai_grade": null
+      },
+      {
+        "station": "문수동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "여천동(여수)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "11",
+        "khai_grade": "2"
+      },
+      {
+        "station": "덕충동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "장천동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "27",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "연향동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "순천만",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "호두리",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "5",
+        "khai_grade": "1"
+      },
+      {
+        "station": "신대",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "빛가람동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "18",
+        "khai_grade": "1"
+      },
+      {
+        "station": "담양읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "-",
+        "pm25": "-",
+        "khai_grade": null
+      },
+      {
+        "station": "장성읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "7",
+        "khai_grade": "1"
+      },
+      {
+        "station": "화양면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "10",
+        "pm25": "1",
+        "khai_grade": "2"
+      },
+      {
+        "station": "율촌면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "삼일동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "중동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "태인동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "광양읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "봉강면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "6",
+        "khai_grade": "2"
+      }
+    ],
+    "서울": [
+      {
+        "station": "강남구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "11",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "서초구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "8",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "도산대로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "10",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "강남대로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "6",
+        "khai_grade": "1"
+      },
+      {
+        "station": "송파구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "11",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "강동구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "천호대로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "7",
+        "khai_grade": "1"
+      },
+      {
+        "station": "금천구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "시흥대로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "강북구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "11",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "양천구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "노원구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "화랑로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "8",
+        "khai_grade": null
+      },
+      {
+        "station": "중구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "한강대로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "종로구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "청계천로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "8",
+        "khai_grade": "1"
+      },
+      {
+        "station": "종로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "8",
+        "khai_grade": "1"
+      },
+      {
+        "station": "용산구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "광진구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "7",
+        "khai_grade": "1"
+      },
+      {
+        "station": "성동구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "11",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "강변북로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "9",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "중랑구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "동대문구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "11",
+        "khai_grade": "2"
+      },
+      {
+        "station": "홍릉로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "성북구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "정릉로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "6",
+        "khai_grade": "1"
+      },
+      {
+        "station": "도봉구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "11",
+        "khai_grade": "2"
+      },
+      {
+        "station": "은평구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "서대문구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "마포구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "10",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "신촌로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "강서구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "공항대로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "25",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "구로구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "영등포구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "13",
+        "khai_grade": "2"
+      },
+      {
+        "station": "영등포로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "10",
+        "khai_grade": "1"
+      },
+      {
+        "station": "동작구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "11",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "동작대로 중앙차로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "8",
+        "khai_grade": "1"
+      },
+      {
+        "station": "관악구",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "7",
+        "khai_grade": "1"
+      }
+    ],
+    "부산": [
+      {
+        "station": "광복동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "초량동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "24",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "태종대",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "청학동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "전포동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "29",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "온천동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "26",
+        "pm25": "12",
+        "khai_grade": "2"
+      },
+      {
+        "station": "명장동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "대연동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "용호동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "2",
+        "khai_grade": "2"
+      },
+      {
+        "station": "학장동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "덕천동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "화명동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "삼락동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "우동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "감천동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "30",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "청룡동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "2",
+        "khai_grade": "2"
+      },
+      {
+        "station": "좌동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "재송동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "장림동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "대저동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "녹산동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "11",
+        "khai_grade": "2"
+      },
+      {
+        "station": "명지동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "연산동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "26",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "기장읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "25",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "용수리",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "수정동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "1",
+        "khai_grade": "2"
+      },
+      {
+        "station": "회동동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "6",
+        "khai_grade": null
+      },
+      {
+        "station": "광안동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "2",
+        "khai_grade": "2"
+      },
+      {
+        "station": "대신동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "덕포동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "개금동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "14",
+        "khai_grade": "2"
+      },
+      {
+        "station": "당리동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "부산항",
+        "measured_at": null,
+        "pm10": null,
+        "pm25": null,
+        "khai_grade": null
+      },
+      {
+        "station": "부산북항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "부산감만",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "24",
+        "pm25": "6",
+        "khai_grade": "2"
+      }
+    ],
+    "대구": [
+      {
+        "station": "남산1동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "수창동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "지산동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "서호동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "용계동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "11",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "이현동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "6",
+        "khai_grade": null
+      },
+      {
+        "station": "평리동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "대명동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "신암동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "태전동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "11",
+        "khai_grade": "2"
+      },
+      {
+        "station": "산격동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "서변동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "11",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "연호동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "만촌동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "호림동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "유가읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "11",
+        "khai_grade": "2"
+      },
+      {
+        "station": "이곡동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "시지동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "진천동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "다사읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "본동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "내당동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "침산동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "화원읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "충혼탑",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "군위읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "6",
+        "khai_grade": "2"
+      }
+    ],
+    "인천": [
+      {
+        "station": "신흥",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "서해",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "36",
+        "pm25": "15",
+        "khai_grade": "2"
+      },
+      {
+        "station": "영종",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "8",
+        "khai_grade": "1"
+      },
+      {
+        "station": "송림",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "구월동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "4",
+        "khai_grade": "1"
+      },
+      {
+        "station": "숭의",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "석바위",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "부평역",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "31",
+        "pm25": "13",
+        "khai_grade": "1"
+      },
+      {
+        "station": "남동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "9",
+        "khai_grade": "1"
+      },
+      {
+        "station": "주안",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "부평",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "연희",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "검단",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "9",
+        "khai_grade": "1"
+      },
+      {
+        "station": "중봉",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "계산",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "효성",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "임학",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "고잔",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "9",
+        "khai_grade": "1"
+      },
+      {
+        "station": "서창",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "9",
+        "khai_grade": "1"
+      },
+      {
+        "station": "석남",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "송해",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "동춘",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "4",
+        "khai_grade": "1"
+      },
+      {
+        "station": "운서",
+        "measured_at": null,
+        "pm10": null,
+        "pm25": null,
+        "khai_grade": null
+      },
+      {
+        "station": "송현",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "논현",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "8",
+        "khai_grade": "1"
+      },
+      {
+        "station": "청라",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "송도",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "아암",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "7",
+        "khai_grade": "1"
+      },
+      {
+        "station": "동막",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "8",
+        "khai_grade": null
+      },
+      {
+        "station": "원당",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "7",
+        "khai_grade": "1"
+      },
+      {
+        "station": "길상",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "8",
+        "khai_grade": "1"
+      },
+      {
+        "station": "삼산",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "경인항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "27",
+        "pm25": "10",
+        "khai_grade": "1"
+      },
+      {
+        "station": "인천항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "31",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "인천 신항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "29",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "인천 북항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "10",
+        "khai_grade": null
+      },
+      {
+        "station": "인천 남항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "10",
+        "khai_grade": null
+      },
+      {
+        "station": "석모리",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "덕적도",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "1",
+        "khai_grade": "1"
+      },
+      {
+        "station": "백령도",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "영흥",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "연평도",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "울도",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "5",
+        "khai_grade": "2"
+      }
+    ],
+    "광주": [
+      {
+        "station": "서석동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "농성동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "치평동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "노대동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "8",
+        "khai_grade": "1"
+      },
+      {
+        "station": "유촌동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "두암동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "운암동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "8",
+        "khai_grade": "1"
+      },
+      {
+        "station": "건국동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "26",
+        "pm25": "12",
+        "khai_grade": "2"
+      },
+      {
+        "station": "일곡동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "오선동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "우산동(광주)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "평동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "36",
+        "pm25": "29",
+        "khai_grade": "2"
+      },
+      {
+        "station": "주월동",
+        "measured_at": "2026-09-17 21:00",
+        "pm10": "21",
+        "pm25": "12",
+        "khai_grade": "2"
+      }
+    ],
+    "대전": [
+      {
+        "station": "구성동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "8",
+        "khai_grade": null
+      },
+      {
+        "station": "노은동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "상대동(대전)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "관평동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "2",
+        "khai_grade": "2"
+      },
+      {
+        "station": "지족동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "대흥동1",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "6",
+        "khai_grade": "1"
+      },
+      {
+        "station": "성남동1",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "대성동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "8",
+        "pm25": "2",
+        "khai_grade": "1"
+      },
+      {
+        "station": "정림동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "둔산동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "월평동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "비래동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "읍내동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "1",
+        "khai_grade": "1"
+      },
+      {
+        "station": "문평동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "2",
+        "khai_grade": "1"
+      },
+      {
+        "station": "문창동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "6",
+        "khai_grade": "2"
+      }
+    ],
+    "울산": [
+      {
+        "station": "화산리",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "-",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "상남리",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "농소동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "삼남읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "약사동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "웅촌면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "18",
+        "khai_grade": "2"
+      },
+      {
+        "station": "범서읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "북부순환도로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "송정동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "전하동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "산업로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "방어진순환도로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "울산항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "신정동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "24",
+        "pm25": "2",
+        "khai_grade": "2"
+      },
+      {
+        "station": "덕신리",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "무거동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "효문동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "대송동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "성남동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "부곡동(울산)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "여천동(울산)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "선암동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "삼산동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "신정로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "6",
+        "khai_grade": "2"
+      }
+    ],
+    "경기": [
+      {
+        "station": "백석읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "11",
+        "pm25": "2",
+        "khai_grade": "2"
+      },
+      {
+        "station": "고읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "보산동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "11",
+        "pm25": "0",
+        "khai_grade": "2"
+      },
+      {
+        "station": "봉산동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "2",
+        "khai_grade": "1"
+      },
+      {
+        "station": "공도읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "10",
+        "pm25": "1",
+        "khai_grade": "1"
+      },
+      {
+        "station": "죽산면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "30",
+        "pm25": "12",
+        "khai_grade": "1"
+      },
+      {
+        "station": "중앙동(경기)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "대신면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "17",
+        "khai_grade": "2"
+      },
+      {
+        "station": "가남읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "연천",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "10",
+        "pm25": "-",
+        "khai_grade": null
+      },
+      {
+        "station": "전곡",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "가평",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "10",
+        "pm25": "2",
+        "khai_grade": "2"
+      },
+      {
+        "station": "설악면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "3",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "용문면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "6",
+        "khai_grade": "1"
+      },
+      {
+        "station": "양평읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "7",
+        "pm25": "0",
+        "khai_grade": "2"
+      },
+      {
+        "station": "연천(DMZ)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "10",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "신풍동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "인계동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "9",
+        "khai_grade": "1"
+      },
+      {
+        "station": "광교동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "9",
+        "khai_grade": "1"
+      },
+      {
+        "station": "영통동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "12",
+        "khai_grade": "1"
+      },
+      {
+        "station": "천천동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "3",
+        "khai_grade": "1"
+      },
+      {
+        "station": "경수대로(동수원)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "7",
+        "khai_grade": "1"
+      },
+      {
+        "station": "고색동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "6",
+        "khai_grade": "1"
+      },
+      {
+        "station": "호매실",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "13",
+        "khai_grade": "1"
+      },
+      {
+        "station": "대왕판교로(백현동)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "9",
+        "khai_grade": "1"
+      },
+      {
+        "station": "단대동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "2",
+        "khai_grade": "2"
+      },
+      {
+        "station": "정자동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "9",
+        "pm25": "2",
+        "khai_grade": "2"
+      },
+      {
+        "station": "수내동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "11",
+        "pm25": "12",
+        "khai_grade": "1"
+      },
+      {
+        "station": "성남대로(모란역)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "복정동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "-",
+        "pm25": "0",
+        "khai_grade": null
+      },
+      {
+        "station": "운중동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "28",
+        "pm25": "11",
+        "khai_grade": "1"
+      },
+      {
+        "station": "상대원동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "의정부동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "12",
+        "khai_grade": "2"
+      },
+      {
+        "station": "의정부1동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "송산3동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "8",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "안양8동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "13",
+        "khai_grade": "1"
+      },
+      {
+        "station": "부림동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "11",
+        "khai_grade": "1"
+      },
+      {
+        "station": "호계3동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "11",
+        "pm25": "11",
+        "khai_grade": "2"
+      },
+      {
+        "station": "안양2동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "3",
+        "khai_grade": "1"
+      },
+      {
+        "station": "철산동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "1",
+        "khai_grade": "2"
+      },
+      {
+        "station": "소하동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "32",
+        "pm25": "14",
+        "khai_grade": "2"
+      },
+      {
+        "station": "고잔동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "9",
+        "khai_grade": "1"
+      },
+      {
+        "station": "초지동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "8",
+        "khai_grade": "1"
+      },
+      {
+        "station": "본오동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "26",
+        "pm25": "5",
+        "khai_grade": "1"
+      },
+      {
+        "station": "원곡동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "13",
+        "khai_grade": "1"
+      },
+      {
+        "station": "부곡동1",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "7",
+        "khai_grade": "1"
+      },
+      {
+        "station": "대부동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "호수동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "5",
+        "khai_grade": "1"
+      },
+      {
+        "station": "중앙대로(고잔동)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "7",
+        "khai_grade": null
+      },
+      {
+        "station": "별양동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "과천동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "7",
+        "khai_grade": "1"
+      },
+      {
+        "station": "교문동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "동구동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "4",
+        "khai_grade": "1"
+      },
+      {
+        "station": "부곡3동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "8",
+        "khai_grade": "1"
+      },
+      {
+        "station": "고천동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "4",
+        "khai_grade": "1"
+      },
+      {
+        "station": "정왕동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "13",
+        "khai_grade": "1"
+      },
+      {
+        "station": "시화산단",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "9",
+        "khai_grade": "1"
+      },
+      {
+        "station": "대야동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "9",
+        "khai_grade": "1"
+      },
+      {
+        "station": "목감동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "장현동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "12",
+        "khai_grade": "2"
+      },
+      {
+        "station": "서해안로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "9",
+        "khai_grade": "1"
+      },
+      {
+        "station": "배곧동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "6",
+        "khai_grade": "1"
+      },
+      {
+        "station": "금곡동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "10",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "오남읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "8",
+        "pm25": "0",
+        "khai_grade": "2"
+      },
+      {
+        "station": "별내동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "7",
+        "pm25": "2",
+        "khai_grade": "2"
+      },
+      {
+        "station": "화도읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "경춘로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "12",
+        "khai_grade": "1"
+      },
+      {
+        "station": "와부읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "6",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "진접읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "9",
+        "pm25": "6",
+        "khai_grade": null
+      },
+      {
+        "station": "비전동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "11",
+        "pm25": "5",
+        "khai_grade": "1"
+      },
+      {
+        "station": "안중",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "9",
+        "khai_grade": "1"
+      },
+      {
+        "station": "평택항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "11",
+        "khai_grade": "2"
+      },
+      {
+        "station": "송북동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "청북읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "고덕동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "8",
+        "khai_grade": "1"
+      },
+      {
+        "station": "금촌동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "운정",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "파주",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "8",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "파주읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "행신동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "5",
+        "khai_grade": "1"
+      },
+      {
+        "station": "식사동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "백마로(마두역)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "7",
+        "khai_grade": "1"
+      },
+      {
+        "station": "신원동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "-",
+        "pm25": "-",
+        "khai_grade": null
+      },
+      {
+        "station": "주엽동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "13",
+        "khai_grade": "2"
+      },
+      {
+        "station": "경안동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "29",
+        "pm25": "9",
+        "khai_grade": "1"
+      },
+      {
+        "station": "오포1동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "곤지암",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "2",
+        "khai_grade": "2"
+      },
+      {
+        "station": "김량장동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "13",
+        "khai_grade": "1"
+      },
+      {
+        "station": "수지",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "10",
+        "khai_grade": "1"
+      },
+      {
+        "station": "기흥",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "11",
+        "khai_grade": "2"
+      },
+      {
+        "station": "중부대로(구갈동)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "25",
+        "pm25": "11",
+        "khai_grade": "1"
+      },
+      {
+        "station": "모현읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "11",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "이동읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "4",
+        "khai_grade": "1"
+      },
+      {
+        "station": "백암면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "24",
+        "pm25": "10",
+        "khai_grade": "1"
+      },
+      {
+        "station": "설성면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "10",
+        "pm25": "6",
+        "khai_grade": "1"
+      },
+      {
+        "station": "창전동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "장호원읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "28",
+        "pm25": "15",
+        "khai_grade": "1"
+      },
+      {
+        "station": "부발읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "관인면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "6",
+        "pm25": "12",
+        "khai_grade": "2"
+      },
+      {
+        "station": "선단동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "7",
+        "pm25": "-",
+        "khai_grade": null
+      }
+    ],
+    "강원": [
+      {
+        "station": "중앙로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "1",
+        "khai_grade": "2"
+      },
+      {
+        "station": "퇴계동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "3",
+        "pm25": "1",
+        "khai_grade": null
+      },
+      {
+        "station": "신사우동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "9",
+        "pm25": "1",
+        "khai_grade": "2"
+      },
+      {
+        "station": "온의동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "11",
+        "pm25": "1",
+        "khai_grade": "2"
+      },
+      {
+        "station": "방산면",
+        "measured_at": "2026-09-17 23:00",
+        "pm10": "-",
+        "pm25": "10",
+        "khai_grade": null
+      },
+      {
+        "station": "양구읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "7",
+        "pm25": "5",
+        "khai_grade": "1"
+      },
+      {
+        "station": "동해항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "39",
+        "pm25": "10",
+        "khai_grade": "1"
+      },
+      {
+        "station": "묵호항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "33",
+        "pm25": "9",
+        "khai_grade": "1"
+      },
+      {
+        "station": "호산항",
+        "measured_at": "2026-09-17 23:00",
+        "pm10": "17",
+        "pm25": "-",
+        "khai_grade": null
+      },
+      {
+        "station": "삼척항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "옥계항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "철원(DMZ)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "15",
+        "khai_grade": "2"
+      },
+      {
+        "station": "화천(DMZ)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "13",
+        "khai_grade": "2"
+      },
+      {
+        "station": "인제(DMZ)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "25",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "고성(DMZ)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "중앙동(강원)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "반곡동(명륜동)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "문막읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "지정면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "주문진읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "10",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "옥천동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "14",
+        "khai_grade": "1"
+      },
+      {
+        "station": "초당동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "11",
+        "pm25": "3",
+        "khai_grade": "1"
+      },
+      {
+        "station": "천곡동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "11",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "남양동1",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "5",
+        "khai_grade": "1"
+      },
+      {
+        "station": "평창읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "7",
+        "khai_grade": "1"
+      },
+      {
+        "station": "북평면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "8",
+        "khai_grade": "1"
+      },
+      {
+        "station": "정선읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "11",
+        "pm25": "1",
+        "khai_grade": "1"
+      },
+      {
+        "station": "간성읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "치악산",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "-",
+        "pm25": "-",
+        "khai_grade": null
+      },
+      {
+        "station": "횡성읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "9",
+        "pm25": "2",
+        "khai_grade": "2"
+      },
+      {
+        "station": "상리",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "5",
+        "khai_grade": "1"
+      },
+      {
+        "station": "양양읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "11",
+        "pm25": "8",
+        "khai_grade": "1"
+      },
+      {
+        "station": "금호동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "6",
+        "khai_grade": "1"
+      },
+      {
+        "station": "갈말읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "홍천읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "-",
+        "pm25": "5",
+        "khai_grade": "1"
+      },
+      {
+        "station": "영월읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "화천읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "5",
+        "pm25": "9",
+        "khai_grade": "1"
+      },
+      {
+        "station": "황지동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "10",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "인제읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "7",
+        "khai_grade": "1"
+      },
+      {
+        "station": "우천면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "8",
+        "pm25": "2",
+        "khai_grade": "1"
+      }
+    ],
+    "충북": [
+      {
+        "station": "봉명동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "사천동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "11",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "호암동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "6",
+        "khai_grade": "1"
+      },
+      {
+        "station": "칠금동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "8",
+        "khai_grade": "1"
+      },
+      {
+        "station": "중앙탑면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "살미면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "11",
+        "khai_grade": "1"
+      },
+      {
+        "station": "장락동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "4",
+        "khai_grade": null
+      },
+      {
+        "station": "영천동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "청풍면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "7",
+        "pm25": "6",
+        "khai_grade": "1"
+      },
+      {
+        "station": "송학면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "10",
+        "khai_grade": "1"
+      },
+      {
+        "station": "오창읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "산남동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "오송읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "-",
+        "pm25": "-",
+        "khai_grade": null
+      },
+      {
+        "station": "가덕면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "9",
+        "pm25": "6",
+        "khai_grade": "1"
+      },
+      {
+        "station": "매포읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "9",
+        "pm25": "2",
+        "khai_grade": "1"
+      },
+      {
+        "station": "단성면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "11",
+        "pm25": "8",
+        "khai_grade": "1"
+      },
+      {
+        "station": "단양읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "8",
+        "pm25": "6",
+        "khai_grade": "1"
+      },
+      {
+        "station": "청천면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "7",
+        "pm25": "7",
+        "khai_grade": "1"
+      },
+      {
+        "station": "괴산읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "15",
+        "khai_grade": "1"
+      },
+      {
+        "station": "감물면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "8",
+        "pm25": "15",
+        "khai_grade": "1"
+      },
+      {
+        "station": "진천읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "6",
+        "khai_grade": "1"
+      },
+      {
+        "station": "덕산읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "11",
+        "khai_grade": "2"
+      },
+      {
+        "station": "금왕",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "6",
+        "khai_grade": "1"
+      },
+      {
+        "station": "음성읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "6",
+        "khai_grade": "1"
+      },
+      {
+        "station": "소이면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "3",
+        "khai_grade": "1"
+      },
+      {
+        "station": "영동읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "황간면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "6",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "도안면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "4",
+        "khai_grade": "1"
+      },
+      {
+        "station": "증평읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "11",
+        "khai_grade": "1"
+      },
+      {
+        "station": "보은읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "옥천읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "용담동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "4",
+        "khai_grade": null
+      },
+      {
+        "station": "용암동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "10",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "복대동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "8",
+        "khai_grade": "2"
+      }
+    ],
+    "충남": [
+      {
+        "station": "이원면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "8",
+        "khai_grade": "1"
+      },
+      {
+        "station": "태안읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "격렬비열도",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "-",
+        "pm25": "10",
+        "khai_grade": "1"
+      },
+      {
+        "station": "원북면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "3",
+        "khai_grade": "1"
+      },
+      {
+        "station": "예산군",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "27",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "삽교읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "27",
+        "pm25": "18",
+        "khai_grade": "1"
+      },
+      {
+        "station": "고덕면(충남)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "대천2동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "11",
+        "khai_grade": "2"
+      },
+      {
+        "station": "주교면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "외연도",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "홍성읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "내포",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "9",
+        "khai_grade": null
+      },
+      {
+        "station": "금산읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "청양읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "정산면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "3",
+        "pm25": "2",
+        "khai_grade": "2"
+      },
+      {
+        "station": "엄사면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "24",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "평택당진항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "대산항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "장항항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "평택당진항(당진항)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "-",
+        "pm25": "-",
+        "khai_grade": null
+      },
+      {
+        "station": "태안항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "50",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "보령항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "70",
+        "pm25": "16",
+        "khai_grade": "2"
+      },
+      {
+        "station": "서천읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "27",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "서면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "2",
+        "khai_grade": "2"
+      },
+      {
+        "station": "장항읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "성황동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "-",
+        "pm25": "-",
+        "khai_grade": null
+      },
+      {
+        "station": "백석동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "성성동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "성거읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "10",
+        "pm25": "1",
+        "khai_grade": "2"
+      },
+      {
+        "station": "신방동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "수신면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "사곡면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "-",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "공주",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "탄천면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "부여읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "독곶리",
+        "measured_at": null,
+        "pm10": null,
+        "pm25": null,
+        "khai_grade": null
+      },
+      {
+        "station": "동문동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "대산리",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "-",
+        "pm25": "-",
+        "khai_grade": "2"
+      },
+      {
+        "station": "성연면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "9",
+        "pm25": "1",
+        "khai_grade": "2"
+      },
+      {
+        "station": "송산면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "9",
+        "khai_grade": "1"
+      },
+      {
+        "station": "당진시청사",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "합덕읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "7",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "복운리",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "7",
+        "khai_grade": "1"
+      },
+      {
+        "station": "모종동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "배방읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "5",
+        "khai_grade": "1"
+      },
+      {
+        "station": "도고면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "둔포면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "인주면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "장재리",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "10",
+        "pm25": "1",
+        "khai_grade": "2"
+      },
+      {
+        "station": "송악면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "논산",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "-",
+        "pm25": "-",
+        "khai_grade": null
+      },
+      {
+        "station": "연무읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "성동면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "파도리",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "10",
+        "khai_grade": "2"
+      }
+    ],
+    "전북": [
+      {
+        "station": "노송동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "9",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "안성면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "순창읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "7",
+        "khai_grade": null
+      },
+      {
+        "station": "장수읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "장계면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "군산항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "24",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "삼천동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "팔복동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "24",
+        "pm25": "13",
+        "khai_grade": "2"
+      },
+      {
+        "station": "송천동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "서신동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "5",
+        "khai_grade": "1"
+      },
+      {
+        "station": "혁신동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "여의동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "15",
+        "khai_grade": "2"
+      },
+      {
+        "station": "효자동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "신풍동(군산)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "소룡동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "12",
+        "khai_grade": "2"
+      },
+      {
+        "station": "사정동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "옥산면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "비응도동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "26",
+        "pm25": "13",
+        "khai_grade": "1"
+      },
+      {
+        "station": "말도",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "27",
+        "pm25": "12",
+        "khai_grade": "1"
+      },
+      {
+        "station": "소룡동2",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "24",
+        "pm25": "13",
+        "khai_grade": "1"
+      },
+      {
+        "station": "삼기면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "팔봉동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "25",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "모현동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "용동면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "함열읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "춘포면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "-",
+        "pm25": "-",
+        "khai_grade": null
+      },
+      {
+        "station": "여산면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "8",
+        "khai_grade": "1"
+      },
+      {
+        "station": "금마면",
+        "measured_at": null,
+        "pm10": null,
+        "pm25": null,
+        "khai_grade": null
+      },
+      {
+        "station": "연지동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "17",
+        "khai_grade": "2"
+      },
+      {
+        "station": "신태인",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "6",
+        "khai_grade": null
+      },
+      {
+        "station": "영파동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "15",
+        "khai_grade": "1"
+      },
+      {
+        "station": "죽항동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "운봉읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "고창읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "10",
+        "khai_grade": null
+      },
+      {
+        "station": "심원면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "26",
+        "pm25": "16",
+        "khai_grade": "2"
+      },
+      {
+        "station": "부안읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "25",
+        "pm25": "11",
+        "khai_grade": "2"
+      },
+      {
+        "station": "새만금",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "7",
+        "khai_grade": "1"
+      },
+      {
+        "station": "계화면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "13",
+        "khai_grade": "1"
+      },
+      {
+        "station": "요촌동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "30",
+        "pm25": "13",
+        "khai_grade": "2"
+      },
+      {
+        "station": "광활면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "12",
+        "khai_grade": "1"
+      },
+      {
+        "station": "고산면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "봉동읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "구이면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "진안읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "6",
+        "khai_grade": "1"
+      },
+      {
+        "station": "운암면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "11",
+        "khai_grade": "1"
+      },
+      {
+        "station": "임실읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "9",
+        "khai_grade": "1"
+      },
+      {
+        "station": "관촌면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "8",
+        "khai_grade": "1"
+      },
+      {
+        "station": "무주읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "5",
+        "khai_grade": "2"
+      }
+    ],
+    "전남": [
+      {
+        "station": "용당동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "-",
+        "khai_grade": null
+      },
+      {
+        "station": "부흥동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "서강동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "-",
+        "pm25": "-",
+        "khai_grade": null
+      },
+      {
+        "station": "월내동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "25",
+        "pm25": "2",
+        "khai_grade": null
+      },
+      {
+        "station": "문수동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "여천동(여수)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "11",
+        "khai_grade": "2"
+      },
+      {
+        "station": "덕충동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "장천동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "27",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "연향동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "순천만",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "호두리",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "5",
+        "khai_grade": "1"
+      },
+      {
+        "station": "신대",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "빛가람동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "18",
+        "khai_grade": "1"
+      },
+      {
+        "station": "담양읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "-",
+        "pm25": "-",
+        "khai_grade": null
+      },
+      {
+        "station": "장성읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "7",
+        "khai_grade": "1"
+      },
+      {
+        "station": "화양면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "10",
+        "pm25": "1",
+        "khai_grade": "2"
+      },
+      {
+        "station": "율촌면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "삼일동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "중동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "태인동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "광양읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "봉강면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "진월면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "해남읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "25",
+        "pm25": "11",
+        "khai_grade": "2"
+      },
+      {
+        "station": "대불",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "15",
+        "khai_grade": "2"
+      },
+      {
+        "station": "영암읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "12",
+        "khai_grade": "2"
+      },
+      {
+        "station": "송단리",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "10",
+        "khai_grade": "1"
+      },
+      {
+        "station": "화순읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "8",
+        "khai_grade": "1"
+      },
+      {
+        "station": "영광읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "안마도",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "장흥읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "35",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "진도읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "17",
+        "khai_grade": "2"
+      },
+      {
+        "station": "신지면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "함평읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "고흥읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "신안군",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "25",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "홍도",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "11",
+        "khai_grade": "2"
+      },
+      {
+        "station": "가거도",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "무안읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "17",
+        "khai_grade": "2"
+      },
+      {
+        "station": "남악.오룡",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "33",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "강진읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "14",
+        "khai_grade": "2"
+      },
+      {
+        "station": "곡성읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "33",
+        "pm25": "8",
+        "khai_grade": "1"
+      },
+      {
+        "station": "구례읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "7",
+        "khai_grade": "1"
+      },
+      {
+        "station": "벌교읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "-",
+        "pm25": "-",
+        "khai_grade": null
+      },
+      {
+        "station": "보성읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "목포항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "29",
+        "pm25": "14",
+        "khai_grade": null
+      },
+      {
+        "station": "광양항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "8",
+        "khai_grade": null
+      },
+      {
+        "station": "여수항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "광양 중마",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "13",
+        "khai_grade": "2"
+      },
+      {
+        "station": "광양 율촌",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "완도항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "7",
+        "khai_grade": "2"
+      }
+    ],
+    "경북": [
+      {
+        "station": "우현동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "장흥동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "장량동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "대도동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "대송면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "14",
+        "khai_grade": "2"
+      },
+      {
+        "station": "3공단",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "송도동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "오천읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "청림동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "35",
+        "pm25": "19",
+        "khai_grade": "2"
+      },
+      {
+        "station": "연일읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "-",
+        "pm25": "-",
+        "khai_grade": null
+      },
+      {
+        "station": "제철동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "성건동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "1",
+        "khai_grade": "2"
+      },
+      {
+        "station": "보덕동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "5",
+        "khai_grade": null
+      },
+      {
+        "station": "안강읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "외동읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "양덕동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "평화남산동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "대광동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "율곡동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "명륜동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "공단동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "6",
+        "khai_grade": "1"
+      },
+      {
+        "station": "원평동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "-",
+        "khai_grade": null
+      },
+      {
+        "station": "형곡동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "14",
+        "khai_grade": "2"
+      },
+      {
+        "station": "4공단",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "-",
+        "khai_grade": null
+      },
+      {
+        "station": "진미동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "8",
+        "khai_grade": "1"
+      },
+      {
+        "station": "가흥동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "5",
+        "khai_grade": "1"
+      },
+      {
+        "station": "영주동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "27",
+        "pm25": "10",
+        "khai_grade": "1"
+      },
+      {
+        "station": "중방동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "12",
+        "khai_grade": "2"
+      },
+      {
+        "station": "하양읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "진량읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "10",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "상주시",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "11",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "칠곡군",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "11",
+        "khai_grade": "2"
+      },
+      {
+        "station": "영덕읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "강구면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "24",
+        "pm25": "10",
+        "khai_grade": null
+      },
+      {
+        "station": "영해면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "문경시",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "4",
+        "khai_grade": "1"
+      },
+      {
+        "station": "성주군",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "26",
+        "pm25": "13",
+        "khai_grade": "1"
+      },
+      {
+        "station": "화북면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "영천시",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "안계면(교외)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "10",
+        "pm25": "5",
+        "khai_grade": "1"
+      },
+      {
+        "station": "의성읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "안계면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "6",
+        "khai_grade": "1"
+      },
+      {
+        "station": "울진군",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "석포면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "8",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "봉화군청",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "5",
+        "khai_grade": null
+      },
+      {
+        "station": "태하리",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "15",
+        "khai_grade": "2"
+      },
+      {
+        "station": "울릉읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "대가야읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "13",
+        "khai_grade": "2"
+      },
+      {
+        "station": "영양군",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "예천군",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "화양읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "포항항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "29",
+        "pm25": "12",
+        "khai_grade": "2"
+      },
+      {
+        "station": "청송읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "7",
+        "khai_grade": "2"
+      }
+    ],
+    "경남": [
+      {
+        "station": "삼진로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "경화동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "5",
+        "khai_grade": null
+      },
+      {
+        "station": "월영동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "하동읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "금성면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "10",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "동상동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "삼방동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "26",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "장유동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "14",
+        "khai_grade": "2"
+      },
+      {
+        "station": "진영읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "김해대로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "진례면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "저구리",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "아주동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "고현동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "사천읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "향촌동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "8",
+        "pm25": "1",
+        "khai_grade": "2"
+      },
+      {
+        "station": "대산면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "옥포항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "29",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "북부동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "삼호동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "10",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "물금읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "내일동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "19",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "무전동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "고성읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "거창읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "8",
+        "pm25": "11",
+        "khai_grade": "2"
+      },
+      {
+        "station": "가야읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "24",
+        "pm25": "6",
+        "khai_grade": "1"
+      },
+      {
+        "station": "함양읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "26",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "남해읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "-",
+        "khai_grade": null
+      },
+      {
+        "station": "산청읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "6",
+        "khai_grade": "1"
+      },
+      {
+        "station": "남상면",
+        "measured_at": "2026-09-17 23:00",
+        "pm10": "-",
+        "pm25": "10",
+        "khai_grade": null
+      },
+      {
+        "station": "의령읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "12",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "창녕읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "4",
+        "khai_grade": "2"
+      },
+      {
+        "station": "합천읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "7",
+        "khai_grade": "1"
+      },
+      {
+        "station": "마산항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "하동항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "18",
+        "pm25": "9",
+        "khai_grade": "2"
+      },
+      {
+        "station": "삼천포항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "14",
+        "khai_grade": "2"
+      },
+      {
+        "station": "진해항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "15",
+        "khai_grade": "2"
+      },
+      {
+        "station": "상봉동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "대안동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "상대동(진주)",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "정촌면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "8",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "명서동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "웅남동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "성주동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "용지동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "반송로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "사파동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "3",
+        "khai_grade": null
+      },
+      {
+        "station": "회원동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "봉암동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "내서읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "13",
+        "pm25": "6",
+        "khai_grade": "2"
+      }
+    ],
+    "제주": [
+      {
+        "station": "이도동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "31",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "연동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "20",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "조천읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "28",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "한림읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "29",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "화북동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "21",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "애월읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "5",
+        "khai_grade": "2"
+      },
+      {
+        "station": "동홍동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "27",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "성산읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "31",
+        "pm25": "10",
+        "khai_grade": "2"
+      },
+      {
+        "station": "남원읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "22",
+        "pm25": "13",
+        "khai_grade": "2"
+      },
+      {
+        "station": "강정동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "23",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "대정읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "14",
+        "pm25": "7",
+        "khai_grade": null
+      },
+      {
+        "station": "노형로",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "25",
+        "pm25": "8",
+        "khai_grade": "2"
+      },
+      {
+        "station": "고산리",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "47",
+        "pm25": "11",
+        "khai_grade": null
+      },
+      {
+        "station": "제주항",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "39",
+        "pm25": "8",
+        "khai_grade": "2"
+      }
+    ],
+    "세종": [
+      {
+        "station": "조치원읍",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "3",
+        "khai_grade": "2"
+      },
+      {
+        "station": "아름동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "17",
+        "pm25": "11",
+        "khai_grade": "2"
+      },
+      {
+        "station": "한솔동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "15",
+        "pm25": "6",
+        "khai_grade": "2"
+      },
+      {
+        "station": "부강면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "7",
+        "khai_grade": "2"
+      },
+      {
+        "station": "보람동",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "16",
+        "pm25": "4",
+        "khai_grade": "1"
+      },
+      {
+        "station": "전의면",
+        "measured_at": "2026-09-17 22:00",
+        "pm10": "11",
+        "pm25": "4",
+        "khai_grade": "2"
+      }
+    ]
+  }
+}

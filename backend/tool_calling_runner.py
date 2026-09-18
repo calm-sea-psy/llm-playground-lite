@@ -11,8 +11,13 @@
 유도한다) 두 도구는 항상 "테스트 환경이라 건너뛴다"는 합성 결과로 응답하고,
 **모델이 그 도구를 요청했다는 사실 자체**만 채점한다(destructive_confirm
 카테고리). 나머지 다섯 도구(get_current_datetime/get_holidays/
-get_air_quality/list_models/always_fails)는 실제로 실행한다 — 읽기 전용이거나
+get_air_quality/list_models/always_fails)는 실행한다 — 읽기 전용이거나
 의도된 실패뿐이라 부작용이 없다.
+
+**측정 경로의 도구 응답은 고정값이다.** 세트 옆 `tool_calling_fixtures.json`이 있으면 현재 시각·공휴일·대기질·설치된 모델
+네 도구는 기록해 둔 실제 응답을 돌려준다(`agent_tools.fixed_responses`) — 실시간 값이면 바퀴마다·실행마다 같은 문항이 다른
+입력으로 돈다. 채점도 같은 문맥 안에서 한다(tc-104의 정답 계산, `<현재 연도>`). 파일이 없으면 실시간으로 돌고 실행 조건에
+`live`로 적힌다.
 
 주 지표는 "모델이 올바른 도구를 올바른 인자로 골랐는가"(모델의 판단)이고,
 실제 API 호출 성공 여부는 보조 지표다 — 도구 실행 자체의 실패
@@ -34,7 +39,16 @@ import response_health as rh
 import run_errors
 
 TESTSET_PATH = qt.TESTSETS_DIR / "tool_calling.json"
+FIXTURES_PATH = TESTSET_PATH.parent / "tool_calling_fixtures.json"
 MAX_HOPS = 5
+
+# 실행 조건 `tool_responses`의 값 — 키가 없는 옛 실행은 실시간으로 잰 것이다
+TOOL_RESPONSES_FIXED, TOOL_RESPONSES_LIVE = "fixed", "live"
+
+
+def load_fixtures() -> dict[str, Any] | None:
+    """측정용 도구 고정값 — 없으면 None(실시간으로 잰다)."""
+    return json.loads(FIXTURES_PATH.read_text(encoding="utf-8")) if FIXTURES_PATH.exists() else None
 
 # 판정기 버전(quality_scoring.JUDGE_VERSIONS와 같은 원칙 — 판정이 달라질 때만 올리고, 이유는 데이터로 둔다).
 # 이 판정기들은 재채점 대상이 아니다: tc-104 등은 채점 중에 실제 API를 불러 정답을
@@ -132,6 +146,7 @@ def _ask_with_tools(
     hops = 0
     truncated = False
     final: dict[str, Any] | None = None
+    first_call: dict[str, Any] | None = None
 
     while True:
         turn_text: list[str] = []
@@ -153,6 +168,9 @@ def _ask_with_tools(
                 turn_calls.append(_validated_call(tc))
             if chunk.get("done"):
                 final = chunk
+        if hops == 0:
+            # 첫 호출의 메타 — 두 바퀴 재현은 캐시 조건을 문항의 첫 호출로 본다(뒤 호출의 캐시는 앞 hop이 만든다)
+            first_call = qr._ollama_call_meta(final)
 
         text_parts.extend(turn_text)
         if not turn_calls:
@@ -186,6 +204,7 @@ def _ask_with_tools(
         "truncated": truncated,
         # 마지막 hop의 호출 메타(전 프로바이더 원칙 — 빈 응답의 원인을 가르는 재료)
         "call": qr._ollama_call_meta(final),
+        "first_call": first_call,
     }
 
 
@@ -207,7 +226,7 @@ def _ask_variant(
         if not run_errors.is_model_timeout(exc):
             raise
         failure = "timeout"
-    return {"response": "", "calls": [], "hops": 0, "truncated": False, "call": None}, failure
+    return {"response": "", "calls": [], "hops": 0, "truncated": False, "call": None, "first_call": None}, failure
 
 
 # ---------------------------------------------------------------------------
@@ -227,7 +246,8 @@ def _as_comparable(v: Any) -> Any:
 def _args_match(expected: dict[str, Any], actual: dict[str, Any]) -> bool:
     if not expected:
         return True
-    now_year = datetime.now(ZoneInfo("Asia/Seoul")).year
+    # `<현재 연도>`는 모델이 본 현재 시각의 연도다 — 고정 응답이면 기록한 순간, 아니면 지금
+    now_year = (agent_tools.fixed_now() or datetime.now(ZoneInfo("Asia/Seoul"))).astimezone(ZoneInfo("Asia/Seoul")).year
     for key, exp_val in expected.items():
         if exp_val == "<현재 연도>":
             exp_val = now_year
@@ -435,6 +455,7 @@ def run_tool_calling(model: str, user_system: str | None = None) -> dict[str, An
                     "calls": result["calls"],
                     "truncated": result["truncated"],
                     **({"call": result["call"]} if result.get("call") else {}),
+                    **({"first_call": result["first_call"]} if result.get("first_call") else {}),
                     **({"failure": failure} if failure else {}),
                     **scored,
                 }
@@ -463,6 +484,7 @@ def run_tool_calling(model: str, user_system: str | None = None) -> dict[str, An
                     "calls": result["calls"],
                     "truncated": result["truncated"],
                     **({"call": result["call"]} if result.get("call") else {}),
+                    **({"first_call": result["first_call"]} if result.get("first_call") else {}),
                     **({"failure": failure} if failure else {}),
                     **scored,
                 }

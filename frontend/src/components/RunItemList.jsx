@@ -1,4 +1,6 @@
+import { useState } from 'react'
 import { STATUS_LABEL } from '../metrics'
+import { rerunReasonLabel, rerunReasonText } from '../rerun'
 import { FAILURE_CAUSE_LABEL, OUTCOME, OUTCOME_LABEL } from '../scoring'
 
 // 실행 항목 목록 — 진행 중 화면과 저장된 상세가 같이 쓴다. 상태 넷을 끝까지 구분해
@@ -24,6 +26,19 @@ const RERUNNABLE = new Set([
 const AUX_ROLE_LABEL = { embedding: '임베딩' }
 
 export default function RunItemList({ items, provenance, parentRunId, onRerun, rerunDisabled }) {
+  // 이유를 받는 중인 항목 — 버튼을 누르면 그 자리에 입력칸이 열리고, 이유를 적어야 다시 잰다
+  const [asking, setAsking] = useState(null)
+  const [reason, setReason] = useState('')
+  const reasonText = rerunReasonText(reason)
+
+  function submit(event, itemId) {
+    event.preventDefault()
+    if (!reasonText || rerunDisabled) return
+    onRerun(itemId, reasonText)
+    setAsking(null)
+    setReason('')
+  }
+
   return (
     <ul className="run-items">
       {items.map((item) => {
@@ -49,13 +64,43 @@ export default function RunItemList({ items, provenance, parentRunId, onRerun, r
             ))}
             {item.error && <span className="item-error"> {item.error}</span>}
             {fromRerun && (
-              <span className="run-item-source"> · 재실행 {new Date(source.started_at).toLocaleString()}</span>
+              <span className="run-item-source">
+                {' '}
+                · 재실행 {new Date(source.started_at).toLocaleString()} ({rerunReasonLabel(source.reason)})
+              </span>
             )}
             {/* 버튼은 저장 상태로 판단한다 — 능력 부재는 다시 재도 능력 부재다. outcome이 없는 옛 결과만 status로 본다 */}
             {onRerun && (outcome ? outcome === OUTCOME.FAILED : item.status === 'failed') && RERUNNABLE.has(item.id) && (
-              <button type="button" className="ghost run-item-rerun" onClick={() => onRerun(item.id)} disabled={rerunDisabled}>
-                이 지표 다시 재기
-              </button>
+              asking === item.id ? (
+                <form className="run-item-reason" onSubmit={(event) => submit(event, item.id)}>
+                  <input
+                    type="text"
+                    value={reason}
+                    onChange={(event) => setReason(event.target.value)}
+                    placeholder="다시 재는 이유 — 리포트의 혼합 실행 줄에 실린다"
+                    aria-label={`${item.label} 재실행 이유`}
+                    autoFocus
+                  />
+                  <button type="submit" className="ghost" disabled={!reasonText || rerunDisabled}>
+                    다시 재기
+                  </button>
+                  <button type="button" className="ghost" onClick={() => setAsking(null)}>
+                    취소
+                  </button>
+                </form>
+              ) : (
+                <button
+                  type="button"
+                  className="ghost run-item-rerun"
+                  onClick={() => {
+                    setAsking(item.id)
+                    setReason('')
+                  }}
+                  disabled={rerunDisabled}
+                >
+                  이 지표 다시 재기
+                </button>
+              )
             )}
           </li>
         )

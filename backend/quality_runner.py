@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import bench_config as cfg
+import bench_measure
 import ollama_client
 import quality_scoring as qs
 import quality_testsets as qt
@@ -597,18 +598,15 @@ def aggregate_consistency(detail: list[dict[str, Any]]) -> float | None:
 
 
 # ---------------------------------------------------------------------------
-# 긴 컨텍스트 기억력 + 다중 턴 제약 유지 — 압축 켬/끔 대조군
+# 긴 컨텍스트 기억력 + 다중 턴 제약 유지 — 점수는 압축 끔, 압축 켬은 참고
 # ---------------------------------------------------------------------------
 
 
-# 압축 요약 전용 모델 — 채점 대상 모델과 완전히 무관하다. 실측으로 확인한
-# 버그: 예전에는 `conv["model"]`에 채점 대상 모델 이름(예: 베이스라인의
-# "gpt-5.6-luna")을 그대로 넣었는데, `summarizer.build_context`가 압축이
-# 트리거되면 그 이름을 그대로 요약 호출(항상 로컬 Ollama)에
-# 넘긴다 — Ollama에 없는 모델 이름이라 "model 'gpt-5.6-luna' not found"
-# 404로 죽는다. 클라우드 모델을 테스트할 때만, 그리고 압축이 실제로
-# 트리거될 만큼 대화가 길어졌을 때만 나타나 처음엔 못 잡았다.
-_SUMMARIZER_MODEL = "llama3.2:3b"
+# 압축 켬 경로의 요약기 — **후보 자신**이다. 이 Use Case에는 다중 턴 압축 단계가 없어 점수는 압축 끔 경로로 내고, 켬은
+# 참고로만 싣는다. 모델 하나를 배포하는 구성이 압축을 넣는다면 요약도 그 모델이 하게 되니(채팅 화면과 같다) 켬 경로도 그
+# 조건으로 잰다. 요약 호출은 로컬 Ollama로만 가므로 클라우드 후보(기준선)는 켬 경로를 돌지 않는다 — 클라우드 모델 이름이
+# 요약 호출로 넘어가면 Ollama에 없는 모델이라 404로 죽는다(실측으로 한 번 겪었다).
+SELF_SUMMARIZER = "후보 자신"
 
 
 def _run_scenario(
@@ -623,7 +621,7 @@ def _run_scenario(
     않는다 — 여기서만 쓰고 버리는 in-memory 대화 상태다. 실험 프롬프트는 시나리오
     자체 프롬프트 뒤에 붙여 한 system으로 넘긴다(압축 경로도 같은 system을 본다)."""
     conv = {
-        "model": _SUMMARIZER_MODEL,  # 아래 참고 — 채점 대상 모델이 아니라 압축 전용
+        "model": model,  # 압축 켬 경로의 요약도 후보 자신이 한다(`SELF_SUMMARIZER`)
         "system": merge_system(scenario.get("system_prompt"), user_system),
         "messages": [],
         "summary": None,
@@ -634,10 +632,8 @@ def _run_scenario(
     turn_summarized: list[bool] = []  # 이 턴을 보내기 전에 요약 호출이 있었나
     for turn_text in scenario["turns"]:
         conv["messages"].append({"role": "user", "content": turn_text})
-        # 압축 요약 호출 자체는 항상 로컬 Ollama + _SUMMARIZER_MODEL로 한다 —
-        # 이건 컨텍스트 관리의 내부 구현일 뿐 채점 대상이 아니다. 채점 대상인
-        # "이번 턴 답변"만 프로바이더·모델에 맞게 따로 받는다(아래 `ask_model` 호출,
-        # 고정 샘플링이 필요한 순위 지표 원칙은 네이티브 경로에서만 적용된다).
+        # 요약 호출은 로컬 Ollama 앱 경로로 간다(요약 seed 고정). 채점하는 "이번 턴 답변"은 프로바이더에 맞게 따로
+        # 받는다(아래 `ask_model` — 고정 샘플링이 필요한 순위 지표 원칙은 네이티브 경로에서만 적용된다)
         summarized_before = conv["summarized_upto"]
         send_messages, _compressed = summarizer.build_context(conv, conv["system"], compress)
         turn_summarized.append(conv["summarized_upto"] != summarized_before)
@@ -670,18 +666,37 @@ def score_long_context_entry(scenario: dict[str, Any], entry: dict[str, Any]) ->
 
 
 def aggregate_long_context(detail: list[dict[str, Any]]) -> dict[str, Any]:
-    """대표값은 압축 켠 경로(실사용 조건). 압축 끈 경로는 대조군 — 나란히 저장하되
-    종합 점수엔 넣지 않는다(zero-shot/few-shot, ko/en과 같은 구조)."""
+    """대표값(`score`)은 압축 끈 경로 — 이 Use Case에는 압축 단계가 없다. 압축 켠 경로(`score_compressed`)는 참고로 나란히
+    두고 종합 점수엔 넣지 않는다(zero-shot/few-shot과 같은 구조). 옛 결과의 모양은 `current_long_context`가 읽을 때 바꾼다."""
 
     def mean(kind: str, compress: bool) -> float | None:
         xs = [1.0 if e["passed"] else 0.0 for e in detail if e["kind"] == kind and e["compress"] == compress]
         return sum(xs) / len(xs) if xs else None
 
     return {
-        "recall": {"score": mean("recall", True), "score_uncompressed": mean("recall", False)},
-        "constraint": {"score": mean("constraint", True), "score_uncompressed": mean("constraint", False)},
+        "recall": {"score": mean("recall", False), "score_compressed": mean("recall", True)},
+        "constraint": {"score": mean("constraint", False), "score_compressed": mean("constraint", True)},
         "detail": detail,
     }
+
+
+# 옛 결과의 표식 — 대표값이 압축 켠 경로이던 때의 끈 경로 값 키. 지금 모양에는 이 키를 쓰지 않아 이 키가 있으면 옛 모양이다
+_OLD_UNCOMPRESSED_KEY = "score_uncompressed"
+
+
+def current_long_context(result: dict[str, Any] | None) -> dict[str, Any] | None:
+    """결과(실행·기준선)를 **읽을 때** 긴 컨텍스트 값을 지금 모양으로 — 옛 모양(`score`=켬 · `score_uncompressed`=끔)이면
+    `score`=끔 · `score_compressed`=켬으로 바꾼다. 결과 파일은 고치지 않는다(측정 기록을 덮으면 원래 값을 볼 자리가 없다).
+    옛 실행도 끔 값을 갖고 있어 대표값을 끔으로 옮겨도 옛 값과 끊기지 않는다. 지금 모양은 그대로 둔다(두 번 불러도 같다)."""
+    long_context = ((result or {}).get("metrics") or {}).get("long_context")
+    if not isinstance(long_context, dict):
+        return result
+    for kind in ("recall", "constraint"):
+        value = long_context.get(kind)
+        if isinstance(value, dict) and _OLD_UNCOMPRESSED_KEY in value:
+            rest = {k: v for k, v in value.items() if k not in ("score", _OLD_UNCOMPRESSED_KEY)}
+            long_context[kind] = {**rest, "score": value[_OLD_UNCOMPRESSED_KEY], "score_compressed": value.get("score")}
+    return result
 
 
 def diverged_before_compression(detail: list[dict[str, Any]]) -> list[str]:
@@ -708,8 +723,8 @@ def diverged_before_compression(detail: list[dict[str, Any]]) -> list[str]:
 
 def split_before_compression(long_context: dict[str, Any]) -> list[dict[str, Any]]:
     """압축이 걸릴 수 없는 턴에서 켬/끔이 갈린 시나리오와 **그 자리의 값** — 처음 갈린 턴, 그 턴 두 호출(켬·끔 순)의
-    `cached_tokens`와 `load_duration_ns`. 시나리오 이름만으로는 무엇이 배제됐는지 못 읽는다: 캐시가 같은 채 갈렸으면 캐시로도
-    설명되지 않는다. 갈렸다고 보는 규칙은 `diverged_before_compression`과 같다.
+    `cached_tokens`와 `load_duration_ns`. 시나리오 이름만으로는 그 자리를 못 읽는다 — 앞선 호출이 남긴 상태가 답을 바꾸는데,
+    `cached_tokens` 수가 같다고 그 상태가 같은 것은 아니다(실측). 갈렸다고 보는 규칙은 `diverged_before_compression`과 같다.
 
     모든 턴의 호출 기록(`turns`)이 없는 옛 결과는 채점 턴으로 시나리오만 가린다 — 없는 값을 지어내지 않는다."""
     turns = long_context.get("turns")
@@ -732,21 +747,24 @@ def split_before_compression(long_context: dict[str, Any]) -> list[dict[str, Any
     return list(out.values())
 
 
-def _summarizer_loaded(summaries: int) -> dict[str, Any]:
-    """요약 모델이 **실제로 올라간 모습** — 컨텍스트와 VRAM은 요청값이 아니라 `/api/ps`에서 읽는다(요약 호출이 보내는 값과
-    Ollama가 올린 값이 다를 수 있다). 요약이 한 번도 걸리지 않았으면 읽지 않는다 — 그때 보이는 모델은 요약 모델이 아니다.
-    후보가 요약 모델과 같은 모델이면 한 줄로 보인다."""
-    out: dict[str, Any] = {"model": _SUMMARIZER_MODEL, "summaries": summaries}
-    if summaries == 0:
-        return out
+def _reload_before_scenario(model: str, meter: Any) -> None:
+    """시나리오 앞에서 모델을 내렸다 올린다 — 바로 앞에 보낸 호출이 남긴 상태가 같은 입력의 답을 바꾼다(실측: 새로 올린 직후,
+    같은 턴을 곧바로 다시 보낸 뒤, 앞 시나리오의 마지막 턴 뒤가 서로 다른 답을 냈고, `cached_tokens` 수가 같아도 그랬다). 켬·끔 두
+    경로와 2회차가 시나리오마다 같은 상태에서 시작해야 압축이 걸릴 수 없는 턴의 입력과 상태가 같아진다. 올리는 절차는 로드 시간
+    항목과 같다. 다시 올리는 동안은 계측 밖이다 — `meter`는 계측 중인 경로만 넘긴다(켬 경로는 이미 멈춰 있다)."""
+    if meter is not None:
+        meter.pause()
     try:
-        loaded = next((m for m in ollama_client.list_loaded() if m.get("name") == _SUMMARIZER_MODEL), None)
-    except Exception:  # noqa: BLE001 — 기록이 목적이라 조회 실패로 지표를 실패시키지 않는다
-        return {**out, "read_error": True}
-    if loaded is None:
-        return {**out, "loaded": False}
-    return {**out, "loaded": True, "context_length": loaded.get("context_length"), "vram_bytes": loaded.get("size_vram"),
-            "size_bytes": loaded.get("size")}
+        bench_measure.measure_model_load(model)
+    finally:
+        if meter is not None:
+            meter.resume()
+
+
+def _summarizer_loaded(summaries: int) -> dict[str, Any]:
+    """켬 경로의 요약 기록 — 요약기는 후보 자신이라 따로 올라간 모델이 없다(컨텍스트는 후보의 것이 `loaded_context_length`에
+    있다). 요약이 몇 번 걸렸는지만 남긴다. 따로 올린 요약 모델의 컨텍스트·VRAM을 적던 옛 결과는 리포트가 그대로 읽는다."""
+    return {"model": SELF_SUMMARIZER, "self": True, "summaries": summaries}
 
 
 def run_long_context(
@@ -756,19 +774,24 @@ def run_long_context(
     *,
     compress_paths: tuple[bool, ...] = (False, True),
 ) -> dict[str, Any]:
-    """두 경로(압축 끔 → 켬)로 시나리오를 돈다. **끔을 먼저 돈다** — 최근 `summarizer.KEEP_RECENT_TURNS`턴까지는 두 경로가
-    같은 입력을 보내, 켬을 먼저 돌면 끔의 앞쪽 턴이 방금 돈 켬의 캐시를 받는다. 같은 호출을 다시 도는 재현 확인은 끔 경로만
-    돌므로(`compress_paths=(False,)`), 끔을 먼저 두어야 두 번의 끔이 같은 자리(앞 항목 바로 뒤)에서 출발한다.
+    """두 경로(압축 끔 → 켬)로 시나리오를 돈다. 점수는 끔 경로, 켬 경로(후보 자신이 요약)는 참고다. **시나리오마다 모델을
+    내렸다 올린다**(`_reload_before_scenario`) — 최근 `summarizer.KEEP_RECENT_TURNS`턴까지는 두 경로가 같은 입력을 보내는데,
+    앞선 호출이 남긴 상태가 다르면 그 턴에서 이미 답이 갈린다. 다시 올려 두 경로와 2회차(`compress_paths=(False,)`)가 시나리오마다
+    같은 상태에서 시작한다. 끔을 먼저 도는 순서는 그대로 둔다. 네이티브 경로가 아닌 프로바이더(클라우드 기준선)는 켬 경로를 돌지
+    않고 다시 올리지도 않는다 — 요약 호출과 내렸다 올리기가 로컬 Ollama로만 간다(`SELF_SUMMARIZER`).
 
     - `detail`: 채점하는 턴 — 켬 경로 먼저 담는다(저장 모양은 순서를 바꾸기 전과 같다).
     - `turns`: **모든 턴**의 답과 호출 기록, 실제로 돈 순서대로. 채점하지 않는 앞쪽 턴에서 갈린 것까지 턴별로 본다.
-    - `summarizer_loaded`: 켬 경로를 돈 뒤 요약 모델이 올라간 모습(요약 횟수 포함).
-    켬 경로는 요약 모델 호출이 끼어 **계측 구간 밖**이다 — 전력과 응답 시간에 그 로드·생성이 섞이지 않게 뺀다."""
+    - `summarizer_loaded`: 켬 경로의 요약 기록(요약 횟수).
+    켬 경로는 요약 호출이 끼어 **계측 구간 밖**이다 — 전력과 응답 시간에 요약 생성이 섞이지 않게 뺀다."""
+    if True in compress_paths and not provider.supports_native_api:
+        compress_paths = tuple(path for path in compress_paths if not path)
     d = qt.load_quality_testset("long_context")
     scenarios = d["scenarios"]
     by_path: dict[bool, list[dict[str, Any]]] = {True: [], False: []}
     turns: list[dict[str, Any]] = []
     summarizer_state: dict[str, Any] | None = None
+    reload = provider.supports_native_api
 
     for compress in compress_paths:
         meter = _meter.get() if compress else None
@@ -777,6 +800,8 @@ def run_long_context(
         summaries = 0
         try:
             for scenario in scenarios:
+                if reload:
+                    _reload_before_scenario(model, None if compress else _meter.get())
                 run = _run_scenario(model, provider, scenario, compress=compress, user_system=user_system)
                 replies, failures = run["turn_replies"], run["turn_failures"]
                 for turn, reply in enumerate(replies, 1):

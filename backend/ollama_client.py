@@ -187,14 +187,16 @@ def app_chat(
     *,
     temperature: float,
     tools: list[dict[str, Any]] | None = None,
+    seed: int | None = None,
 ) -> Generator[dict[str, Any], None, None]:
-    """앱 경로의 채팅 스트리밍 — 청크를 그대로 yield한다(`stream_chat`과 같은 모양)."""
+    """앱 경로의 채팅 스트리밍 — 청크를 그대로 yield한다(`stream_chat`과 같은 모양). `seed`는 주는 호출만 보낸다 — 요약만 준다.
+    채팅·도구 채팅은 `/v1`에서 옮겨 온 조건 그대로 seed를 보내지 않는다."""
     return stream_chat(
         model,
         messages,
         num_ctx=cfg.NUM_CTX,
         num_predict=APP_NUM_PREDICT,
-        sampling={"temperature": temperature, "top_p": APP_TOP_P},
+        sampling={"temperature": temperature, "top_p": APP_TOP_P, **({"seed": seed} if seed is not None else {})},
         think=None,
         timeout=APP_TIMEOUT_SEC,
         tools=tools,

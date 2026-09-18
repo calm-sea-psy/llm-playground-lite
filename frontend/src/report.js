@@ -12,6 +12,7 @@
 import {
   BASELINE_ROW_ID,
   CATEGORIES,
+  COMPOSITE_DEFINITION,
   FAILURE_CAUSE_LABEL,
   METRICS,
   OUTCOME,
@@ -22,10 +23,11 @@ import {
   baselineMetricCount,
   baselineRemeasurePending,
   categoryContribution,
+  consistencyExclusion,
   consistencyGateLines,
-  demotedWeights,
   flipGroups,
   formatMetricCell,
+  gatedWeights,
   isPromptExperiment,
   itemFailure,
   koreanPurityGate,
@@ -47,10 +49,16 @@ import {
   conditionMismatchLines,
   consistencyNumPredict,
   documentLength,
+  commitText,
   hardwareText,
+  softwareText,
+  powerText,
+  longContextReloadText,
+  reloadAfterSkippedText,
   machineLabel,
   ollamaVersionText,
   samplingText,
+  toolResponsesText,
 } from './runDiff'
 
 // 상용 대비 점수 — 기준선이 값을 가진 지표가 이보다 적으면 싣지 않는다(리포트가 그 까닭을 점수 정리에 적는다)
@@ -76,24 +84,34 @@ export function conditionLines(detail) {
     `num_ctx ${c.num_ctx} · 속도 탐침 num_predict ${c.num_predict} · 품질 num_predict ${c.quality_num_predict} · 일관성 num_predict ${consistencyNumPredict(consistencyConfig)}`,
     `샘플링 ${samplingText(c.sampling)}`,
     `일관성 샘플링 ${samplingText(c.consistency_sampling)}`,
-    `thinking ${c.think ? '켬' : '끔'} · 워밍업 ${c.warmup_count}회 · 반복 ${c.repeat_count}회`,
+    `thinking ${c.think ? '켬' : '끔'} · 워밍업 ${c.warmup_count}회(본 집계에서 뺐다) · 반복 ${c.repeat_count}회`,
     `타임아웃 짧은 ${c.timeout_short_sec}초 / 긴 ${c.timeout_long_sec}초 / 품질 ${c.quality_timeout_sec}초`,
     `컨텍스트 단계 ${(c.context_stage_tokens || []).join(' / ')} 토큰`,
     `요약 압축 모델 ${c.summarizer_model ?? '기록 없음'}`,
+    `긴 컨텍스트 시작 ${longContextReloadText(c)}`,
+    `건너뛴 항목 뒤 재로드 ${reloadAfterSkippedText(c)}`,
     `문항 집합 ${c.question_set ?? (c.assignment ? '고른 문항' : '기록 없음')}`,
     `문서 길이 ${documentLength(c)}`,
     `측정 기계 ${machineLabel(c.measurement_machine)} · Ollama ${ollamaVersionText(c)}`,
     `하드웨어 ${hardwareText(c.hardware)}`,
+    `도구 커밋 ${commitText(c.tool_commit)}`,
+    `소프트웨어 ${softwareText(c.software)}`,
+    `전원(시작 시) ${powerText(c.power)}`,
+    `도구 응답 ${toolResponsesText(c)}`,
   ]
 }
 
-/** 긴 컨텍스트 두 지표가 **요약 압축을 켠 경로의 값**이라는 것과, 압축을 끈 경로와 값이 다른 칸 — 측정 조건 상세의
- * `요약 압축 모델` 줄 아래에 붙는다. 압축을 끈 경로는 결과에만 있어, 이 줄이 없으면 떨어진 값을 `모델이 잊었다`로 읽게 된다.
- * **값은 문장에 박지 않고 결과에서 센다** — 다시 재거나 재채점하면 따라간다.
+// 켬 경로의 요약기가 후보 자신이라는 기록 값 — 백엔드 `quality_runner.SELF_SUMMARIZER`와 같다
+const SELF_SUMMARIZER = '후보 자신'
+
+/** 측정 조건 상세의 `요약 압축` 문단 — 이 Use Case에 다중 턴 압축이 없어 긴 컨텍스트 두 지표의 점수는 **압축을 끈 경로의
+ * 값**이고, 켠 경로는 참고 행이라는 것과, 두 경로의 값이 다른 칸. 채팅 화면의 압축 옵션은 이 도구의 기능이지 제품
+ * 파이프라인이 아니라는 것도 여기 적는다 — 그 옵션을 보고 제품에 압축이 있다고 읽기 쉽다(실제로 한 번 그렇게 읽혔다).
+ * **값은 문장에 박지 않고 결과에서 센다** — 다시 재거나 재채점하면 따라간다. 켬 경로의 요약기가 실행마다 같지 않으면
+ * 요약기를 문장에 적지 않고 측정값 표의 행 각주(실행마다 요약기)를 가리킨다.
  *
- * **두 경로가 갈린 까닭은 적지 않는다.** 요약문이 결과에 남지 않고, 실측에서 고정 샘플링인데도 압축이 걸릴 수 없는
- * 턴(3턴)부터 두 경로의 입력이 갈린 실행이 있었다 — 켬/끔의 차이를 압축 탓으로 가를 기록이 없다. 그래서 값이 다르다는
- * 사실만 적고, 까닭은 가를 수 없다고 적는다. */
+ * 켬↔끔 차이의 까닭은 요약 seed가 없던 실행에서만 가를 수 없다고 적는다 — 요약문이 결과에 남지 않고 그 요약이 고정 샘플링이
+ * 아니었다. 요약 seed가 고정된 실행의 차이는 압축의 효과로 읽는다(압축이 걸리기 전에 갈린 실행은 따로 적힌다). */
 export function compressionLines(details) {
   const METRICS_LC = [
     ['recall', '기억력'],
@@ -101,39 +119,58 @@ export function compressionLines(details) {
   ]
   const runs = details.filter((d) => d.metrics?.long_context)
   if (runs.length === 0) return []
-  const changes = new Map() // `기억력 67→100%` → [실행]
-  const unrecorded = []
+  const summarizerOf = (d) => {
+    const config = d.provenance?.long_context?.config || d.config || {}
+    return { model: config.summarizer_model ?? null, seed: config.summarizer_sampling?.seed ?? null }
+  }
+  const changes = new Map() // `기억력 100→67%` → [실행]
+  const unseeded = new Set()
+  const summarizers = []
+  const missing = []
   let cells = 0
   for (const d of runs) {
     const lc = d.metrics.long_context
-    const pairs = METRICS_LC.filter(([key]) => lc[key]?.score != null && lc[key]?.score_uncompressed != null)
+    const pairs = METRICS_LC.filter(([key]) => lc[key]?.score != null && lc[key]?.score_compressed != null)
     if (pairs.length === 0) {
-      unrecorded.push(model(d.id))
+      missing.push(model(d.id))
       continue
     }
+    summarizers.push(summarizerOf(d))
     for (const [key, label] of pairs) {
       cells += 1
-      const on = pctFmt(lc[key].score)
-      const off = pctFmt(lc[key].score_uncompressed)
+      const off = pctFmt(lc[key].score)
+      const on = pctFmt(lc[key].score_compressed)
       if (on === off) continue
-      const text = `${label} ${on.slice(0, -1)}→${off}`
+      const text = `${label} ${off.slice(0, -1)}→${on}`
       changes.set(text, [...(changes.get(text) ?? []), model(d.id)])
+      if (summarizerOf(d).seed == null) unseeded.add(model(d.id))
     }
   }
-  const head = '요약 압축 — 긴 컨텍스트 기억력·다중 턴 제약 유지는 압축을 켠 경로의 값이다.'
-  const changed = [...changes.entries()].map(([text, who]) => `${who.join('·')} ${text}`)
-  const changedCells = [...changes.values()].reduce((a, who) => a + who.length, 0)
+  const numCtx = runs.map((d) => d.config?.num_ctx).find((v) => v != null)
+  const selfSeeds = new Set(summarizers.map((s) => (s.model === SELF_SUMMARIZER && s.seed != null ? s.seed : null)))
+  const who =
+    summarizers.length && selfSeeds.size === 1 && !selfSeeds.has(null)
+      ? `후보 자신이 요약, seed ${[...selfSeeds][0]}`
+      : '요약기는 실행마다 측정값 표의 행 각주에'
+  const head =
+    `요약 압축 — 다중 턴 압축 없음: 문서와 대화는 ${numCtx != null ? `num_ctx ${numCtx}` : '컨텍스트'} 안에서 그대로 유지한다. ` +
+    '긴 컨텍스트 기억력·다중 턴 제약 유지 점수는 압축 끔 경로 값이다. ' +
+    `압축 켬 경로(${who})는 참고 행으로만 싣는다. 플레이그라운드 채팅 화면의 압축 옵션은 이 도구의 기능이지 제품 파이프라인이 아니다.`
+  const changed = [...changes.entries()].map(([text, names]) => `${names.join('·')} ${text}`)
+  const changedCells = [...changes.values()].reduce((a, names) => a + names.length, 0)
   const lines = []
   if (changed.length) {
     const rest = changedCells < cells ? ' 후보 중 나머지는 같다.' : ''
-    lines.push(`${head} 압축을 끈 경로와 값이 다른 칸(켬→끔): ${changed.join(', ')}.${rest}`)
-    lines.push('두 경로가 갈린 까닭이 압축인지는 기록으로 가를 수 없다 — 요약문이 결과에 남지 않는다.')
+    lines.push(`${head} 압축을 켠 경로와 값이 다른 칸(끔→켬): ${changed.join(', ')}.${rest}`)
+    if (unseeded.size) {
+      lines.push(`요약 seed가 없던 실행(${[...unseeded].join('·')})은 두 경로가 갈린 까닭이 압축인지 기록으로 가를 수 없다 — 요약문이 결과에 남지 않고 그 요약이 고정 샘플링이 아니었다.`)
+    }
   } else if (cells) {
-    lines.push(`${head} 압축을 끈 경로와 값이 같다.`)
+    lines.push(`${head} 압축을 켠 경로와 값이 같다.`)
   } else {
     lines.push(head)
   }
-  if (unrecorded.length) lines.push(`압축을 끈 경로 기록이 없다 — ${unrecorded.join('·')}`)
+  if (missing.length) lines.push(`압축을 켠 경로 값이 없다 — ${missing.join('·')}`)
   return lines
 }
 
@@ -334,9 +371,10 @@ function subRows(metric, details, baseRun) {
       label: ref.label,
       kind: 'reference',
       raw: Object.fromEntries(details.map((d) => [d.id, cell(d, ref.get)])),
-      baseline_raw: baseRun ? cell(baseRun, ref.get) : null,
+      // 기준선이 재지 않는 참고 값은 옛 기준선 파일에 값이 남아 있어도 싣지 않고 그 사실을 적는다(`baselineText`)
+      baseline_raw: baseRun ? (ref.baselineText ?? cell(baseRun, ref.get)) : null,
       n: Object.fromEntries(details.map((d) => [d.id, cells(d, ref)])),
-      baseline_n: baseRun ? cells(baseRun, ref) : null,
+      baseline_n: baseRun && !ref.baselineText ? cells(baseRun, ref) : null,
     })
   }
   return rows
@@ -454,10 +492,10 @@ export function buildReportPayload({ selectedDetails, baseline, weights: chosenW
   const baseRun = baseline?.run
   const normRows = baseRun ? [...rows, toRow(baseRun, BASELINE_ROW_ID)] : rows
   const normalized = normalize(normRows)
-  // 강등 → 가중치 확정 → 뒤집힘 → 동률 순서다. 세 가중치 모두 강등을 먼저 적용한다.
-  const weights = demotedWeights(chosenWeights, demotion)
-  const neutralW = demotedWeights(PRESETS.neutral.build(), demotion)
-  const usageW = demotedWeights(PRESETS.usage.build(), demotion)
+  // 일관성 게이트 → 가중치 확정 → 뒤집힘 → 동률 순서다. 세 가중치 모두 게이트를 먼저 적용한다.
+  const weights = gatedWeights(chosenWeights, demotion)
+  const neutralW = gatedWeights(PRESETS.neutral.build(), demotion)
+  const usageW = gatedWeights(PRESETS.usage.build(), demotion)
   const scoresFor = (w) => Object.fromEntries(selectedDetails.map((d) => [d.id, weightedScore(normalized, w, d.id)]))
   const currentScores = scoresFor(weights)
   const neutralScores = scoresFor(neutralW)
@@ -514,6 +552,8 @@ export function buildReportPayload({ selectedDetails, baseline, weights: chosenW
         started_at: d.started_at,
         // 실행 종류 — 선정용 실행은 프롬프트가 없고, 실험이면 제목과 길이를 적는다
         run_type: RUN_TYPE_LABEL[d.run_type ?? 'selection'],
+        // 실제로 부른 가중치 — 태그만으로는 같은 이름에 다른 모델이 올라왔는지 모른다(리포트가 값으로 적는다)
+        digest: d.config?.model_identity?.digest ?? null,
         prompt_title: isPromptExperiment(d) ? (d.system_prompt_meta?.title ?? d.system_prompt_meta?.name ?? null) : null,
         mixed: Boolean(d.mixed),
         // 혼합 실행 — 어느 지표가 어느 실행에서 왔는지(표지에 적는다)
@@ -525,6 +565,8 @@ export function buildReportPayload({ selectedDetails, baseline, weights: chosenW
             run_id: p.run_id,
             started_at: p.started_at,
             rescored_at: p.rescored_at ?? null,
+            // 왜 다시 쟀나 — 이유 기록 전 재실행은 null(리포트가 `이유 기록 없음`으로 적는다)
+            reason: p.reason ?? null,
             // 이 재실행이 원래 실행과 어떻게 다르게 쟀는지 — 경고가 아닌 사실이라 출처 각주 뒤에 붙인다(기계 섞임은 경고 목록으로)
             notes: conditions.facts.filter((f) => f.runId === d.id && f.itemId === itemId).map((f) => f.text),
           })),
@@ -541,7 +583,15 @@ export function buildReportPayload({ selectedDetails, baseline, weights: chosenW
       weight_preset: presetName ? PRESETS[presetName]?.label : '커스텀 (슬라이더 조정)',
       weight_sensitivity_conclusion: withheld ? null : weightSensitivityConclusion(flips),
       // 일관성 사람 판정 게이트 — 표지 두 줄(상태, 채점기 감시 부재)
-      consistency_gate: { status: demotion?.status ?? null, lines: withheld ? [] : gate.lines, watcher: gate.watcher },
+      // `excluded`는 종합 점수에서 일관성을 뺀 까닭(넣었으면 null) — 리포트 `합치는 법` 줄이 무게 0 지표 옆에 붙인다
+      consistency_gate: {
+        status: demotion?.status ?? null,
+        lines: withheld ? [] : gate.lines,
+        watcher: gate.watcher,
+        excluded: consistencyExclusion(demotion),
+      },
+      // 종합 점수 정의의 판 — 채점기 버전 곁에 찍힌다. 판이 다른 리포트끼리는 종합 점수를 옮겨 읽지 않는다
+      composite_definition: COMPOSITE_DEFINITION,
       // 지표 집합 경고 — 모델별로 빠진 지표(표지·종합 순위·점수 구성·가중치 민감도에 붙는다)
       metric_set_gaps: Object.fromEntries(
         Object.entries(gaps).map(([id, list]) => [id, list.map((g) => ({ label: g.label, outcome: OUTCOME_LABEL[g.outcome] }))]),
@@ -592,6 +642,8 @@ export function buildReportPayload({ selectedDetails, baseline, weights: chosenW
       items: m.items ?? [],
       // 하위 값에서 만든 상위 값은 만드는 법을 함께 적는다 — 읽는 사람이 하위 값에서 역산하게 두지 않는다
       derivation: m.components ? `${m.components.map((c) => c.label).join(' · ')}의 평균` : null,
+      // 값을 낸 조건이 이름에 붙어야 하는 지표 — 긴 컨텍스트 두 지표의 `압축 끔`
+      condition: m.condition ?? null,
       // 측정값 장 — 정규화 전 원본 값을 단위까지 붙인 문자열로. 상태가 붙은 값은 상태 문구로.
       raw: Object.fromEntries(selectedDetails.map((d) => [d.id, cellText(d, m)])),
       status: Object.fromEntries(selectedDetails.map((d) => [d.id, metricState(d, m).outcome])),
@@ -618,7 +670,10 @@ export function buildReportPayload({ selectedDetails, baseline, weights: chosenW
         ? []
         : [
             weightSensitivityConclusion(flips),
-            ...(demotion?.status === 'demoted' ? ['두 프리셋 모두 일관성을 순위에서 뺀 가중치(일관성 0, 나머지 재정규화)로 계산했다.'] : []),
+            // 일관성 값이 없는 비교(`not_applicable`)는 뺄 것이 없어 적지 않는다
+            ...(consistencyExclusion(demotion) && demotion?.status !== 'not_applicable'
+              ? [`두 프리셋 모두 일관성을 순위에서 뺀 가중치(일관성 0 — ${consistencyExclusion(demotion)}, 나머지 재정규화)로 계산했다.`]
+              : []),
           ],
       variance: varianceSentences(selectedDetails),
     },

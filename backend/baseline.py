@@ -18,7 +18,9 @@
 - **파일만이 아니다.** `tool_calling` 범위는 코드 안 상수(주입 문구·프로브 변형)와
   **모델에 전달되는 도구 스펙을 도구 이름별 키로** 해시한다. 키 집합이 다르면
   도구 목록이 바뀐 것(키 설정), 같은 키의 해시가 다르면 스펙 문구가 바뀐 것이다.
-- **고정된 것만** — 현재 시각이나 공휴일 조회 결과처럼 세상이 준 값은 넣지 않는다.
+- **고정된 것만** — 현재 시각이나 공휴일 조회 결과처럼 세상이 준 값은 넣지 않는다. 측정용으로 **기록해 둔**
+  도구 응답(`tool_calling_fixtures.json`)은 고정값이라 넣되, 세트 해시에 섞지 않고 `fixture:` 키로 따로 둔다 —
+  세트 문항이 바뀐 것과 도구 고정값이 바뀐(또는 생긴) 것은 다른 사실이고, 경고가 무엇이 바뀌었는지를 말해야 한다.
 
 ## 지문 — 어떻게 저장하나
 
@@ -45,6 +47,7 @@ from typing import Any
 
 import agent_tools
 import bench_config as cfg
+import quality_runner
 import quality_testsets as qt
 import tool_calling_runner
 
@@ -97,7 +100,13 @@ RULES: dict[int, RuleSet] = {
             "structured_output.json": ("items[].schema",),
             # canary 값은 system_prompt·주입 문서 안에도 그대로 있어 그쪽이 해시된다
             "injection_direct.json": ("canary", "items[].task_keywords"),
-            "injection_indirect.json": ("canary", "items[].task_keywords"),
+            # 지시문 뒤 내용 목록도 답을 읽는 데만 쓰고 모델에게 가지 않는다
+            "injection_indirect.json": (
+                "canary",
+                "items[].task_keywords",
+                "items[].after_instruction_facts",
+                "items[].after_instruction_facts_long",
+            ),
             "prompt_leak.json": ("canary",),
             "long_context.json": ("scenarios[].recall_checks", "scenarios[].constraint"),
             "tool_calling.json": (
@@ -169,8 +178,21 @@ def _hash_obj(obj: Any) -> str:
     return _hash_bytes(json.dumps(obj, sort_keys=True, ensure_ascii=False).encode("utf-8"))
 
 
+FIXTURES_FILE = tool_calling_runner.FIXTURES_PATH.name  # 이름은 도구 호출 실행부가 한 번만 정한다
+
+
+def _fixture_hash(path: Path) -> str:
+    """도구 고정값의 해시 — `notes`(기록 시각·손으로 고친 까닭)는 빼고 값만 센다. 설명을 고쳤다고 고정값이 바뀐 것이 아니다."""
+    data = json.loads(path.read_text(encoding="utf-8"))
+    data.pop("notes", None)
+    return _hash_obj(data)
+
+
 def _tool_specs() -> dict[str, dict[str, Any]]:
-    specs = {t.name: t.openai_spec() for t in agent_tools.list_ready_tools("test")}
+    # 도구 고정값이 있으면 측정 경로에서 고정값 도구는 키 없이도 모델에게 간다 — 모델에게 가는 목록과 같은 목록을 센다
+    fixed = (TESTSETS_DIR / FIXTURES_FILE).exists()
+    with agent_tools.fixed_responses({} if fixed else None):
+        specs = {t.name: t.openai_spec() for t in agent_tools.list_ready_tools("test")}
     specs[agent_tools.INJECTION_PROBE_TOOL.name] = agent_tools.INJECTION_PROBE_TOOL.openai_spec()
     return specs
 
@@ -203,6 +225,8 @@ def compute_map(scope: str, rule: int | None = None, document_length: str = qt.D
                 if p.is_file() and not any(other in p.parents for other in others):
                     out[f"doc:{p.relative_to(TESTSETS_DIR).as_posix()}"] = _hash_bytes(p.read_bytes())
     if scope == TOOL_CALLING:
+        if (TESTSETS_DIR / FIXTURES_FILE).exists():
+            out[f"fixture:{FIXTURES_FILE}"] = _fixture_hash(TESTSETS_DIR / FIXTURES_FILE)
         out["const:INJECTION_PROBE_NOTE"] = _hash_obj(agent_tools.INJECTION_PROBE_NOTE)
         out["const:INJECTION_PROBE_VARIANTS"] = _hash_obj(tool_calling_runner.INJECTION_PROBE_VARIANTS)
         for name, spec in _tool_specs().items():
@@ -231,7 +255,7 @@ def _rules_of(entry: dict[str, Any]) -> dict[int, dict[str, dict[str, str]]]:
 # 비교
 # ---------------------------------------------------------------------------
 
-_KIND_LABELS = {"set": "세트 파일", "doc": "참조 문서", "const": "프로브 상수", "tool": "도구"}
+_KIND_LABELS = {"set": "세트 파일", "doc": "참조 문서", "const": "프로브 상수", "tool": "도구", "fixture": "도구 고정값"}
 
 
 def key_kind(key: str) -> str:
@@ -252,6 +276,11 @@ def _one_sided_note(key: str, *, present_in: str) -> dict[str, Any]:
     elif kind == "const":
         meaning = f"프로브 문항 구성 변화 ({name})"
         remeasure, report = "재측정", "비교 가능성 경고"
+    elif kind == "fixture":
+        # 세트 문항은 그대로다 — 한쪽은 기록된 도구 응답으로, 다른 쪽은 실시간 도구 응답으로 쟀다
+        meaning = (f"도구 고정값 {'생김' if present_in == 'right' else '없어짐'} ({name}) — 한쪽은 실시간 도구 응답으로 쟀다, "
+                   "세트 문항이 바뀐 것은 아니다")
+        remeasure, report = "tool-calling 지표에 한해 재측정", "tool-calling 지표에 비교 가능성 경고"
     else:
         meaning = f"도구 목록 변화 — {name} {'추가' if present_in == 'right' else '빠짐'} (키 설정을 되돌리면 같은 조건)"
         remeasure, report = "tool-calling 지표에 한해 재측정", "tool-calling 지표에 비교 가능성 경고"
@@ -266,8 +295,9 @@ def _changed_note(key: str) -> dict[str, Any]:
         "doc": f"참조 문서 본문 변경 ({name})",
         "const": f"프로브 문구 변경 ({name})",
         "tool": f"도구 스펙 문구가 바뀜 ({name})",
+        "fixture": f"도구 고정값이 바뀜 ({name}) — 세트 문항이 바뀐 것은 아니다",
     }[kind]
-    report = "tool-calling 지표에 비교 가능성 경고" if kind == "tool" else "비교 가능성 경고"
+    report = "tool-calling 지표에 비교 가능성 경고" if kind in ("tool", "fixture") else "비교 가능성 경고"
     return {"key": key, "kind": kind, "meaning": meaning, "remeasure": "재측정", "report": report}
 
 
@@ -351,6 +381,9 @@ def _rehash_key(key: str, rule: int) -> str | None:
     if kind == "doc":
         path = TESTSETS_DIR / name
         return _hash_bytes(path.read_bytes()) if path.exists() else None
+    if kind == "fixture":
+        path = TESTSETS_DIR / name
+        return _fixture_hash(path) if path.exists() else None
     if kind == "const":
         value = {
             "INJECTION_PROBE_NOTE": agent_tools.INJECTION_PROBE_NOTE,
@@ -450,7 +483,8 @@ def latest(document_length: str | None = None) -> dict[str, Any] | None:
     entries = []
     for path in BASELINE_DIR.glob("*.json"):
         try:
-            entries.append(json.loads(path.read_text(encoding="utf-8")))
+            # 긴 컨텍스트의 옛 모양은 읽을 때 지금 모양으로 — 실행 결과와 같은 변환이다(파일은 그대로)
+            entries.append(quality_runner.current_long_context(json.loads(path.read_text(encoding="utf-8"))))
         except (OSError, json.JSONDecodeError):
             continue
     if document_length is not None:

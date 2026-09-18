@@ -10,7 +10,7 @@ import {
   categoryScore,
   categoryWeightTotals,
   consistencyGateLines,
-  demotedWeights,
+  gatedWeights,
   flipGroups,
   normalize,
   presetFlips,
@@ -118,9 +118,9 @@ export default function CompareRadar({ rows, baselineEntry, baselineStaleness, d
   // 두 프리셋의 종합 점수는 지금 슬라이더로 뭘 만졌든 상관없이 항상 나란히
   // 보여준다 — "이 프리셋이면 이렇게 나온다"는 항상 참고 가능해야 한다.
   // 일관성이 순위에서 빠졌으면 슬라이더 값과 무관하게 세 가중치 모두 일관성 0으로 계산한다(세트 단위).
-  const neutralWeights = useMemo(() => demotedWeights(PRESETS.neutral.build(), demotion), [demotion])
-  const usageWeights = useMemo(() => demotedWeights(PRESETS.usage.build(), demotion), [demotion])
-  const scoringWeights = demotedWeights(weights, demotion)
+  const neutralWeights = useMemo(() => gatedWeights(PRESETS.neutral.build(), demotion), [demotion])
+  const usageWeights = useMemo(() => gatedWeights(PRESETS.usage.build(), demotion), [demotion])
+  const scoringWeights = gatedWeights(weights, demotion)
   const currentScores = Object.fromEntries(rows.map((r) => [r.id, weightedScore(normalized, scoringWeights, r.id)]))
   const neutralScores = Object.fromEntries(rows.map((r) => [r.id, weightedScore(normalized, neutralWeights, r.id)]))
   const usageScores = Object.fromEntries(rows.map((r) => [r.id, weightedScore(normalized, usageWeights, r.id)]))

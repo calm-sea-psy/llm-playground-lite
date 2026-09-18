@@ -14,6 +14,11 @@ requires_key·daily_limit 같은 화면·정책 메타데이터)와 실행 함�
 
 import json
 import os
+import re
+from collections.abc import Iterator
+from urllib.parse import quote
+from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Literal
@@ -29,6 +34,35 @@ _TIMEOUT = httpx.Timeout(15.0, connect=5.0)
 
 Scope = Literal["chat", "test", "both"]
 Status = Literal["ready", "missing_key", "disabled"]
+
+# ---------------------------------------------------------------------------
+# 측정용 고정 응답 — 측정 경로에서만 건다. 채팅·도구 화면은 실제 도구 그대로다
+# ---------------------------------------------------------------------------
+# 실시간 값(현재 시각·공휴일·대기질·설치된 모델)이 바퀴마다·실행마다 도구 결과를 바꾸면 같은 문항이 다른 입력으로 돈다.
+# 고정값은 세트 옆 파일에 실제 도구를 한 번 불러 기록한 응답이다(`maintenance.py record-tool-fixtures`). 문맥은 실행 스레드에만 걸린다
+
+FIXTURE_BACKED = frozenset({"get_current_datetime", "get_holidays", "get_air_quality", "list_models"})
+_FIXED: ContextVar[dict[str, Any] | None] = ContextVar("fixed_tool_responses", default=None)
+
+
+class FixtureMissing(LookupError):
+    """고정값에 기록이 없는 인자로 불렀다 — 도구 결과가 오류로 간다(실시간 값으로 채우지 않는다)."""
+
+
+@contextmanager
+def fixed_responses(fixtures: dict[str, Any] | None) -> Iterator[None]:
+    """이 문맥 안에서는 고정값을 가진 도구가 기록된 응답을 돌려준다. None이면 아무것도 걸지 않는다(실시간)."""
+    token = _FIXED.set(fixtures)
+    try:
+        yield
+    finally:
+        _FIXED.reset(token)
+
+
+def fixed_now() -> datetime | None:
+    """고정값의 현재 시각(기록한 순간) — 고정 응답 문맥이 아니면 None."""
+    fixtures = _FIXED.get()
+    return datetime.fromisoformat(fixtures["now"]) if fixtures else None
 
 
 @dataclass
@@ -67,6 +101,8 @@ class ToolDef:
 
 
 def _list_models(**_kwargs: Any) -> Any:
+    if (fixtures := _FIXED.get()) is not None:
+        return list(fixtures["list_models"])
     models = ollama_client.list_models()
     return [m.get("name") for m in models]
 
@@ -106,7 +142,8 @@ def _get_current_datetime(timezone: str | None = "Asia/Seoul", **_kwargs: Any) -
         tz = ZoneInfo(timezone)
     except Exception as exc:  # noqa: BLE001 — 잘못된 timezone 문자열이 모델에서 올 수 있다
         return {"error": f"알 수 없는 시간대: {timezone}"} | {"detail": str(exc)}
-    now = datetime.now(tz)
+    base = fixed_now()
+    now = base.astimezone(tz) if base else datetime.now(tz)
     return {
         "iso": now.isoformat(),
         "date": now.strftime("%Y-%m-%d"),
@@ -129,6 +166,13 @@ def _fetch_holiday_month(year: int, month: int) -> list[dict[str, Any]]:
     ① 그 달에 공휴일이 없으면 `items`가 `{}`가 아니라 빈 문자열 `""`로 온다.
     ② 공휴일이 정확히 1개면 `items.item`이 리스트가 아니라 딕셔너리 하나로
     온다(2개 이상이면 리스트). 둘 다 안 걸러내면 각각 KeyError·TypeError가 난다."""
+    if (fixtures := _FIXED.get()) is not None:
+        recorded = fixtures["holidays"].get(str(year))
+        if recorded is None:
+            raise FixtureMissing(f"고정값에 {year}년 공휴일 기록이 없다")
+        if "error" in recorded:  # 기록할 때 실제 API가 실패한 연도 — 그 실패를 그대로 돌려준다
+            raise RuntimeError(recorded["error"])
+        return list(recorded[str(month)])
     cache_key = (year, month)
     if cache_key in _holiday_cache:
         return _holiday_cache[cache_key]
@@ -193,6 +237,13 @@ def _get_air_quality(sido: str, **_kwargs: Any) -> Any:
 
     if sido not in _SIDO_NAMES:
         return {"error": f"지원하지 않는 시도명입니다: {sido}", "allowed": list(_SIDO_NAMES)}
+    if (fixtures := _FIXED.get()) is not None:
+        recorded = fixtures["air_quality"].get(sido)
+        if recorded is None:
+            raise FixtureMissing(f"고정값에 {sido} 대기질 기록이 없다")
+        if isinstance(recorded, dict) and "error" in recorded:
+            raise RuntimeError(recorded["error"])
+        return recorded
 
     now = time.monotonic()
     cached = _air_cache.get(sido)
@@ -375,8 +426,24 @@ def get_tool(name: str) -> ToolDef | None:
 
 def list_ready_tools(scope: Scope) -> list[ToolDef]:
     """`scope`(chat/test)에 맞고 `status == "ready"`인 도구만 — 모델에게 실제로
-    주는 목록이다. `both`로 등록된 도구는 chat·test 어느 쪽 조회에도 걸린다."""
-    return [t for t in TOOLS if t.status() == "ready" and t.scope in (scope, "both")]
+    주는 목록이다. `both`로 등록된 도구는 chat·test 어느 쪽 조회에도 걸린다.
+    고정 응답 문맥에서는 고정값을 가진 도구가 키 없이도 준비된 것이다 — 기록된 응답을 돌려주니 키를 쓰지 않는다."""
+    fixed = _FIXED.get() is not None
+    return [t for t in TOOLS
+            if (t.status() == "ready" or (fixed and t.name in FIXTURE_BACKED)) and t.scope in (scope, "both")]
+
+
+_SERVICE_KEY_PARAM = re.compile(r"(serviceKey=)[^&\s'\"]+")
+
+
+def redact_secrets(text: str) -> str:
+    """오류 문구에서 API 키를 가린다 — httpx 오류는 요청 URL을 통째로 싣고, 공공데이터 API는 키를 URL 인자(`serviceKey`)로 받는다.
+    가리지 않으면 도구 결과로 모델에게 가고, 결과 파일·도구 고정값에 그대로 남는다."""
+    text = _SERVICE_KEY_PARAM.sub(r"\1(가림)", text)
+    key = os.getenv("DATA_GO_KR_API_KEY")
+    for form in {key, quote(key or "", safe="")} - {None, ""}:
+        text = text.replace(form, "(가림)")
+    return text
 
 
 def run_tool_def(tool: ToolDef, args: dict[str, Any]) -> str:
@@ -387,7 +454,7 @@ def run_tool_def(tool: ToolDef, args: dict[str, Any]) -> str:
     try:
         result = tool.run(**args)
     except Exception as exc:  # noqa: BLE001 — 도구 실행 실패는 결과로 알려준다
-        return json.dumps({"error": str(exc)}, ensure_ascii=False)
+        return json.dumps({"error": redact_secrets(str(exc))}, ensure_ascii=False)
     return json.dumps(result, ensure_ascii=False)
 
 
@@ -414,6 +481,8 @@ def tool_out(t: ToolDef) -> dict[str, Any]:
         "status": t.status(),
         "daily_limit": t.daily_limit,
         "returns": t.returns,
+        # 측정 경로에서 고정값이 있으면 기록된 응답을 돌려주는 도구 — 키가 없어도 측정에는 간다
+        "fixture_backed": t.name in FIXTURE_BACKED,
     }
 
 

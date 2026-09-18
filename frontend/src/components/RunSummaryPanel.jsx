@@ -1,4 +1,15 @@
-import { conditionLabel, consistencyNumPredict, hardwareText, machineLabel, ollamaVersionText, samplingText } from '../runDiff'
+import {
+  conditionLabel,
+  consistencyNumPredict,
+  hardwareText,
+  machineLabel,
+  ollamaVersionText,
+  powerText,
+  longContextReloadText,
+  reloadAfterSkippedText,
+  samplingText,
+  toolResponsesText,
+} from '../runDiff'
 
 // 실행 전 확인 패널 — "실제로 뭐가 적용되는지, 지난번과 뭐가
 // 달라졌는지"를 실행 버튼을 누르기 전에 보여준다. 시스템 프롬프트는 기본
@@ -81,6 +92,22 @@ export default function RunSummaryPanel({ runType, prompt, promptDirty, config, 
           <div className="metrics-row">
             <dt>하드웨어</dt>
             <dd>{hardwareText(config.hardware)}</dd>
+          </div>
+          <div className="metrics-row">
+            <dt>전원 (시작 시)</dt>
+            <dd>{powerText(config.power)}</dd>
+          </div>
+          <div className="metrics-row">
+            <dt>도구 응답</dt>
+            <dd>{toolResponsesText(config)}</dd>
+          </div>
+          <div className="metrics-row">
+            <dt>긴 컨텍스트 시작</dt>
+            <dd>{longContextReloadText(config)}</dd>
+          </div>
+          <div className="metrics-row">
+            <dt>건너뛴 항목 뒤 재로드</dt>
+            <dd>{reloadAfterSkippedText(config)}</dd>
           </div>
         </dl>
       )}

@@ -173,7 +173,8 @@ def summarize(metrics: dict[str, Any]) -> dict[str, dict[str, int]]:
     long_context = _dig(metrics, ("long_context", "detail"))
     if isinstance(long_context, list) and long_context:
         for kind in ("recall", "constraint"):
-            entries = [e for e in long_context if e.get("kind") == kind and e.get("compress", True)]
+            # 점수를 내는 압축 끔 경로의 칸만 센다(켬은 참고다). 경로 기록이 없는 옛 칸은 켬 경로뿐이던 때의 것이다
+            entries = [e for e in long_context if e.get("kind") == kind and not e.get("compress", True)]
             if not entries:
                 continue
             counts = _empty_counts()
