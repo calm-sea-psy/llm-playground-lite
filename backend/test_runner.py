@@ -303,6 +303,8 @@ def config_snapshot(provider_name: str = "ollama") -> dict[str, Any]:
         "long_context_reload": bool(providers.NATIVE_API.get(provider_name)),
         # 기계에 딸린 지표를 다른 기계의 값과 섞지 않기 위한 기록. 호스트 이름은 설정을 빠뜨린
         # 보조 PC를 나중에 되짚기 위한 것이라 조건 비교(runDiff)에서는 보지 않는다.
+        # TTFT를 어떻게 쟀나 — 기록이 없으면 캐시가 맞은 옛 방식이다(속도 항목만 이 조건에 걸린다)
+        "ttft_method": cfg.TTFT_METHOD,
         "measurement_machine": cfg.measurement_machine(),
         "measurement_host": platform.node(),
     }

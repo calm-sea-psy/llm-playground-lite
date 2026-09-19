@@ -962,7 +962,7 @@ def generate_compare_report(payload: dict) -> dict:
         # 빠뜨린 것과 안 만든 것을 화면이 구분할 수 있어야 한다
         "transcripts_saved_to": rel(transcripts_path) if files.transcripts else None,
         "transcripts_note": files.note,
-        # 화면의 `리포트 확인하기`가 여는 주소 — 방금 저장한 파일 그 자체다
+        # 방금 저장한 파일을 브라우저에서 바로 여는 주소 — 화면은 저장 위치를 적고, 여는 것은 사람이 고른다
         "view_url": REPORT_FILES_ROUTE + report_path.name,
         "transcripts_view_url": REPORT_FILES_ROUTE + transcripts_path.name if files.transcripts else None,
         # 표지 = 결론 면 — 넘쳤으면 화면이 저장 위치 옆에 그렇게 말한다

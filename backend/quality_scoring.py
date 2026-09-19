@@ -367,18 +367,19 @@ def hallucination_failure_kinds(metrics: dict[str, Any], items: dict[str, Any],
         if float(e.get("score") or 0) >= 1.0:
             continue
         response = (e.get("response") or "").strip()
-        item = items.get(cid)
         cell = {"id": cid, "variant": seen[cid], "excerpt": " ".join(response.split())[:120]}
-        if not response:
-            kind = EMPTY
-        elif item is None:
-            kind = UNKNOWN_ITEM
-        elif has_fabrication(response, (item.get("scoring") or {}).get("fabrication_patterns") or []):
-            kind = FABRICATED
-        else:
-            kind = SIDESTEPPED
-        out.setdefault(kind, []).append(cell)
+        out.setdefault(hallucination_kind(response, items.get(cid)), []).append(cell)
     return out
+
+
+def hallucination_kind(response: str, item: dict[str, Any] | None) -> str:
+    """0점 칸 하나의 갈래 — 규칙이 보는 것은 지어냄 정규식뿐이다.
+    사람이 확정한 판정이 있으면 그쪽이 이긴다(`second_opinion.hallucination_kinds`)."""
+    if not (response or "").strip():
+        return EMPTY
+    if item is None:
+        return UNKNOWN_ITEM
+    return FABRICATED if has_fabrication(response, (item.get("scoring") or {}).get("fabrication_patterns") or []) else SIDESTEPPED
 
 
 def score_hallucination_item(

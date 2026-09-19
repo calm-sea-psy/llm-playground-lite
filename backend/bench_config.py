@@ -147,6 +147,10 @@ def document_guard_record() -> dict[str, Any] | None:
     return {"version": DOCUMENT_GUARD_VERSION, "sha256": sha}
 
 
+# TTFT를 어떻게 재는가 — `찬 캐시`는 호출마다 앞머리를 새로 달아 프롬프트 캐시를 비켜 간 값이다.
+# 이 기록이 없는 실행은 같은 글을 반복해 캐시가 맞은 값이라, 두 실행의 TTFT를 나란히 읽으면 안 된다
+TTFT_METHOD = "찬 캐시"
+
 # 품질/보안 지표 파일 이름 — id는 RunItem.id 겸 run.metrics의 키로 쓴다.
 # 순서가 실행 순서다(로드→워밍업→속도/리소스→품질 — 속도 항목 뒤에 이어붙인다).
 QUALITY_TESTSET_FILES: dict[str, str] = {

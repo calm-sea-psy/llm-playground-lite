@@ -77,7 +77,9 @@ SCOPES_FOR_RUN = {"baseline": (QUALITY, GRADING), "full": FINGERPRINT_SCOPES,
 # 않은 부재는 신호다. 기준선은 일관성/재현성을 재지 않는다 —
 # 이 지표만 temperature 0.7로 일부러 흔드는데 클라우드 경로는 샘플링을 못 받고,
 # 글자 단위 유사도가 길이에 편향되는데 기준선 응답이 5~6배 짧아 비교가 성립하지 않는다.
-DECLARED_EXCLUSIONS: dict[str, set[str]] = {"baseline": {"set:consistency.json"}}
+# 재지 않는 지표는 **범위마다** 적는다 — 품질 키만 빼면 채점 범위에 `grade:` 키가 남아, 그 실행은 세트를
+# 건드리지 않아도 영원히 `낡음`으로 뜬다(재지 않은 지표의 채점 데이터는 그 실행에 뜻이 없다).
+DECLARED_EXCLUSIONS: dict[str, set[str]] = {"baseline": {"set:consistency.json", "grade:consistency.json"}}
 
 MATCH = "일치"
 MISMATCH = "불일치"
@@ -328,6 +330,10 @@ def _one_sided_note(key: str, *, present_in: str) -> dict[str, Any]:
         meaning = (f"도구 고정값 {'생김' if present_in == 'right' else '없어짐'} ({name}) — 한쪽은 실시간 도구 응답으로 쟀다, "
                    "세트 문항이 바뀐 것은 아니다")
         remeasure, report = "tool-calling 지표에 한해 재측정", "tool-calling 지표에 비교 가능성 경고"
+    elif kind == "grade":
+        # 채점 데이터는 답을 매기는 자리다 — 문항이 바뀐 것이 아니라 다시 채점하면 맞출 수 있다
+        meaning = f"채점 데이터 {'추가' if present_in == 'right' else '빠짐'} ({name}) — 문항이 바뀐 것은 아니다"
+        remeasure, report = "재채점", "채점 비교 가능성 경고"
     else:
         meaning = f"도구 목록 변화 — {name} {'추가' if present_in == 'right' else '빠짐'} (키 설정을 되돌리면 같은 조건)"
         remeasure, report = "tool-calling 지표에 한해 재측정", "tool-calling 지표에 비교 가능성 경고"
@@ -343,9 +349,12 @@ def _changed_note(key: str) -> dict[str, Any]:
         "const": f"프로브 문구 변경 ({name})",
         "tool": f"도구 스펙 문구가 바뀜 ({name})",
         "fixture": f"도구 고정값이 바뀜 ({name}) — 세트 문항이 바뀐 것은 아니다",
+        # 채점 범위는 바뀌라고 있는 범위다 — 여기 없으면 채점 데이터를 고치는 순간 대조 자체가 깨진다(KeyError)
+        "grade": f"채점 데이터 변경 ({name}) — 문항이 바뀐 것은 아니다",
     }[kind]
     report = "tool-calling 지표에 비교 가능성 경고" if kind in ("tool", "fixture") else "비교 가능성 경고"
-    return {"key": key, "kind": kind, "meaning": meaning, "remeasure": "재측정", "report": report}
+    remeasure = "재채점" if kind == "grade" else "재측정"
+    return {"key": key, "kind": kind, "meaning": meaning, "remeasure": remeasure, "report": report}
 
 
 def compare_scope(

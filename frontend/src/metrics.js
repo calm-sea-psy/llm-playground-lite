@@ -21,7 +21,7 @@ export function retentionInvalidCause(metrics) {
 // (`검증 중`·`원인 미확인` 표시). 기준선 범위는 목록 기본값을 따르고 `baselineInScope`로만 바꾼다.
 export const METRICS = [
   { key: 'load_time_sec', label: '모델 로드 시간', item: 'model_load', direction: 'lower', get: (m) => m.load_time_sec, fmt: (v) => `${v.toFixed(2)}초` },
-  { key: 'ttft_sec', label: 'TTFT (짧은 탐침, 중앙값)', item: 'short_probe', direction: 'lower', get: (m) => m.ttft_sec, fmt: (v) => `${v.toFixed(3)}초` },
+  { key: 'ttft_sec', label: 'TTFT (짧은 탐침, 찬 캐시 중앙값)', item: 'short_probe', direction: 'lower', get: (m) => m.ttft_sec, fmt: (v) => `${v.toFixed(3)}초` },
   { key: 'tok_per_sec', label: 'tok/s (짧은 탐침, 중앙값)', item: 'short_probe', get: (m) => m.tok_per_sec, fmt: (v) => v.toFixed(1) },
   {
     // 변동계수(편차 ÷ 중앙값) — 절대 편차는 빠른 모델이 자동으로 유리하다(scoring.js 참고)

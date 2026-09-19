@@ -29,11 +29,11 @@ import {
   weightedScore,
 } from '../scoring'
 import { buildReportPayload } from '../report'
-import { exportKey, viewAction } from '../reportView'
+import { loadChapterChoice, saveChapterChoice } from '../reportChapters'
 import { baselineLengthKey, mixedLengthsReason } from '../baselineChoice'
 import { STATUS_LABEL, METRICS, QUALITY_METRICS, TOOL_CALLING_METRICS } from '../metrics'
 import NavTabs from '../components/NavTabs'
-import ReportViewer from '../components/ReportViewer'
+import ReportChaptersDialog from '../components/ReportChaptersDialog'
 import CompareRadar from '../components/CompareRadar'
 import CompareNotes from '../components/CompareNotes'
 import ConsistencyJudgmentPanel from '../components/ConsistencyJudgmentPanel'
@@ -132,10 +132,9 @@ export default function ComparePage() {
   // 리포트 내보내기의 노트 생성 확인 패널과 진행 단계(숨은 부작용이 되어서는 안 된다)
   const [exportPlan, setExportPlan] = useState(null) // {status, tableText}
   const [exportStage, setExportStage] = useState('')
-  // 리포트 확인하기 — 마지막으로 내보낸 파일과 그 조건. 보는 것은 언제나 내보낸 파일 그 자체다
-  const [lastExport, setLastExport] = useState(null)
-  const [viewerOpen, setViewerOpen] = useState(false)
-  const viewAfterExport = useRef(false)
+  // 실을 장 고르기 — 내보내기를 누르면 먼저 뜨고, 고른 것은 이 브라우저에 남는다
+  const [chapterPick, setChapterPick] = useState(null) // 고르는 중이면 지금 고른 id 배열
+  const [chapters, setChapters] = useState(() => loadChapterChoice())
   const [notesRefresh, setNotesRefresh] = useState(0)
 
   useEffect(() => {
@@ -332,10 +331,7 @@ export default function ComparePage() {
       ? buildComparisonTableText(ALL_METRIC_DEFS, selectedDetails, baseline, aliases)
       : null
 
-  const currentExportKey = exportKey({ selectedIds, weighting, judgmentRefresh })
-
-  async function renderReport(notesData) {
-    const key = currentExportKey // payload를 만든 조건 — 보는 파일이 지금 화면과 같은 조건인지 가르는 열쇠
+  async function renderReport(notesData, chosenChapters = chapters) {
     setExportStage('리포트 렌더링 중')
     const payload = buildReportPayload({
       selectedDetails,
@@ -344,6 +340,7 @@ export default function ComparePage() {
       presetName: weighting.presetName,
       demotion,
       notes: notesData && Object.keys(notesData.notes ?? {}).length ? notesData : null,
+      chapters: chosenChapters,
     })
     const res = await fetch('/api/compare/report', {
       method: 'POST',
@@ -356,20 +353,14 @@ export default function ComparePage() {
     }
     // 브라우저로 내려받지 않는다 — 백엔드가 저장소의 report/ 폴더에 저장하고 위치를 돌려준다.
     // 응답 전문은 판정하는 사람의 작업 자료라 따로 나온다 — 없으면 그 까닭이 함께 온다
-    return { ...(await res.json()), key }
+    return res.json()
   }
 
   function finishExport(saved, skipped = []) {
     setExportStage(savedText(saved, skipped))
-    setLastExport(saved)
-    if (viewAfterExport.current) {
-      viewAfterExport.current = false
-      setViewerOpen(true)
-    }
   }
 
   function cancelExport() {
-    viewAfterExport.current = false
     setExportPlan(null)
   }
 
@@ -384,7 +375,21 @@ export default function ComparePage() {
 
   // 내보내기 = 사용자가 한 번 누르는 명시적 동작이라, 그 조합의 노트가 없으면 생성해서 싣는다.
   // 다만 모델을 후보 수만큼 부르므로 먼저 알리고 "노트 없이 바로 내보내기"를 나란히 둔다.
-  async function handleExportReport() {
+  // 내보내기 = 장을 고르고 시작한다. 고르는 판을 취소하면 아무 일도 하지 않는다
+  function openChapterPick() {
+    setExportStage('')
+    setError('')
+    setChapterPick(chapters)
+  }
+
+  function confirmChapters(ids) {
+    setChapterPick(null)
+    setChapters(ids)
+    saveChapterChoice(ids)
+    handleExportReport(ids)
+  }
+
+  async function handleExportReport(chosenChapters = chapters) {
     setReportBusy(true)
     setError('')
     setExportStage('')
@@ -395,19 +400,18 @@ export default function ComparePage() {
       if (!demotion) throw new Error('일관성 판정 게이트를 아직 불러오는 중입니다')
       const status = await fetchCompareNotesStatus(selectedIds, tableText)
       if (status.missing.length === 0) {
-        finishExport(await renderReport(status))
+        finishExport(await renderReport(status, chosenChapters))
         return
       }
       const active = await fetchActiveTest().catch(() => ({ run_id: null }))
       if (active.run_id) {
         // 측정 중에는 노트를 생성하지 않는다(측정 오염) — 오류가 아니라 노트 없이 내보내는 경로다
         setExportStage('성능 테스트가 도는 중이라 노트를 생성하지 않고 내보냅니다')
-        finishExport(await renderReport(status), ['성능 테스트가 도는 중이라 노트를 생성하지 않았습니다'])
+        finishExport(await renderReport(status, chosenChapters), ['성능 테스트가 도는 중이라 노트를 생성하지 않았습니다'])
         return
       }
-      setExportPlan({ status, tableText })
+      setExportPlan({ status, tableText, chapters: chosenChapters })
     } catch (e) {
-      viewAfterExport.current = false
       setError(String(e.message || e))
     } finally {
       setReportBusy(false)
@@ -415,7 +419,7 @@ export default function ComparePage() {
   }
 
   async function confirmExport(withNotes) {
-    const { status, tableText } = exportPlan
+    const { status, tableText, chapters: chosenChapters } = exportPlan
     setExportPlan(null)
     setReportBusy(true)
     setError('')
@@ -438,24 +442,13 @@ export default function ComparePage() {
         }
         setNotesRefresh((n) => n + 1)
       }
-      finishExport(await renderReport(latest), skipped)
+      finishExport(await renderReport(latest, chosenChapters), skipped)
     } catch (e) {
-      viewAfterExport.current = false
       setError(String(e.message || e))
       setExportStage('')
     } finally {
       setReportBusy(false)
     }
-  }
-
-  // 화면용으로 따로 그리지 않는다 — 지금 조건으로 내보낸 파일이 없으면 같은 내보내기를 거친 뒤 그 파일을 연다
-  function handleViewReport() {
-    if (viewAction(lastExport, currentExportKey) === 'open') {
-      setViewerOpen(true)
-      return
-    }
-    viewAfterExport.current = true
-    handleExportReport()
   }
 
   function estimateText(status) {
@@ -592,23 +585,10 @@ export default function ComparePage() {
                 <button
                   type="button"
                   className="ghost"
-                  onClick={handleExportReport}
-                  disabled={reportBusy || Boolean(exportPlan) || !tableText}
+                  onClick={openChapterPick}
+                  disabled={reportBusy || Boolean(exportPlan) || Boolean(chapterPick) || !tableText}
                 >
                   {reportBusy ? '리포트 생성 중…' : '리포트 내보내기 (PDF)'}
-                </button>
-                <button
-                  type="button"
-                  className="ghost"
-                  onClick={handleViewReport}
-                  disabled={reportBusy || Boolean(exportPlan) || !tableText}
-                  title={
-                    viewAction(lastExport, currentExportKey) === 'open'
-                      ? `${lastExport.saved_to}을 엽니다`
-                      : '지금 조건으로 내보낸 리포트가 없어 먼저 내보낸 뒤 엽니다'
-                  }
-                >
-                  리포트 확인하기
                 </button>
                 {rescoreCounts.files > 0 && (
                   <button
@@ -646,11 +626,11 @@ export default function ComparePage() {
               </div>
             )}
             {exportStage && <p className="export-stage">{exportStage}</p>}
-            {viewerOpen && lastExport && (
-              <ReportViewer
-                saved={lastExport}
-                stale={lastExport.key !== currentExportKey}
-                onClose={() => setViewerOpen(false)}
+            {chapterPick && (
+              <ReportChaptersDialog
+                chosen={chapterPick}
+                onConfirm={confirmChapters}
+                onCancel={() => setChapterPick(null)}
               />
             )}
 

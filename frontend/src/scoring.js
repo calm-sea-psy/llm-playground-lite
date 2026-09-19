@@ -541,10 +541,22 @@ export const METRICS = _BASE_METRICS.map((m) => ({ ...m, fmt: _RAW_FMT[m.key] ??
 const _METRIC_BY_KEY = Object.fromEntries(METRICS.map((m) => [m.key, m]))
 
 /** 원본 값 한 칸의 문자열 — 상태가 붙은 값은 상태 문구로. 측정값 장·비교 표가 같이 쓴다. */
+// 칸이 적은 지표는 **소수로 적지 않는다** — `1.000`은 스무 칸을 다 맞힌 것과 두 칸을 다 맞힌 것을 같아 보이게 한다.
+// 열 칸이 채 안 되는 지표(긴 컨텍스트 기억 2칸·제약 7칸)는 맞은 칸/전체 칸으로 읽는다
+const FEW_CELLS = 10
+
+/** 칸 수로만 읽어야 하는 값인가 — 비율 지표이고 채점한 칸이 열보다 적을 때. */
+export function tooFewCells(run, metric) {
+  const cells = metric.cells?.(run?.metrics ?? {})
+  return metric.kind === 'ratio' && cells != null && cells > 0 && cells < FEW_CELLS ? cells : null
+}
+
 export function formatMetricCell(run, metric, { baseline = false } = {}) {
   const { outcome, value, raw, flags, cause } = metricState(run, metric, { baseline })
   if (outcome === OUTCOME.MEASURED) {
     const detail = metric.fmtDetail?.(run.metrics)
+    const cells = tooFewCells(run, metric)
+    if (cells) return `${Math.round(value * cells)}/${cells}칸`
     const text = detail ? `${metric.fmt(value)} (${detail})` : metric.fmt(value)
     return flags?.includes(OUTCOME.UNKNOWN_CAUSE) ? `${text} · ${OUTCOME_LABEL[OUTCOME.UNKNOWN_CAUSE]}` : text
   }

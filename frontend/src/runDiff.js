@@ -53,7 +53,11 @@ const ITEM_SCOPED_KEYS = {
   gpu_power_limit: new Set(['model_load', 'short_probe', 'context_2000', 'context_4000', 'context_8000']),
   // 문서 방어는 문서를 함께 보내는 지표에만 걸린다 — 문서가 없는 호출에는 붙지 않아 조건이 그대로다
   document_guard: new Set(['closed_qa', 'key_coverage', 'hallucination', 'injection_indirect']),
+  // TTFT 재는 법은 속도 항목에만 걸린다 — 품질 답은 캐시로 달라지지 않는다
+  ttft_method: new Set(['short_probe', 'context_2000', 'context_4000', 'context_8000']),
 }
+// TTFT — 기록이 없는 실행은 같은 글을 반복해 **캐시가 맞은** 값이다(그 값은 찬 캐시 값과 나란히 읽으면 안 된다)
+export const TTFT_CACHED = '캐시 맞음(옛 방식)'
 // 문서 방어 — 기록이 없는 실행은 방어 없이 쟀다(방어를 넣기 전이다)
 export const NO_DOCUMENT_GUARD = '없음'
 // 도구 응답 — 기록이 없는 옛 실행은 도구를 실시간으로 실행했다(고정값이 생기기 전이다)
@@ -68,6 +72,19 @@ export function machineLabel(machine) {
 }
 
 const gib = (bytes) => `${(bytes / 1024 ** 3).toFixed(1)}GB`
+
+/** 표지에 한 줄로 적는 기계 사양 — **CPU·RAM·GPU만**이다. 드라이버·OS·CUDA는 조건 상세의 몫이고,
+ * 표지는 한 쪽이라 `무엇으로 잰 값인가`에 답하는 만큼만 싣는다. 기록이 없으면 `null`이라 그 줄 자체가 안 나간다
+ * — 측정하지 않은 것을 표지에 적지 않는다. */
+export function machineSpecText(hw) {
+  if (!hw) return null
+  const parts = []
+  if (hw.cpu) parts.push(hw.cpu)
+  if (hw.ram_bytes) parts.push(`RAM ${gib(hw.ram_bytes)}`)
+  if (hw.gpus?.length) parts.push(hw.gpus.map((g) => `${g.name}${g.vram_bytes ? ` ${gib(g.vram_bytes)}` : ''}`).join(', '))
+  else if (hw.gpus) parts.push('NVIDIA GPU 없음')
+  return parts.length ? parts.join(' · ') : null
+}
 
 /** 측정한 기계의 사양 한 줄 — 못 읽은 칸은 못 읽었다고 적는다(`GPU 없음`과 `GPU 못 읽음`은 다른 말이다). */
 export function hardwareText(hw) {
@@ -165,6 +182,7 @@ function conditionValue(cfg, key) {
   if (key === 'tool_responses') return cfg[key] ?? TOOL_RESPONSES_LIVE
   if (key === 'long_context_reload') return cfg[key] ?? false
   if (key === 'document_guard') return cfg[key] ?? NO_DOCUMENT_GUARD
+  if (key === 'ttft_method') return cfg[key] ?? TTFT_CACHED
   if (key === 'reload_after_skipped') return cfg[key] ?? false
   return cfg[key]
 }
@@ -187,6 +205,7 @@ const CONDITION_LABELS = {
   summarizer_sampling: '요약 샘플링',
   document_length: '문서 길이',
   document_guard: '문서 방어',
+  ttft_method: 'TTFT 재는 법',
   measurement_machine: '측정 기계',
   ollama_version: 'Ollama 버전',
   tool_responses: '도구 응답',
@@ -208,6 +227,9 @@ export function conditionValueText(key, value) {
   if (key === 'tool_responses') return TOOL_RESPONSES_TEXT[value] ?? String(value)
   if (key === 'gpu_power_limit') return value.map((w) => `${w}W`).join('·')
   if (key === 'document_guard') return value === NO_DOCUMENT_GUARD ? value : `v${value.version} (${value.sha256})`
+  // 커밋은 리포트 어디서나 같은 꼴로 적는다(`ee19e75` · `ee19e75+dirty`) — 날 것(`sha=…, dirty=false`)으로
+  // 두면 한 줄이 두 배로 길어지고, 같은 값이 장마다 다른 꼴로 인쇄된다
+  if (key === 'tool_commit') return commitText(value)
   if (typeof value === 'boolean') return value ? '켬' : '끔'
   if (Array.isArray(value)) return value.join(' / ')
   if (typeof value === 'object') {
@@ -286,6 +308,8 @@ export function metricConditionMismatches(details) {
   const groups = new Map()
   const keyGaps = new Map()
   const unrecorded = new Map()
+  // 대조까지 간 항목 수 — 한 키가 이만큼에 다 걸리면 항목을 세지 않고 `전 항목`이라 적는다
+  let compared = 0
   const addTo = (map, signature, make, label) => {
     if (!map.has(signature)) map.set(signature, make())
     map.get(signature).items.push(label)
@@ -297,6 +321,7 @@ export function metricConditionMismatches(details) {
       if (Object.keys(e.config).length === 0) unrecorded.set(e.runId, [...(unrecorded.get(e.runId) ?? []), label])
     }
     if (recorded.length < 2) continue
+    compared += 1
     const keys = new Set([...recorded.flatMap((e) => Object.keys(e.config)), ...Object.keys(DERIVED_KEYS)])
     for (const key of keys) {
       if (RECORD_ONLY_KEYS.has(key) || REFERENCE_ONLY_KEYS.has(key)) continue
@@ -313,10 +338,12 @@ export function metricConditionMismatches(details) {
       }
     }
   }
+  // `everyItem`은 셈이지 판단이 아니다 — 문장을 만드는 쪽이 항목을 나열할지 `전 항목`이라 적을지 고른다
+  const mark = (g) => ({ ...g, everyItem: compared > 1 && g.items.length === compared })
   return {
-    mismatches: [...groups.values()],
+    mismatches: [...groups.values()].map(mark),
     unrecorded: [...unrecorded.entries()].map(([runId, items]) => ({ runId, items })),
-    unrecordedKeys: [...keyGaps.values()],
+    unrecordedKeys: [...keyGaps.values()].map(mark),
   }
 }
 
@@ -347,7 +374,7 @@ export function conditionMismatchLines(details, { hasBaseline = false, nameOf = 
   const footnotes = [
     ...unrecorded.map((u) => `${nameOf(u.runId)}: 측정 조건 기록 없음 — 대조하지 못한 항목: ${u.items.join(', ')}`),
     ...unrecordedKeys.map(
-      (g) => `${conditionLabel(g.key)} — ${g.items.join(', ')}: ${g.runIds.map(nameOf).join('·')} 기록 없음(그 기능 이전 실행)이라 대조하지 못함`,
+      (g) => `${conditionLabel(g.key)} — ${whereText(g)}: ${g.runIds.map(nameOf).join('·')} 기록 없음(그 기능 이전 실행)이라 대조하지 못함`,
     ),
   ]
   const facts = notes
@@ -356,15 +383,22 @@ export function conditionMismatchLines(details, { hasBaseline = false, nameOf = 
   return { warnings, footnotes, facts }
 }
 
+/** 항목 자리 — 대조한 항목에 다 걸렸으면 세어 적는다. 열아홉 개를 늘어놓은 줄은 표지 한 쪽을 넘겨 리포트 조립을
+ * 실패시키고, 다 걸렸다는 사실 자체는 이름을 하나도 잃지 않고 `전 항목`으로 말할 수 있다(항목이 하나뿐이면
+ * 그 이름이 `전 항목`보다 많은 것을 말하므로 그대로 적는다 — `everyItem`이 그 경우를 이미 뺀다). */
+function whereText({ items, everyItem }) {
+  return everyItem ? `전 항목(${items.length}개)` : items.join(', ')
+}
+
 /** 조건 불일치 한 줄 — `일관성 num_predict — 일관성/재현성: A·B 2048 / C 512`. 같은 값인 실행은 모은다. */
-export function conditionMismatchText({ key, values, items }, nameOf) {
+export function conditionMismatchText({ key, values, items, everyItem }, nameOf) {
   const byValue = new Map()
   for (const { runId, value } of values) {
     const text = conditionValueText(key, value)
     byValue.set(text, [...(byValue.get(text) ?? []), nameOf(runId)])
   }
   const spread = [...byValue.entries()].map(([text, names]) => `${names.join('·')} ${text}`).join(' / ')
-  return `${conditionLabel(key)} — ${items.join(', ')}: ${spread}`
+  return `${conditionLabel(key)} — ${whereText({ items, everyItem })}: ${spread}`
 }
 
 /** `프롬프트 실험` 실행이 비교에 끼었는가 — 후보끼리든 기준선과든 경고한다. 기준선은 프롬프트를 쓰지

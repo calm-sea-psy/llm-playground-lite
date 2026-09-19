@@ -10,6 +10,7 @@
 """
 
 import statistics
+import uuid
 import time
 from typing import Any
 
@@ -101,6 +102,17 @@ def measure_memory(model: str) -> dict[str, Any]:
     }
 
 
+def _uncached(prompt: str) -> str:
+    """앞머리에 한 번만 쓰는 줄을 붙여 **프롬프트 캐시를 비켜 간다.**
+
+    캐시는 앞머리가 같으면 맞는다. 짧은 탐침은 같은 글을 열 번 반복하고, 컨텍스트 단계는 2000자리가
+    4000자리의 앞부분과 같아서(같은 채움 문단을 늘린 것이다) 두 번째 호출부터는 프리필을 거의 건너뛴다 —
+    그렇게 잰 TTFT는 `처음 받아 본 입력`의 값이 아니다(실측: 4천 토큰 문서에서 0.52초 대 0.055초).
+
+    뒤에 붙이지 않고 앞에 붙이는 까닭은 캐시가 **앞에서부터** 맞기 때문이다."""
+    return f"[{uuid.uuid4().hex}]\n{prompt}"
+
+
 def measure_short_probe(model: str, short_prompt: str, user_system: str | None = None) -> dict[str, Any]:
     """짧은 탐침을 `REPEAT_COUNT`회 반복 — TTFT·tok/s는 중앙값, tok/s 편차는
     성능 변동성으로 쓴다(이미 하는 반복 측정에서 공짜로 나온다)."""
@@ -108,9 +120,11 @@ def measure_short_probe(model: str, short_prompt: str, user_system: str | None =
     tps_list: list[float] = []
     output_tokens: list[int] = []
     complete_count = 0
+    last_prompt = None
     for _ in range(cfg.REPEAT_COUNT):
+        last_prompt = _uncached(short_prompt)  # 반복마다 앞머리가 달라 열 번 다 찬 캐시다
         ttft, _text, final = _consume_stream(
-            model, short_prompt, num_predict=cfg.NUM_PREDICT, timeout=cfg.TIMEOUT_SHORT, user_system=user_system
+            model, last_prompt, num_predict=cfg.NUM_PREDICT, timeout=cfg.TIMEOUT_SHORT, user_system=user_system
         )
         ttfts.append(ttft)
         if _is_complete(final):
@@ -118,8 +132,18 @@ def measure_short_probe(model: str, short_prompt: str, user_system: str | None =
         if final and final.get("eval_count") and final.get("eval_duration"):
             tps_list.append(final["eval_count"] / (final["eval_duration"] / _NS_PER_SEC))
             output_tokens.append(final["eval_count"])
+    # 캐시가 맞았을 때의 값도 하나 남긴다 — 같은 프롬프트를 한 번 더 보낸다. 둘을 나란히 둬야
+    # `처음 받아 본 입력`과 `이어지는 대화`의 지연을 구분해 읽을 수 있다
+    cached_ttft = None
+    if last_prompt is not None:
+        cached_ttft, _text, _final = _consume_stream(
+            model, last_prompt, num_predict=cfg.NUM_PREDICT, timeout=cfg.TIMEOUT_SHORT, user_system=user_system
+        )
     return {
+        # `ttft_sec`는 이제 **찬 캐시** 값이다(반복마다 앞머리가 다르다). 옛 실행의 같은 이름은 캐시가 맞은 값이라
+        # 나란히 읽으면 안 된다 — 실행 조건의 `ttft_method`가 그 둘을 가른다
         "ttft_sec": statistics.median(ttfts) if ttfts else None,
+        "ttft_cached_sec": cached_ttft,
         "tok_per_sec": statistics.median(tps_list) if tps_list else None,
         # 표본 1개면 분산이 정의되지 않으므로 0 — REPEAT_COUNT가 1로 줄어들 때의 방어.
         "tok_per_sec_stdev": statistics.pstdev(tps_list) if len(tps_list) > 1 else 0.0,
@@ -135,9 +159,14 @@ def measure_short_probe(model: str, short_prompt: str, user_system: str | None =
 
 
 def measure_context_stage(model: str, stage_text: str, user_system: str | None = None) -> dict[str, Any]:
-    """긴 입력 하나를 보내 prefill 처리량과 그 길이에서의 생성 tok/s를 잰다."""
+    """긴 입력 하나를 보내 prefill 처리량과 그 길이에서의 생성 tok/s를 잰다.
+
+    **단계마다 앞머리를 새로 단다**(`_uncached`) — 단계 텍스트가 서로의 앞부분이라 그대로 보내면 뒤 단계가
+    앞 단계의 캐시를 물려받아, 입력이 길수록 프리필이 빨라지는 것처럼 보인다(실측: 9,145 → 15,776 tok/s).
+    생성 tok/s는 캐시와 무관하다(`eval_count / eval_duration`) — 유지율은 그 값으로 낸다."""
+    prompt = _uncached(stage_text)
     ttft, _text, final = _consume_stream(
-        model, stage_text, num_predict=cfg.NUM_PREDICT, timeout=cfg.TIMEOUT_LONG, user_system=user_system
+        model, prompt, num_predict=cfg.NUM_PREDICT, timeout=cfg.TIMEOUT_LONG, user_system=user_system
     )
     if final is None:
         raise TimeoutError("응답을 받지 못했습니다(타임아웃 또는 빈 스트림)")
@@ -147,9 +176,14 @@ def measure_context_stage(model: str, stage_text: str, user_system: str | None =
     gen_tps = None
     if final.get("eval_count") and final.get("eval_duration"):
         gen_tps = final["eval_count"] / (final["eval_duration"] / _NS_PER_SEC)
+    cached_ttft, _t, _f = _consume_stream(
+        model, prompt, num_predict=cfg.NUM_PREDICT, timeout=cfg.TIMEOUT_LONG, user_system=user_system
+    )
     return {
         "ttft_sec": ttft,
+        "ttft_cached_sec": cached_ttft,
         "prompt_tokens": final.get("prompt_eval_count"),
+        "cached_tokens": final.get("prompt_eval_cached_count"),
         "prefill_tok_per_sec": prefill_tps,
         "tok_per_sec": gen_tps,
         "output_tokens": final.get("eval_count"),

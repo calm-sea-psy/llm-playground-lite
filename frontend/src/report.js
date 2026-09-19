@@ -52,6 +52,7 @@ import {
   NO_DOCUMENT_GUARD,
   commitText,
   hardwareText,
+  machineSpecText,
   softwareText,
   powerText,
   longContextReloadText,
@@ -397,6 +398,9 @@ function metricCells(run, metric, { baseline = false } = {}) {
   return (value ?? raw) == null || outcome === OUTCOME.INCAPABLE || !metric.cells || !run?.metrics ? null : metric.cells(run.metrics)
 }
 
+/** 도구 결과 인젝션 저항성의 칸 수 — 참고 행과 채점 규칙 장이 같이 쓴다(둘이 다른 수를 적으면 안 된다). */
+const probeCells = (d) => (d.metrics?.injection_probe?.injection_resistance_rate == null ? null : d.metrics.injection_probe.detail?.length ?? null)
+
 /** 측정값 표 맨 아래의 `참고` 행 — 점수에 들어가지 않는 값(보조 지표, 한국어 출력 순도 게이트). */
 function referenceRows(details) {
   const probe = (d) => {
@@ -412,7 +416,6 @@ function referenceRows(details) {
   // 문턱도 백엔드가 판정에 쓴 값을 그대로 적는다 — 표시용 사본을 두면 어긋날 때 사람이 틀린 문턱을 읽는다
   const thresholds = [...new Set(details.map((d) => koreanPurityGate(d)?.threshold).filter((t) => t != null))]
   const thresholdText = thresholds.length ? `, 임계 ${thresholds.map((t) => `${Math.round(t * 100)}%`).join(' / ')}` : ''
-  const probeCells = (d) => (d.metrics?.injection_probe?.injection_resistance_rate == null ? null : d.metrics.injection_probe.detail?.length ?? null)
   // 게이트의 분모는 칸이 아니라 답한 응답 수다(빈 응답·잘린 깨끗한 답은 백엔드가 이미 뺐다)
   const purityCount = (d) => {
     const gate = koreanPurityGate(d)
@@ -497,7 +500,7 @@ function varianceSentences(details) {
   return [`오차 막대가 겹치는 쌍: ${overlaps.join(', ')} — 읽는 법대로 이 쌍은 속도 동률로 읽고, 나머지 순위는 그대로 읽는다.`]
 }
 
-export function buildReportPayload({ selectedDetails, baseline, weights: chosenWeights, presetName, demotion, notes }) {
+export function buildReportPayload({ selectedDetails, baseline, weights: chosenWeights, presetName, demotion, notes, chapters }) {
   const rows = selectedDetails.map((d) => toRow(d))
   const baseRun = baseline?.run
   const normRows = baseRun ? [...rows, toRow(baseRun, BASELINE_ROW_ID)] : rows
@@ -583,6 +586,9 @@ export function buildReportPayload({ selectedDetails, baseline, weights: chosenW
       })),
       metric_count: METRICS.length,
       condition_lines: conditionLines(selectedDetails[0]),
+      // 표지의 기계 한 줄 — 무엇으로 잰 값인지는 조건 상세를 빼고 뽑아도 남아야 한다. 실행마다 다르면 다른 만큼 싣고,
+      // 기록이 없으면 빈 목록이라 그 줄이 안 나간다(측정하지 않은 것을 표지에 적지 않는다)
+      machine_specs: [...new Set(selectedDetails.map((d) => machineSpecText(d.config?.hardware)).filter(Boolean))],
       // 문서 길이 줄은 비교에 든 실행이 읽은 판으로 센다 — 판이 섞였으면 판마다 한 줄(섞인 것 자체는 조건 불일치 경고가 말한다)
       document_lengths: [...new Set(selectedDetails.map((d) => documentLength(d.config)))],
       // 긴 컨텍스트 두 지표가 압축을 켠 경로의 값이라는 것과, 끈 경로와 값이 다른 칸 — 첫 실행 기준이 아니라 후보 전부에서 센다
@@ -619,7 +625,21 @@ export function buildReportPayload({ selectedDetails, baseline, weights: chosenW
         baseline: baseRun ? { scope: baseRun.scope ?? 'baseline', fingerprints: baseRun.fingerprints ?? {} } : null,
       },
     },
+    // 고른 장 — 빈 배열은 `기본 장만`이고, 안 넘기면(undefined) 키 자체가 빠져 백엔드가 전부 싣는다.
+    // 둘을 가르지 않으면 고르는 화면을 거치지 않는 경로(시험·CLI)가 기본 판으로 쪼그라든다
+    ...(chapters ? { chapters } : {}),
     models: selectedDetails.map((d) => ({ id: d.id, label: d.model, started_at: d.started_at })),
+    // 지표마다 **이 실행들이 실제로 채점한 칸 수** — 리포트의 채점 표가 값 옆에 적는다.
+    // 세트 크기가 아니라 돈 칸이라야 값을 그 수로 나눠 읽을 수 있다(두 칸짜리 1.000과 스무 칸짜리 1.000은 다르다)
+    // 합친 지표(인젝션 저항성·Tool-calling 기본)는 제 칸이 없다 — 채점 규칙 장이 갈래마다 한 줄씩 적으므로
+    // 갈래의 칸도 함께 보낸다. 보조 지표도 그 장에 줄이 있어 같이 보낸다
+    metric_cells: Object.fromEntries([
+      ...METRICS.flatMap((m) => [
+        [m.key, selectedDetails.map((d) => m.cells?.(d.metrics ?? {}) ?? null)],
+        ...(m.components ?? []).map((c) => [c.key, selectedDetails.map((d) => c.cells?.(d.metrics ?? {}) ?? null)]),
+      ]),
+      ['injection_probe', selectedDetails.map((d) => probeCells(d))],
+    ]),
     // 선정 규칙을 지금 결과에 적용한 경로 — 표지가 `이 규칙을 적용하면 X`로 인쇄한다(사람이 적어 넣으면 다시 잴 때 낡는다)
     selection: applySelectionRule(selectedDetails, (d) => model(d.id)),
     composite: withheld ? null : {

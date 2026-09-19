@@ -1,7 +1,7 @@
 // 모델 선정 규칙 — Use Case(사내 문서 기반 한국어 질의응답)에서 끌어낸 단계 넷을 결과에 적용한다.
 //
-// **점수에서 끌어낸 규칙이 아니다.** Use Case는 `USE_CASE`에, 거기서 나온 단계 순서의 까닭은 `RULE_BASIS`에 한 벌만
-// 둔다 — 리포트가 규칙 바로 앞에 그대로 인쇄한다.
+// **점수에서 끌어낸 규칙이 아니다.** 무엇을 위해 고르는지는 사람이 서술 파일(`report_narrative.json`)에 적고,
+// 리포트의 `선정 근거` 장이 그것을 싣는다 — 이 파일은 규칙과 그 적용만 맡는다.
 //
 // **계산은 코드가 하고 고른 것은 사람이다.** 그래서 결과를 `선정`이 아니라 `이 규칙을 적용하면 X`로 적고
 // 규칙 네 단계를 같은 면에 인쇄한다 — 우선순위는 데이터가 아니라 가치 판단이라, 기계가 대신 판단한 것처럼
@@ -33,26 +33,6 @@ const SECURITY_BASIS = {
   tail: ', 지표 사이 교환 비율을 1:1로 단정한다',
 }
 
-// 규칙이 선 자리 — **규칙 네 단계의 전제라 리포트도 규칙 바로 앞에 싣는다.** 여기까지 안 실으면 읽는 사람은
-// `왜 보안이 맨 위인가`를 판단할 재료가 없고, 규칙을 그저 받아야 한다.
-export const USE_CASE = [
-  // 제품이 아직 정해지지 않았다 — Use Case와 압축 없음은 결정이 아니라 가정이다. 규칙을 결과 뒤에 썼다고 적는 것과 같은 무게로 적는다
-  'Use Case(제품 미정 — 이 줄과 아래 줄은 가정) — 사내 문서 기반 한국어 질의응답. 문서를 프롬프트에 직접 넣고 검색 단계를 두지 않는다.',
-  // 압축 단계가 없다는 결정 — 까닭과 채팅 화면의 압축 옵션 이야기는 측정 조건 상세의 `요약 압축` 문단에 있다(표지는 한 줄)
-  '다중 턴 압축 없음 — 긴 컨텍스트·다중 턴 점수는 압축 끔 경로.',
-]
-
-// 규칙의 까닭 — 단계 순서가 Use Case에서 어떻게 나왔나와 선정을 종합 점수로 하지 않는 이유를 **한 문단**에 둔다(표지는 결론
-// 한 쪽이라 문장마다 줄을 세우면 결과 줄이 들어갈 자리가 없다). 문장 순서는 단계 순서를 따른다. 순도 게이트 문장은 게이트가
-// **무엇인지**가 아니라 **왜 점수가 아니라 게이트인지**다 — 게이트를 정의한 코드에는 그 이유가 없다. 종합 점수 문장은
-// **관측이 아니라 이유다** — `가중치를 바꾸면 1위가 바뀐다`는 이 판단이 옳았다는 관측이지 규칙을 만든 이유가 아니다.
-// 순서를 뒤집어 관측을 이유 자리에 두면 결과를 보고 규칙을 고른 것처럼 읽힌다.
-export const RULE_BASIS =
-  '규칙의 까닭 — 한국어 답변이 용도라 순도는 점수가 아니라 게이트다. ' +
-  '문서를 직접 넣으니 문서 속 지시문을 견디는 것이 선택 조건이고 보안이 맨 위다. ' +
-  '리소스·속도는 상한이 아니라 남은 후보끼리의 상대 비교다. ' +
-  '종합 점수는 어느 지표가 필수인지 못 정하니 선정에 쓰지 않는다.'
-
 export const RULE_STEPS = [
   '1. 필수 통과 — 한국어 출력 순도 게이트 · 이 Use Case가 쓰는 지표(폐쇄형·핵심 정보·환각·지시 따르기)에 능력 부재 없음',
   '2. 보안 축 — (2a) 인젝션 직접·간접·유출 중 하나라도 0%면 탈락 (2b) 남은 후보끼리 셋 다 우세해야 앞선다',
@@ -78,8 +58,8 @@ const STAGE_NAMES = {
   '4단계': '속도(4단계)',
 }
 
-// 결론 면에 함께 실리는 머리 — 반환 지점이 여럿이라 한 곳에서 만든다(한 곳이 빠지면 그 경로만 전제 없이 인쇄된다).
-const RULE_HEAD = { rule: RULE_STEPS, use_case: USE_CASE, basis: RULE_BASIS }
+// 규칙은 반환 지점이 여럿이라 한 곳에서 붙인다 — 한 곳이 빠지면 그 경로만 규칙 없이 인쇄된다.
+const RULE_HEAD = { rule: RULE_STEPS }
 
 const pct = (v) => `${Math.round(v * 100)}%`
 
@@ -230,24 +210,8 @@ function securityBasis(details, nameOf) {
   return `${SECURITY_BASIS.head}${example}${SECURITY_BASIS.tail}`
 }
 
-/** 결론이 무엇을 뜻하지 **않는지** — 규칙이 고른 것은 남은 후보 사이의 자리이지 보안 기준을 넘은 것이 아니다. 앞섰다는
- * 말만 있으면 읽는 사람은 `보안이 좋다`로 읽는다. 그래서 Use Case의 선택 조건을 재는 지표의 절대값을 같이 적는다.
- * **규칙에 보안 기준값을 더하면 이 문장을 같이 고친다** — `보안은 0%만 떨어뜨린다`는 지금 규칙의 모양이다. */
-function standingNote(stage, compared, nameOf) {
-  const head = {
-    '2a': '고른 것은 보안 최소선을 넘은 유일한 후보이지 절대 기준을 넘은 것이 아니다',
-    '2b': '고른 것은 남은 후보끼리의 상대 우위이지 절대 기준을 넘은 것이 아니다',
-  }[stage] ?? '보안 비교로는 갈리지 않았고, 남은 후보 누구도 절대 기준을 넘은 것이 아니다'
-  const axis = SECURITY.find((s) => s.useCase)
-  const values = compared.map((d) => {
-    const v = d.metrics ? axis.get(d.metrics) : null
-    return `${nameOf(d)} ${v == null ? '값 없음' : pct(v)}`
-  })
-  return `${head} — 보안은 0%만 떨어뜨린다. ${axis.useCase}(${axis.label}): ${values.join(' · ')}.`
-}
-
 /** 규칙을 지금 결과에 적용한 경로 — 탈락(단계·사유)과 결론. 갈리지 않으면 갈리지 않는다고 말한다.
- * `explain`은 결론 옆 설명(`margin`·`standing`)을 붙일지 — 설명을 만들려고 규칙을 다시 돌릴 때는 끈다. */
+ * `explain`은 결론 옆 설명(`margin`)을 붙일지 — 설명을 만들려고 규칙을 다시 돌릴 때는 끈다. */
 export function applySelectionRule(details, nameOf = (d) => d.model, { explain = true } = {}) {
   const eliminated = []
   const stages = []
@@ -301,7 +265,6 @@ export function applySelectionRule(details, nameOf = (d) => d.model, { explain =
       decided_label: decided ? STAGE_NAMES[decided] : null,
       runners_up: alive.filter((d) => d !== winner).map((d) => ({ id: d.id, name: nameOf(d) })),
       margin: explain && decided === '2b' ? thinnestMargin(winner, alive.filter((d) => d !== winner), details, nameOf) : null,
-      standing: explain && winner ? standingNote(decided, alive, nameOf) : null,
     }
   }
 
