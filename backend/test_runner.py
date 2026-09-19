@@ -702,7 +702,10 @@ def _finalize_metrics(run: Run) -> None:
         if first_stage:
             m["prefill_tok_per_sec"] = first_stage.get("prefill_tok_per_sec")
 
-        # 컨텍스트 부하 시 tok/s 유지율 = 가장 긴 단계 tok/s ÷ 짧은 탐침 tok/s
+        # 컨텍스트 부하 시 tok/s 유지율 = 가장 긴 단계 tok/s ÷ 짧은 탐침 tok/s.
+        # 두 값이 **같은 일**을 시켜야 길이의 영향만 남는다 — 탐침과 단계가 같은 지시문을 쓰고
+        # 입력 길이만 다르다(`probe.json`). 다른 일을 시키면 생성 길이·토큰 구성이 달라져
+        # 부하를 견딘 정도가 아니라 기준이 유리했던 정도가 섞인다.
         last_stage = m.get(stage_ids[-1])
         if last_stage and last_stage.get("tok_per_sec") and m.get("tok_per_sec"):
             m["context_retention_ratio"] = last_stage["tok_per_sec"] / m["tok_per_sec"]

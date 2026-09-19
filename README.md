@@ -42,7 +42,7 @@ flowchart TD
   subgraph R1["1회차"]
     L1["모델 로드<br/>내리기(keep_alive 0) → 다시 올려 첫 토큰까지"] --> W1["워밍업 1회"]
     W1 --> M1["메모리·VRAM 확인"]
-    M1 --> P1["짧은 탐침 3회"]
+    M1 --> P1["짧은 탐침 10회"]
     P1 --> C1["컨텍스트 부하<br/>2000 · 4000 · 8000토큰"]
     C1 --> Q1["품질·보안 세트 11개<br/>(긴 컨텍스트는 압축 끔 → 켬)"]
     Q1 --> T1["Tool-calling · 도구 결과 인젝션"]
@@ -207,7 +207,7 @@ flowchart TD
 
 | 파일 | 지표 | 최상위 필드 | 문항 필드 | 문서 |
 |---|---|---|---|---|
-| `probe.json` (저장소에 있음) | 워밍업 · 짧은 탐침 · 컨텍스트 부하 | `short`, `context_stages[{target_tokens, text}]` — `target_tokens`는 2000·4000·8000 | – | – |
+| `probe.json` (저장소에 있음) | 워밍업 · 짧은 탐침 · 컨텍스트 부하 | `short`, `context_stages[{target_tokens, text}]` — `target_tokens`는 2000·4000·8000. **짧은 탐침과 각 단계는 같은 지시문으로 끝나고 입력 길이만 다르다** (유지율이 길이의 영향만 재게 한다) | – | – |
 | `instruction_following.json` | 지시 따르기 | `shot_modes`(`"zero"` 필수), `few_shot_examples[{input, output}]` | `id`, `variants`, `scoring{type, …}` | – |
 | `structured_output.json` | 구조적 출력 준수 | `shot_modes`, `few_shot_examples` | `id`, `variants`, `schema`(JSON Schema) | – |
 | `closed_qa.json` | 폐쇄형 정답 정확도 | – | `id`, `variants`, `allowed_forms`, `doc?` | 일부 문항 |

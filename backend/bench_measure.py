@@ -125,9 +125,8 @@ def measure_short_probe(model: str, short_prompt: str, user_system: str | None =
         "tok_per_sec_stdev": statistics.pstdev(tps_list) if len(tps_list) > 1 else 0.0,
         # 중앙값·표준편차로 뭉개기 전의 반복 원본값을 그대로 남긴다.
         # 이미 계산해둔 값을 버리지 않는 것뿐이라 비용이 없고, 분포를 어떻게
-        # 그릴지(에러바냐 박스플롯이냐)는 표본 수를 보고 쓰는 쪽이 정한다 —
-        # 지금은 `REPEAT_COUNT=3`이라 늘 에러바다. 이 필드가 생기기 전에 저장된
-        # 실행에는 없으므로, 쓰는 쪽에서 없으면 평균±표준편차로 근사한다.
+        # 그릴지(에러바냐 박스플롯이냐)는 표본 수를 보고 쓰는 쪽이 정한다.
+        # 이 필드가 생기기 전에 저장된 실행에는 없으므로, 쓰는 쪽에서 없으면 평균±표준편차로 근사한다.
         "tok_per_sec_samples": tps_list,
         "output_tokens_median": statistics.median(output_tokens) if output_tokens else None,
         "short_probe_complete_count": complete_count,
