@@ -287,6 +287,9 @@ def config_snapshot(provider_name: str = "ollama") -> dict[str, Any]:
         "consistency_sampling": dict(cfg.REALISTIC_SAMPLING) if fixed else None,
         # 문서를 주고 묻는 세트가 읽는 판(점수에 드는 쪽). 과제용 고정 문항은 실행을 시작할 때 짧은 판으로 덮어 쓴다
         "document_length": qt.REPRESENTATIVE_DOCUMENT_LENGTH,
+        # 문서를 함께 보내는 호출에 붙는 방어의 판. 키가 없거나 None이면 방어 없이 잰 실행이다 —
+        # 방어를 넣은 실행과 그 전 실행은 문서를 읽는 지표에서 같은 조건이 아니다
+        "document_guard": cfg.document_guard_record(),
         # 긴 컨텍스트 압축 켬 경로(참고)의 요약기 — 후보 자신이다(`quality_runner.SELF_SUMMARIZER`). 옛 실행은 별도 요약
         # 모델(`llama3.2:3b`)로 요약해 켬 참고값이 같은 것이 아니다 — 리포트가 켬 참고 행 각주에 실행마다 적는다. 켬 경로를
         # 돌지 않는 프로바이더(클라우드)는 요약하지 않아 두 값 모두 None이다
@@ -910,11 +913,12 @@ def _execute(run_id: str) -> None:
     try:
         probe = _load_probe()
         provider = providers.get_provider(run.provider_name)
-        if run.provider_name == "cloud":
-            run.precheck = _run_precheck(run, provider)
-            if not run.precheck["passed"]:
-                with _lock:
-                    run.status = "failed"
+        # 사전 점검 — 클라우드는 빈 응답(조건 쪽) 문항까지, 로컬은 컨텍스트 여유만 본다.
+        # 가장 긴 입력이 안 들어가면 문서를 읽는 지표가 통째로 `문서에 없다`가 되므로 재기 전에 멈춘다
+        run.precheck = _run_precheck(run, provider)
+        if not run.precheck["passed"]:
+            with _lock:
+                run.status = "failed"
         # 다시 올리는 자리는 적힌 조건을 따른다 — 기록과 실제가 어긋나지 않게
         reloads = frozenset(reload_points([it.id for it in run.items]) if run.config.get("reload_after_skipped") else [])
         with quality_runner.metering(meter) if meter is not None else nullcontext(), agent_tools.fixed_responses(fixtures):
@@ -1001,14 +1005,92 @@ def _precheck_questions() -> list[dict[str, Any]]:
     return picked
 
 
+def _biggest_prompts(limit: int = 3) -> list[dict[str, Any]]:
+    """기준선에서 **프롬프트가 가장 컸던 칸**들 — 실행 전에 그 입력을 다시 만들어 재 본다.
+
+    가장 긴 문서로 어림하지 않는 까닭은, 실제로 가장 큰 입력이 문서 길이만으로 정해지지 않기 때문이다
+    (문서 + 방어 문구 + 질문 + few-shot이 함께 간다). 기준선이 없거나 되살릴 수 없으면 빈 목록이고,
+    그때는 가장 긴 문서로 대신 잰다."""
+    entry = baseline.latest() or {}
+    rows: list[dict[str, Any]] = []
+    for metric, value in (entry.get("metrics") or {}).items():
+        if metric not in cfg.QUALITY_TESTSET_FILES or not isinstance(value, dict):
+            continue
+        try:
+            items = {it["id"]: it for it in qt.load_quality_testset(metric)["items"]}
+        except (OSError, KeyError, ValueError):
+            continue
+        for e in value.get("detail") or []:
+            item = items.get(e.get("id")) or {}
+            tokens = (e.get("call") or {}).get("prompt_tokens")
+            if not tokens or not item.get("doc") or not e.get("variant"):
+                continue
+            rows.append({"metric": metric, "id": e["id"], "doc": item["doc"], "question": e["variant"],
+                         "measured_tokens": tokens})
+    rows.sort(key=lambda r: r["measured_tokens"], reverse=True)
+    return rows[:limit]
+
+
+def _context_headroom(run: Run, provider: providers.Provider) -> dict[str, Any]:
+    """**가장 큰 입력이 컨텍스트에 드는가** — 실행 전에 실제로 보내 재 본다.
+
+    기준선에서 프롬프트가 가장 컸던 칸 셋을 그대로 다시 만들어 보내고, 모델이 돌려준 프롬프트 토큰 수 중
+    가장 큰 값을 쓴다. 글자 수로 어림하지 않는 까닭은 토큰화가 모델마다 다르기 때문이다 — 어림은
+    `들어간다`고 해 놓고 실제로는 앞이 잘리는 일을 막지 못한다. 잘리면 문서를 읽는 지표가 통째로
+    `문서에 없다`가 되는데, 그 답은 모델의 성질이 아니라 우리가 문서를 다 안 보낸 결과다.
+
+    **프롬프트 캐시가 맞아도 이 수는 전체를 센다** — 같은 호출을 두 번 보내 확인했다(로컬 llama3.2:3b,
+    1회차 4,252 / 2회차 4,252, `cached_tokens` 0 → 4,251, 5.00초 → 0.13초). 캐시가 맞은 호출이 작게 세어졌다면
+    점검이 `들어간다`고 말하면서 실제로는 잘리는 일이 생긴다.
+
+    `num_ctx`는 네이티브 경로에서만 걸린다 — 클라우드는 그 값을 보내지 않아 재기만 하고 막지 않는다."""
+    probes = _biggest_prompts()
+    if not probes:
+        document = qt.longest_document()
+        if document is None:
+            return {"measured": False, "why": "기준선에도 문서에도 잴 것이 없다"}
+        probes = [{"metric": "(문서)", "id": document[0], "doc": None, "text": document[1],
+                   "question": "이 문서를 한 문장으로 요약해 줘."}]
+    applies = bool(providers.NATIVE_API.get(run.provider_name))
+    measured: list[dict[str, Any]] = []
+    for probe in probes:
+        try:
+            doc_text = probe.get("text") if probe.get("doc") is None else qt.load_doc(probe["doc"])
+            reply = quality_runner.ask_model(
+                run.model, quality_runner._build_messages(doc_text=doc_text, question=probe["question"]),
+                provider=provider, num_predict=16, timeout=cfg.QUALITY_TIMEOUT,
+            )
+        except Exception as exc:  # noqa: BLE001 — 점검 실패는 실행을 멈추는 사유가 아니라 기록이다
+            return {"measured": False, "why": run_errors.describe(exc, None).get("message", "호출 실패"),
+                    "probes": [p["id"] for p in probes]}
+        tokens = (reply.call or {}).get("prompt_tokens")
+        if not tokens:
+            return {"measured": False, "why": "프롬프트 토큰 수를 돌려주지 않았다", "probes": [p["id"] for p in probes]}
+        measured.append({"metric": probe["metric"], "id": probe["id"], "prompt_tokens": tokens,
+                         "baseline_tokens": probe.get("measured_tokens")})
+    biggest = max(measured, key=lambda m: m["prompt_tokens"])
+    headroom = cfg.NUM_CTX - biggest["prompt_tokens"] - cfg.QUALITY_NUM_PREDICT
+    return {
+        "measured": True, "probes": measured, "biggest": biggest,
+        "prompt_tokens": biggest["prompt_tokens"], "num_ctx": cfg.NUM_CTX,
+        "output_budget": cfg.QUALITY_NUM_PREDICT, "headroom_tokens": headroom,
+        # 네이티브 경로가 아니면 `num_ctx`를 보내지 않아 이 값으로 막지 않는다 — 재 둔 것은 기록이다
+        "applies": applies, "fits": headroom >= 0 or not applies,
+    }
+
+
 def _run_precheck(run: Run, provider: providers.Provider) -> dict[str, Any]:
-    """기준선 사전 점검. 측정이 아니라 조건 점검이므로 1회 원칙에 세지 않는다. **조건 쪽 빈 응답**
-    (텍스트 없음 + `finish_reason=length` + 추론 토큰 > 0)이 하나라도 나오면 멈춘다 — 확인 없이
-    돌리면 1회 원칙을 쓰고도 같은 빈 응답 더미를 얻는다. 호출 자체가 실패해도 멈춘다."""
+    """실행 전 조건 점검. 측정이 아니라 조건 점검이므로 1회 원칙에 세지 않는다.
+
+    둘을 본다. **조건 쪽 빈 응답**(텍스트 없음 + `finish_reason=length` + 추론 토큰 > 0)은 출력 예산을 숨은
+    추론이 먼저 써버린 자리라 클라우드 경로에서만 나고, 하나라도 나오면 멈춘다 — 확인 없이 돌리면 1회 원칙을
+    쓰고도 같은 빈 응답 더미를 얻는다. **컨텍스트 여유**는 어느 경로든 본다(`_context_headroom`).
+    호출 자체가 실패해도 멈춘다."""
     checks: list[dict[str, Any]] = []
     error = None
     try:
-        for q in _precheck_questions():
+        # 빈 응답 문항은 클라우드 경로만 — 로컬은 숨은 추론이 예산을 먹는 경로가 아니다
+        for q in (_precheck_questions() if not providers.NATIVE_API.get(run.provider_name) else []):
             reply = quality_runner.ask_model(
                 run.model, quality_runner._build_messages(question=q["question"]), provider=provider
             )
@@ -1026,7 +1108,9 @@ def _run_precheck(run: Run, provider: providers.Provider) -> dict[str, Any]:
             )
     except Exception as exc:  # noqa: BLE001 — 점검 실패는 실행 중단 사유로 기록한다
         error = run_errors.describe(exc, None)
-    passed = error is None and not any(c["kind"] == "empty_condition" for c in checks)
+    headroom = _context_headroom(run, provider)
+    passed = (error is None and not any(c["kind"] == "empty_condition" for c in checks)
+              and headroom.get("fits", True))
     applied = quality_runner.applied_reasoning_effort(run.model)
     rejection = quality_runner.reasoning_effort_rejection(run.model)
     run.config["cloud_reasoning_effort_applied"] = applied
@@ -1035,6 +1119,7 @@ def _run_precheck(run: Run, provider: providers.Provider) -> dict[str, Any]:
     return {
         "passed": passed,
         "checks": checks,
+        "context_headroom": headroom,
         "error": error,
         "reasoning_effort_applied": applied,
         "reasoning_effort_rejection": rejection,

@@ -309,7 +309,17 @@ class ToolDefOut(BaseModel):
 
 @app.get("/api/health")
 def health():
-    return {"status": "ok", "ollama": OLLAMA_BASE_URL}
+    """살아 있나 — 화면과 **감시**(`tools/dev/watch.py`)가 두드리는 자리.
+
+    포트가 열려 있는 것과 답하는 것은 다르다. 포트만 보면 떠 있는데 답만 안 하는 상태(먹통)를 못 잡는다.
+    그래서 여기서는 **아무 일도 하지 않는다** — 파일도 안 읽고 모델도 안 부른다. 무거운 일을 하면 건강
+    확인이 건강을 해친다.
+
+    `busy`는 측정이 도는 중인가다. 감시는 이 값을 보고 **더 참는다** — 재는 동안 몇 초 늦는 것과 먹통을
+    가르지 못해 다시 띄우면 몇 십 분짜리 측정이 날아간다."""
+    active = test_runner.get_active_run_id()
+    return {"status": "ok", "service": "backend", "busy": active is not None, "run_id": active,
+            "ollama": OLLAMA_BASE_URL}
 
 
 def _license_label(text: str | None) -> str | None:

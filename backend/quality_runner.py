@@ -218,14 +218,19 @@ def _build_messages(
     user_system: str | None = None,
 ) -> list[dict[str, Any]]:
     messages: list[dict[str, Any]] = []
-    system = merge_system(system, user_system)
+    # 문서를 함께 보내는 호출에만 방어를 붙인다 — 문서가 없는 호출에는 가리킬 자료가 없고, 붙이면 그 지표의 조건만 달라진다.
+    # 방어가 맨 앞이다: 세트·실험 프롬프트가 뒤에 와도 자료를 다루는 규칙이 먼저 선다
+    system = merge_system(cfg.DOCUMENT_GUARD if doc_text else None, merge_system(system, user_system))
     if system:
         messages.append({"role": "system", "content": system})
     if few_shot:
         for ex in few_shot:
             messages.append({"role": "user", "content": ex["input"]})
             messages.append({"role": "assistant", "content": ex["output"]})
-    content = f"{doc_text}\n\n{question}" if doc_text else question
+    if doc_text:
+        content = f"{cfg.wrap_document(doc_text)}\n\n{question}"
+    else:
+        content = question
     messages.append({"role": "user", "content": content})
     return messages
 

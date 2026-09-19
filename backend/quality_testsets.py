@@ -6,6 +6,7 @@
 저장소에는 돌아가는 모습을 보이기 위한 공개 샘플 세트(`testsets/sample/`)만 있다.
 """
 
+import hashlib
 import json
 from contextlib import contextmanager
 from contextvars import ContextVar, Token
@@ -145,6 +146,13 @@ def load_refusal_expressions() -> list[str]:
     return _load("refusal_expressions.json")["expressions"]
 
 
+def refusal_expressions_sha() -> str:
+    """지금 쓰는 거절 표현 목록의 지문 — 결과에 적어 두면 어떤 목록으로 채점한 값인지 되짚을 수 있다.
+    목록이 바뀌면 같은 답의 점수가 달라지는데, 버전 숫자만으로는 무엇이 달라졌는지 알 수 없다."""
+    payload = json.dumps(sorted(load_refusal_expressions()), ensure_ascii=False).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()[:12]
+
+
 # ---------------------------------------------------------------------------
 # 문서 길이 — 실행 조건. 세트의 `doc`은 짧은 판을 가리키고, 긴 판은 같은 이름으로 `documents/long/` 아래에 있다.
 # **세트마다가 아니라 실행 하나에 하나다** — 문서를 읽는 세트가 함께 옮겨 가야 한 실행 안에서 지표마다 문서 길이가
@@ -204,6 +212,20 @@ def document_metrics() -> list[str]:
 def load_doc(rel_path: str) -> str:
     """`item["doc"]`에 적힌 상대 경로(예: "documents/example.md")를 **지금 문서 길이의 판으로** 읽는다."""
     return (TESTSETS_DIR / doc_path(rel_path)).read_text(encoding="utf-8")
+
+
+def longest_document(length: str | None = None) -> tuple[str, str] | None:
+    """그 판에서 **가장 긴 문서**의 (이름, 본문) — 심은 판까지 센다(지시문이 한 줄 더 들어가 그쪽이 길다).
+    실행 전에 `가장 긴 입력이 컨텍스트에 드는가`를 재는 데 쓴다. 문서가 없으면 None."""
+    folder = TESTSETS_DIR / DOCUMENT_DIRS[check_document_length(length or REPRESENTATIVE_DOCUMENT_LENGTH)]
+    if not folder.exists():
+        return None
+    best: tuple[str, str] | None = None
+    for path in sorted(folder.rglob("*.md")):
+        text = path.read_text(encoding="utf-8")
+        if best is None or len(text) > len(best[1]):
+            best = (path.relative_to(TESTSETS_DIR).as_posix(), text)
+    return best
 
 
 def document_lengths(length: str = DOCUMENTS_SHORT) -> dict[str, dict[str, Any]]:

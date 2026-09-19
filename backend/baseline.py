@@ -60,12 +60,18 @@ BASELINE_MODEL = "gpt-5.6-luna"
 QUALITY = "quality"
 SPEED = "speed"
 TOOL_CALLING = "tool_calling"
-FINGERPRINT_SCOPES = (QUALITY, SPEED, TOOL_CALLING)
+# 채점 데이터 — 세트 안에서 **모델에게 가지 않고 답을 읽는 데만 쓰는 것**(정답 표기·지어냄 정규식·핵심 사실·
+# 제약·스키마). 품질 지문에서 일부러 빼 둔 바로 그 필드들이다(`RULES[].excluded_fields`).
+#
+# 범위를 나눈 까닭: 둘은 어긋났을 때 할 일이 다르다. **질문이 바뀌면 다시 재야 하고, 채점 데이터만 바뀌면
+# 재채점으로 충분하다.** 한 지문에 섞으면 정답 표기 한 줄을 고친 것도 `세트가 다르다 — 재측정`으로 읽힌다.
+GRADING = "grading"
+FINGERPRINT_SCOPES = (QUALITY, SPEED, TOOL_CALLING, GRADING)
 
 # 실행 종류별로 남기는 범위 — 베이스라인은 품질만 잰다.
-SCOPES_FOR_RUN = {"baseline": (QUALITY,), "full": FINGERPRINT_SCOPES,
+SCOPES_FOR_RUN = {"baseline": (QUALITY, GRADING), "full": FINGERPRINT_SCOPES,
                   # 과제용 부분 실행 — 로컬은 워밍업에 속도 탐침을 쓰고, 클라우드는 품질 세트만 읽는다
-                  "assignment": (QUALITY, SPEED), "assignment_cloud": (QUALITY,)}
+                  "assignment": (QUALITY, SPEED, GRADING), "assignment_cloud": (QUALITY, GRADING)}
 
 # 실행 종류별로 **선언된 의도적 제외**. 여기 적힌 부재만 조용히 넘기고, 선언되지
 # 않은 부재는 신호다. 기준선은 일관성/재현성을 재지 않는다 —
@@ -125,6 +131,15 @@ RULES: dict[int, RuleSet] = {
         }
     ),
 }
+RULES[2] = RuleSet(
+    excluded_fields={
+        # 1의 규칙 전부에 `provenance`를 더한다 — 세트를 낸 때·원천 해시는 모델에게 가지 않고 판정에도 안 쓴다.
+        # 그대로 두면 같은 질문을 다시 펴내기만 해도 `세트가 다르다`가 되어, 그 신호가 뜻을 잃는다
+        **{name: fields for name, fields in RULES[1].excluded_fields.items()},
+        "*": (*RULES[1].excluded_fields["*"], "provenance"),
+    }
+)
+
 CURRENT_RULE = max(RULES)
 
 
@@ -134,7 +149,7 @@ CURRENT_RULE = max(RULES)
 
 
 def _scope_set_files(scope: str) -> list[str]:
-    if scope == QUALITY:
+    if scope in (QUALITY, GRADING):
         return sorted(set(cfg.QUALITY_TESTSET_FILES.values()))
     if scope == SPEED:
         return ["probe.json"]
@@ -167,6 +182,34 @@ def _filtered_set_bytes(name: str, raw: bytes, rule: int) -> bytes:
     for spec in (*rules.get("*", ()), *rules.get(name, ())):
         _strip(data, spec.replace("[].", "[] ").split(" ") if "[]." in spec else [spec])
     return json.dumps(data, sort_keys=True, ensure_ascii=False).encode("utf-8")
+
+
+def _pick_field(data: Any, path: list[str]) -> Any:
+    """`_strip`이 빼는 자리의 값만 꺼낸다 — 빼는 규칙과 꺼내는 규칙이 같은 경로를 봐야 둘이 갈라지지 않는다."""
+    head, rest = path[0], path[1:]
+    if head.endswith("[]"):
+        items = data.get(head[:-2]) if isinstance(data, dict) else None
+        return [_pick_field(element, rest) if rest else element for element in items or []]
+    value = data.get(head) if isinstance(data, dict) else None
+    if rest and value is not None:
+        return _pick_field(value, rest)
+    return value
+
+
+def _grading_bytes(name: str, raw: bytes, rule: int) -> bytes:
+    """**채점 데이터만** 골라 결정적으로 직렬화한다 — 품질 지문이 일부러 뺀 그 필드들이다.
+    만든 때(`provenance`)처럼 판정과 무관한 값은 들지 않는다: 새 판을 낼 때마다 `채점 데이터 다름`이 뜨면
+    그 신호는 아무 뜻이 없다."""
+    try:
+        data = json.loads(raw.decode("utf-8"))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        return b""
+    rules = RULES[rule].excluded_fields
+    picked = {}
+    for spec in (*rules.get("*", ()), *rules.get(name, ())):
+        path = spec.replace("[].", "[] ").split(" ") if "[]." in spec else [spec]
+        picked[spec] = _pick_field(data, path)
+    return json.dumps(picked, sort_keys=True, ensure_ascii=False).encode("utf-8")
 
 
 def _hash_bytes(b: bytes) -> str:
@@ -213,7 +256,11 @@ def compute_map(scope: str, rule: int | None = None, document_length: str = qt.D
     out: dict[str, str] = {}
     for name in _scope_set_files(scope):
         path = _set_path(name)
-        if path.exists():
+        if not path.exists():
+            continue
+        if scope == GRADING:
+            out[f"grade:{name}"] = _hash_bytes(_grading_bytes(name, path.read_bytes(), rule))
+        else:
             out[f"set:{name}"] = _hash_bytes(_filtered_set_bytes(name, path.read_bytes(), rule))
     if scope == QUALITY:
         documents_dir = TESTSETS_DIR / qt.DOCUMENT_DIRS[qt.check_document_length(document_length)]
@@ -372,12 +419,34 @@ def _upgrade_failed(entry: dict[str, Any], rule: int, scope: str) -> list[str]:
 # ---------------------------------------------------------------------------
 
 
-def _rehash_key(key: str, rule: int) -> str | None:
-    """현재 파일(또는 상수)을 주어진 규칙으로 다시 해시한다. 대상이 사라졌으면 None."""
+def _set_editions(name: str) -> list[Path]:
+    """그 세트 파일이 있는 자리 전부 — 지금 읽는 판이 먼저, 그다음 쌓인 판들이 최신순. 승급이 **그 실행이 읽은
+    판**을 되찾는 데 쓴다: 판을 갈아 낀 뒤 규칙이 올라가면, 지금 판으로만 해시해서는 옛 실행을 되살릴 수 없다."""
+    seen: list[Path] = []
+    for path in [_set_path(name), *(v / name for v in qt.versions(TESTSETS_DIR)), TESTSETS_DIR / name]:
+        if path.exists() and path not in seen:
+            seen.append(path)
+    return seen
+
+
+def _hash_set_file(name: str, path: Path, rule: int, scope: str = QUALITY) -> str:
+    reader = _grading_bytes if scope == GRADING else _filtered_set_bytes
+    return _hash_bytes(reader(name, path.read_bytes(), rule))
+
+
+def _rehash_key(key: str, rule: int, *, want: str | None = None, scope: str = QUALITY) -> str | None:
+    """현재 파일(또는 상수)을 주어진 규칙으로 다시 해시한다. 대상이 사라졌으면 None.
+
+    `want`를 주면 세트는 **쌓인 판까지 훑어** 그 해시를 내는 판을 찾고, 찾은 판으로 해시한다 —
+    판이 갈렸다고 승급을 포기하면 그 실행은 이후 어떤 실행과도 `비교 불가`가 된다."""
     kind, name = key.split(":", 1)
-    if kind == "set":
-        path = _set_path(name)
-        return _hash_bytes(_filtered_set_bytes(name, path.read_bytes(), rule)) if path.exists() else None
+    if kind in ("set", "grade"):
+        scope = GRADING if kind == "grade" else QUALITY
+        for path in _set_editions(name):
+            value = _hash_set_file(name, path, rule, scope)
+            if want is None or value == want:
+                return value
+        return None
     if kind == "doc":
         path = TESTSETS_DIR / name
         return _hash_bytes(path.read_bytes()) if path.exists() else None
@@ -394,6 +463,22 @@ def _rehash_key(key: str, rule: int) -> str | None:
     return _hash_obj(spec) if spec is not None else None
 
 
+def _edition_for(name: str, rule: int, stored_hash: str, scope: str) -> Path | None:
+    """그 해시를 내던 세트 판 — 쌓인 판을 훑어 찾는다. 없으면 None(그 사이 판이 지워진 것이다)."""
+    return next((path for path in _set_editions(name) if _hash_set_file(name, path, rule, scope) == stored_hash), None)
+
+
+def _upgraded_hash(key: str, old_rule: int, stored_hash: str) -> str | None:
+    """옛 규칙으로 `stored_hash`를 내던 바로 그 자리를 새 규칙으로 해시한다 — 세트는 판이 여럿일 수 있어
+    `어느 판이었나`를 먼저 가린다(다른 판으로 해시하면 승급이 조용히 다른 세트를 가리킨다)."""
+    kind, name = key.split(":", 1)
+    if kind not in ("set", "grade"):
+        return _rehash_key(key, CURRENT_RULE)
+    scope = GRADING if kind == "grade" else QUALITY
+    path = _edition_for(name, old_rule, stored_hash, scope)
+    return _hash_set_file(name, path, CURRENT_RULE, scope) if path is not None else None
+
+
 def upgrade_entry(entry: dict[str, Any]) -> bool:
     """현재 규칙 맵이 없는 결과에 새 맵을 **덧붙인다**(원본 맵은 그대로 둔다 — 측정은
     불변). 옛 규칙으로 다시 해시한 값이 저장값과 같은 키만 승급하고, 다른 키는
@@ -408,17 +493,37 @@ def upgrade_entry(entry: dict[str, Any]) -> bool:
     for scope, stored in rules[old].items():
         new_maps[scope] = {}
         for key, stored_hash in stored.items():
-            if _rehash_key(key, old) == stored_hash:
-                new_hash = _rehash_key(key, CURRENT_RULE)
+            # 옛 규칙으로 그 해시를 내는 자리를 찾고(세트는 쌓인 판까지), 찾았으면 그 자리를 새 규칙으로 다시 해시한다
+            if _rehash_key(key, old, want=stored_hash) == stored_hash:
+                new_hash = _upgraded_hash(key, old, stored_hash)
                 if new_hash is not None:
                     new_maps[scope][key] = new_hash
                     continue
             failed.setdefault(scope, []).append(key)
+    _fill_grading(new_maps, old)
     fp = entry.setdefault("fingerprints", {})
     fp.setdefault("rules", {})[str(CURRENT_RULE)] = new_maps
     if failed:
         fp.setdefault("upgrade_failed", {})[str(CURRENT_RULE)] = failed
     return True
+
+
+def _fill_grading(maps: dict[str, dict[str, str]], old_rule: int) -> None:
+    """채점 데이터 지문이 없던 실행에 그 값을 **되살린다** — 추정이 아니다. 품질 지문이 어느 판을 가리키는지
+    이미 가려냈으므로, 같은 판에서 채점 데이터만 다시 해시하면 그 실행이 그때 쓴 채점 데이터가 나온다."""
+    quality = maps.get(QUALITY) or {}
+    if not quality or maps.get(GRADING):
+        return
+    grading: dict[str, str] = {}
+    for key, new_hash in quality.items():
+        kind, name = key.split(":", 1)
+        if kind != "set":
+            continue
+        path = _edition_for(name, CURRENT_RULE, new_hash, QUALITY)
+        if path is not None:
+            grading[f"grade:{name}"] = _hash_set_file(name, path, CURRENT_RULE, GRADING)
+    if grading:
+        maps[GRADING] = grading
 
 
 def upgrade_all() -> int:
@@ -487,6 +592,8 @@ def latest(document_length: str | None = None) -> dict[str, Any] | None:
             entries.append(quality_runner.current_long_context(json.loads(path.read_text(encoding="utf-8"))))
         except (OSError, json.JSONDecodeError):
             continue
+    # 대체된 실행은 고르지 않는다 — 파일은 남겨 두되(무엇을 왜 다시 쟀는지가 기록이다) 기준선 열에는 서지 않는다
+    entries = [e for e in entries if not e.get("superseded_by")]
     if document_length is not None:
         entries = [e for e in entries if document_length_of(e) == document_length]
     if not entries:

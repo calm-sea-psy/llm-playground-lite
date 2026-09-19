@@ -49,6 +49,7 @@ import {
   conditionMismatchLines,
   consistencyNumPredict,
   documentLength,
+  NO_DOCUMENT_GUARD,
   commitText,
   hardwareText,
   softwareText,
@@ -92,6 +93,7 @@ export function conditionLines(detail) {
     `건너뛴 항목 뒤 재로드 ${reloadAfterSkippedText(c)}`,
     `문항 집합 ${c.question_set ?? (c.assignment ? '고른 문항' : '기록 없음')}`,
     `문서 길이 ${documentLength(c)}`,
+    `문서 방어 ${documentGuardText(c)}`,
     `측정 기계 ${machineLabel(c.measurement_machine)} · Ollama ${ollamaVersionText(c)}`,
     `하드웨어 ${hardwareText(c.hardware)}`,
     `도구 커밋 ${commitText(c.tool_commit)}`,
@@ -99,6 +101,14 @@ export function conditionLines(detail) {
     `전원(시작 시) ${powerText(c.power)}`,
     `도구 응답 ${toolResponsesText(c)}`,
   ]
+}
+
+/** 문서를 함께 보내는 호출에 붙은 방어 — 판과 지문만 적는다(문구는 코드에 있다).
+ * 기록이 없으면 방어 없이 잰 실행이다. 문서를 읽는 지표의 값을 나란히 읽을 때 이 줄이 같아야 같은 조건이다. */
+export function documentGuardText(config) {
+  const guard = config?.document_guard
+  if (!guard) return NO_DOCUMENT_GUARD
+  return `v${guard.version} (${guard.sha256})`
 }
 
 // 켬 경로의 요약기가 후보 자신이라는 기록 값 — 백엔드 `quality_runner.SELF_SUMMARIZER`와 같다

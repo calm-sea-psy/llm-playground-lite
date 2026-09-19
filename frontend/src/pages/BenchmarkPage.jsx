@@ -32,6 +32,9 @@ import { promptIdentity } from '../promptIdentity'
 import { toolAvailabilityWarning, useFeatures } from '../features'
 
 const POLL_MS = 2000 // SSE보다 단순하고 이 용도엔 2초 해상도로 충분
+// 조회가 몇 번 이어서 실패하면 그만둔다. 한 번 실패에 그만두면(예전 동작) 서버가 잠깐 바쁜 사이
+// 폴링이 죽어 실행이 끝나도 화면은 계속 `실행 중`이고 딤드 창이 안 걷힌다 — 실제로 그렇게 걸렸다
+const POLL_FAILURES_BEFORE_STOP = 5
 
 // 성능 테스트 페이지. 좌측은 모델 하나를 고르는 목록 +
 // "기준선" 항목 + 그 모델의 지난 실행 이력이고, 우측은 rightPanelMode에 따라
@@ -82,9 +85,11 @@ export default function BenchmarkPage() {
   const pollRun = useCallback(
     (runId) => {
       clearInterval(pollRef.current)
+      let failures = 0
       const tick = async () => {
         try {
           const updated = await fetchTestRun(runId)
+          failures = 0
           setRun(updated)
           if (updated.status !== 'running' && updated.status !== 'cancelling') {
             clearInterval(pollRef.current)
@@ -102,8 +107,12 @@ export default function BenchmarkPage() {
             }
           }
         } catch (e) {
-          clearInterval(pollRef.current)
-          setError(String(e.message || e))
+          // 한 번 걸러도 계속 묻는다 — 측정 중에는 서버가 바빠 조회 하나가 늦거나 끊길 수 있다
+          failures += 1
+          if (failures >= POLL_FAILURES_BEFORE_STOP) {
+            clearInterval(pollRef.current)
+            setError(String(e.message || e))
+          }
         }
       }
       tick() // 2초를 기다리지 않고 상태를 바로 한 번 받아온다
@@ -143,6 +152,36 @@ export default function BenchmarkPage() {
       .catch(() => {})
     return () => clearInterval(pollRef.current)
   }, [refreshResults, refreshBaseline, refreshPrompts, pollRun])
+
+  // 화면으로 돌아왔을 때 한 번 맞춘다 — 폴링이 죽었거나(탭을 오래 비웠거나 조회가 끊겼거나) 다른 화면에서
+  // 실행이 끝났을 수 있다. 이 동기화가 없으면 실행은 끝났는데 딤드 창이 걷히지 않고, 사람은 멈춘 줄 안다.
+  // (`busy`는 아래에서 만든다 — 여기서 쓰면 선언 전 참조라 같은 판단을 이 자리에서 다시 한다)
+  const running = run && (run.status === 'running' || run.status === 'cancelling')
+  useEffect(() => {
+    if (!running) return undefined
+    const resync = () => {
+      if (document.visibilityState === 'hidden') return
+      fetchActiveTest()
+        .then((active) => {
+          if (active.run_id && active.run_id !== run.id) {
+            pollRun(active.run_id) // 다른 실행이 돌고 있다 — 그쪽으로 옮겨 붙는다
+            return null
+          }
+          if (active.run_id) return null // 폴링이 살아 있으면 그쪽이 곧 갱신한다
+          return fetchTestRun(run.id).then((updated) => {
+            setRun(updated) // 끝난 실행 — 마지막 상태로 맞춰 딤드 창을 걷는다
+            refreshResults()
+          })
+        })
+        .catch(() => {}) // 되맞추기 실패는 화면을 막지 않는다 — 폴링이 계속 시도한다
+    }
+    document.addEventListener('visibilitychange', resync)
+    window.addEventListener('focus', resync)
+    return () => {
+      document.removeEventListener('visibilitychange', resync)
+      window.removeEventListener('focus', resync)
+    }
+  }, [running, run?.id, pollRun, refreshResults])
 
   // 모델을 바꾸면 우측 전체가 그 모델의 작업대로 바뀐다 — 다른 모델의
   // 상세를 계속 보여주거나 베이스라인 패널에 머물러 있으면 안 된다. 렌더 도중
@@ -251,7 +290,7 @@ export default function BenchmarkPage() {
     }
   }
 
-  const busy = run && (run.status === 'running' || run.status === 'cancelling')
+  const busy = running
   const modelRunActive = busy && run.scope !== 'baseline'
   const baselineRunActive = busy && run.scope === 'baseline'
 

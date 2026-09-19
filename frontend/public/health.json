@@ -1,0 +1,5 @@
+{
+  "ok": true,
+  "service": "frontend",
+  "note": "감시(tools/dev/watch.py)가 두드리는 자리 — 개발 서버가 파일을 내주고 있는지 본다"
+}

@@ -31,6 +31,7 @@ from itertools import combinations
 from typing import Any
 
 import quality_scoring as qs
+import quality_testsets as qt
 
 ABSENCE_JUDGED = {
     "over_refusal": "거절하지 않았으면 통과",
@@ -241,6 +242,40 @@ def _has_call_meta(value: Any) -> bool:
     return False
 
 
+def context_pressure(entry: dict[str, Any]) -> dict[str, Any]:
+    """입력이 컨텍스트 상한에 닿은 칸 — **잘림 의심**.
+
+    프롬프트 토큰 + 출력 상한이 `num_ctx`를 넘으면 앞이 잘려 나갔을 수 있다. 모델은 그 사실을 알려주지
+    않고, 잘린 문서로 답한 칸은 `문서에 없다`처럼 보인다 — 모델의 성질이 아니라 우리가 문서를 다 안 보낸
+    결과다. 그래서 답이 아니라 **입력 크기**로 센다.
+
+    `num_ctx`는 네이티브 경로에서만 걸린다(클라우드는 그 값을 보내지 않는다) — 그 경우 재기만 하고 세지 않는다."""
+    config = entry.get("config") or {}
+    limit, budget = config.get("num_ctx"), config.get("quality_num_predict")
+    applies = bool(config.get("sampling") is not None)  # 고정 샘플링을 보내는 경로 = num_ctx를 보내는 경로
+    if not limit or not budget:
+        return {"applies": applies, "measured": False}
+    threshold = limit - budget
+    cells: list[dict[str, Any]] = []
+    biggest = 0
+    for metric, value in (entry.get("metrics") or {}).items():
+        if not isinstance(value, dict):
+            continue
+        for shot in (value, value.get("zero"), value.get("few")):
+            seen: dict[str, int] = {}
+            for e in ((shot or {}).get("detail") or []) if isinstance(shot, dict) else []:
+                tokens = (e.get("call") or {}).get("prompt_tokens")
+                if not tokens:
+                    continue
+                cid = e.get("id") or e.get("scenario")
+                seen[cid] = seen.get(cid, 0) + 1
+                biggest = max(biggest, tokens)
+                if tokens > threshold:
+                    cells.append({"metric": metric, "id": cid, "variant": seen[cid], "prompt_tokens": tokens})
+    return {"applies": applies, "measured": True, "num_ctx": limit, "output_budget": budget,
+            "threshold": threshold, "max_prompt_tokens": biggest, "count": len(cells), "cells": cells[:20]}
+
+
 def attach_derived(entry: dict[str, Any]) -> dict[str, Any]:
     """결과 dict에 파생 값(`response_health`, `korean_purity`)을 붙인다. 실행 종료 시 저장하고,
     읽을 때는 **항상 다시 계산한다** — 옛 결과는 값이 없고(파일은 다시 쓰지 않는다), 지표 재실행을
@@ -251,6 +286,10 @@ def attach_derived(entry: dict[str, Any]) -> dict[str, Any]:
     entry["response_health"] = summarize(metrics)
     # 호출 메타가 하나라도 남아 있는가 — 없으면 빈 응답의 원인을 가를 수 없다(기준선 `재측정 대기` 재료)
     entry["call_meta_recorded"] = _has_call_meta(metrics)
+    # 입력이 컨텍스트 상한에 닿은 칸 — 잘림 의심. 저장된 호출 기록에서 매번 다시 센다
+    entry["context_pressure"] = context_pressure(entry)
+    # 거절 판정 오탐 — 답이 있는 문항을 거절로 읽은 칸 수. 지금 표현 목록으로 매번 다시 센다
+    entry["refusal_false_positives"] = qs.refusal_false_positives(metrics, qt.load_refusal_expressions())
     purity = korean_purity(metrics)
     if purity is None:
         entry.pop("korean_purity", None)

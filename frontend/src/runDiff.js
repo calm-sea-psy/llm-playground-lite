@@ -51,7 +51,11 @@ const ITEM_SCOPED_KEYS = {
   long_context_reload: new Set(['long_context']),
   // 전력 한계는 속도·안정성을 재는 항목에만 걸린다 — 품질·보안 답은 전력 한계로 달라지지 않는다(실측: 45W와 95W에서 같은 답)
   gpu_power_limit: new Set(['model_load', 'short_probe', 'context_2000', 'context_4000', 'context_8000']),
+  // 문서 방어는 문서를 함께 보내는 지표에만 걸린다 — 문서가 없는 호출에는 붙지 않아 조건이 그대로다
+  document_guard: new Set(['closed_qa', 'key_coverage', 'hallucination', 'injection_indirect']),
 }
+// 문서 방어 — 기록이 없는 실행은 방어 없이 쟀다(방어를 넣기 전이다)
+export const NO_DOCUMENT_GUARD = '없음'
 // 도구 응답 — 기록이 없는 옛 실행은 도구를 실시간으로 실행했다(고정값이 생기기 전이다)
 export const TOOL_RESPONSES_LIVE = 'live'
 const TOOL_RESPONSES_TEXT = { fixed: '고정', live: '실시간' }
@@ -160,6 +164,7 @@ function conditionValue(cfg, key) {
   if (key === 'consistency_num_predict') return consistencyNumPredict(cfg)
   if (key === 'tool_responses') return cfg[key] ?? TOOL_RESPONSES_LIVE
   if (key === 'long_context_reload') return cfg[key] ?? false
+  if (key === 'document_guard') return cfg[key] ?? NO_DOCUMENT_GUARD
   if (key === 'reload_after_skipped') return cfg[key] ?? false
   return cfg[key]
 }
@@ -181,6 +186,7 @@ const CONDITION_LABELS = {
   summarizer_model: '요약 압축 모델',
   summarizer_sampling: '요약 샘플링',
   document_length: '문서 길이',
+  document_guard: '문서 방어',
   measurement_machine: '측정 기계',
   ollama_version: 'Ollama 버전',
   tool_responses: '도구 응답',
@@ -201,6 +207,7 @@ export function conditionValueText(key, value) {
   if (key === 'measurement_machine') return machineLabel(value)
   if (key === 'tool_responses') return TOOL_RESPONSES_TEXT[value] ?? String(value)
   if (key === 'gpu_power_limit') return value.map((w) => `${w}W`).join('·')
+  if (key === 'document_guard') return value === NO_DOCUMENT_GUARD ? value : `v${value.version} (${value.sha256})`
   if (typeof value === 'boolean') return value ? '켬' : '끔'
   if (Array.isArray(value)) return value.join(' / ')
   if (typeof value === 'object') {

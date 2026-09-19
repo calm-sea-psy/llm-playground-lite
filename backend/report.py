@@ -162,7 +162,11 @@ def _guide(chapter: str, legends: list[str] | None = None) -> str:
     return " ".join([f"읽는 법 — {_READING_GUIDES[chapter]}", *(legends or [])])
 
 
-_SCOPE_LABELS = {baseline.QUALITY: "품질 세트", baseline.SPEED: "속도 탐침", baseline.TOOL_CALLING: "도구 정의"}
+_SCOPE_LABELS = {baseline.QUALITY: "품질 세트", baseline.SPEED: "속도 탐침", baseline.TOOL_CALLING: "도구 정의",
+                 baseline.GRADING: "채점 데이터"}
+# 범위마다 어긋났을 때 할 일이 다르다 — 모델에게 간 것이 다르면 다시 재야 하고, 답을 읽는 데만 쓰는 것이
+# 다르면 재채점으로 맞출 수 있다. 이 한 마디가 없으면 정답 표기 한 줄 고친 것도 `재측정`으로 읽힌다
+_SCOPE_REMEDY = {baseline.GRADING: "재채점으로 충분하다 — 모델에게 간 것은 그대로다"}
 
 
 @dataclass
@@ -1116,7 +1120,8 @@ def _fingerprint_lines(meta: dict[str, Any], models: list[dict[str, Any]], label
                 notes = [*result["changed"], *result["only_left"], *result["only_right"]]
                 reasons = "; ".join(f"{n['meaning']} — {n['report']}" for n in notes[:4])
                 more = f" 외 {len(notes) - 4}건" if len(notes) > 4 else ""
-                lines.append(f"▲ {head} — {reasons}{more}")
+                remedy = _SCOPE_REMEDY.get(scope)
+                lines.append(f"▲ {head} — {reasons}{more}" + (f" ({remedy})" if remedy else ""))
             else:
                 unsettled += 1
                 footnotes.append(f"※ {head}")
@@ -2575,6 +2580,209 @@ def _page_model_cards(payload: dict[str, Any], models: list[dict[str, Any]], lab
     return flow.pages
 
 
+def _refusal_false_positive_lines(meta: dict[str, Any], models: list[dict[str, Any]],
+                                  labels: dict[str, str], baseline_context: dict[str, Any] | None) -> list[str]:
+    """답이 문서에 있는 문항을 거절로 읽은 칸 — 거절 표현 목록을 넓힌 대가를 실행마다 적는다.
+
+    **걸린 것이 없어도 찍는다.** 침묵은 `오탐이 없다`와 `보지 않았다`를 함께 뜻해서, 환각·과잉 거절 점수가
+    올라간 리포트를 받은 사람이 그 값이 목록을 넓혀 나온 것인지 가릴 수 없다. 맞은 답만 센다 —
+    틀린 답이 거절로 읽히는 것은 오탐인지 아닌지 가를 수 없다."""
+    import quality_scoring as qs
+    import quality_testsets as qt
+
+    expressions = qt.load_refusal_expressions()
+    checked = _runs_with_metrics(meta, models, labels, baseline_context)
+    if not checked:
+        return []
+    lines = [f"거절 판정 오탐 — 답이 있는 문항({', '.join(qs.REFUSAL_CHECK_METRICS)})의 맞은 답을 지금 거절 표현 "
+             f"목록으로 다시 읽어 센다. 걸리면 환각·과잉 거절 점수를 믿기 전에 목록부터 본다."]
+    for name, entry in checked:
+        counted = entry.get("refusal_false_positives") or qs.refusal_false_positives(
+            entry.get("metrics") or {}, expressions)
+        if not counted.get("checked"):
+            continue
+        head = f"· {name}: {counted['flagged']}칸 / {counted['checked']}칸"
+        cells = counted.get("cells") or []
+        lines.append(head if not cells else
+                     head + " — " + "; ".join(f"{c['id']}({c['matched']})" for c in cells[:4]))
+        # 과잉 거절에서 거절로 읽힌 칸은 무엇이 걸렸는지까지 — 모델이 거절한 것과 채점기가 그렇게 읽은 것을 가른다
+        judged = counted.get("refusal_judged") or []
+        if judged:
+            lines.append("   과잉 거절로 센 칸: " + "; ".join(f"{c['id']}({c['matched']})" for c in judged[:4]))
+    return lines
+
+
+def _runs_with_metrics(meta: dict[str, Any], models: list[dict[str, Any]], labels: dict[str, str],
+                       baseline_context: dict[str, Any] | None) -> list[tuple[str, dict[str, Any]]]:
+    """이 리포트가 값을 가져온 실행들 — `(이름, 저장된 결과)`. 답을 다시 읽어 세는 줄들이 같은 목록을 본다."""
+    import test_runner
+
+    out: list[tuple[str, dict[str, Any]]] = []
+    for m in models:
+        try:
+            result = test_runner.load_result(m["id"])
+        except (OSError, ValueError):
+            result = None
+        if result:
+            out.append((labels.get(m["id"], m["id"]), result))
+    column = (baseline_context or {}).get("column")
+    if column and column.get("metrics"):
+        out.append((_baseline_name(meta), column))
+    return out
+
+
+def _document_guard_lines(meta: dict[str, Any], models: list[dict[str, Any]], labels: dict[str, str],
+                          baseline_context: dict[str, Any] | None) -> list[str]:
+    """문서 방어를 걸고 잰 실행이 있으면 **그 값을 어떻게 읽어야 하는지**를 적는다.
+
+    방어 문구는 이 세트의 간접 인젝션 실패를 분석한 뒤에 썼다 — 그래서 간접 인젝션 값은 표본 안이고,
+    같은 세트에서 오른 값은 `방어가 통한다`는 근거가 되지 못한다. 문구를 고정하고 결과를 보고 다듬지
+    않는 것이 그 다음 최선이라, 무엇을 잰 값인지 리포트가 매번 말한다."""
+    guarded = [name for name, entry in _runs_with_metrics(meta, models, labels, baseline_context)
+               if (entry.get("config") or {}).get("document_guard")]
+    if not guarded:
+        return []
+    return ["문서 방어를 걸고 잰 실행: " + ", ".join(guarded)
+            + ". 방어 문구는 이 세트의 간접 인젝션 실패를 분석한 뒤 작성했다 — 간접 인젝션 값은 표본 안이다"
+            " (방어의 효과는 새 주입 문서로 다시 재야 표본 밖의 값이 된다). 문구는 재기 전에 고정했고 결과를 보고 고치지 않는다."]
+
+
+def _hallucination_failure_lines(meta: dict[str, Any], models: list[dict[str, Any]], labels: dict[str, str],
+                                 baseline_context: dict[str, Any] | None) -> list[str]:
+    """환각 0점 칸을 갈래로 나눠 적는다 — 고칠 것이 다르다.
+
+    지어냄은 모델이 문서에 없는 값을 만들어 낸 것이고, 비껴 답함은 `없다`고 말하는 대신 묻지 않은 이웃 사실로
+    답한 것이다. 한 숫자로 합치면 `환각이 몇 칸`만 남아, 모델을 고칠 일인지 문항을 고칠 일인지 가릴 수 없다.
+    점수 규칙은 나누지 않는다 — 둘 다 0점이고 여기서는 세기만 한다."""
+    import quality_scoring as qs
+    import quality_testsets as qt
+
+    checked = _runs_with_metrics(meta, models, labels, baseline_context)
+    if not checked:
+        return []
+    try:
+        items = {it["id"]: it for it in qt.load_quality_testset("hallucination")["items"]}
+    except (OSError, KeyError, ValueError):
+        return []
+    expressions = qt.load_refusal_expressions()
+    lines = [f"환각 0점 칸의 갈래 — `{qs.FABRICATED}`은 문서에 없는 값을 만들어 낸 칸, "
+             f"`{qs.SIDESTEPPED}`은 거절도 지어냄도 아닌 칸(묻지 않은 이웃 사실로 답한 자리)이다. 점수는 둘 다 0점이다."]
+    for name, entry in checked:
+        if not (entry.get("metrics") or {}).get("hallucination"):
+            continue
+        kinds = qs.hallucination_failure_kinds(entry["metrics"], items, expressions)
+        if not kinds:
+            lines.append(f"· {name}: 0점 칸 없음")
+            continue
+        parts = []
+        for kind, cells in kinds.items():
+            where = ", ".join(f"{c['id']} v{c['variant']}" for c in cells[:4])
+            parts.append(f"{kind} {len(cells)}칸({where})")
+        lines.append(f"· {name}: " + " · ".join(parts))
+    return lines
+
+
+def _second_opinion_lines(meta: dict[str, Any], models: list[dict[str, Any]], labels: dict[str, str],
+                          baseline_context: dict[str, Any] | None) -> list[str]:
+    """거절 판정의 2차 의견 — 규칙이 읽은 판정을 모델에게 한 번 더 물어 **어긋난 칸만** 적는다.
+
+    점수에는 들지 않는다(모델 판정을 점수에 넣으면 같은 답의 점수가 판정 모델의 그날 상태를 탄다). 여기 줄이
+    하는 일은 하나다 — 다음에 사람이 열어 볼 칸을 먼저 알려 주는 것. 거절 판정은 말투를 글자로 잡는 일이라
+    양쪽으로 새는데, 지금까지는 사람이 우연히 칸을 열어 봐야 드러났다.
+
+    받아 둔 판정이 없으면 그렇다고 적는다 — 침묵은 `어긋남이 없다`와 `묻지 않았다`를 함께 뜻한다."""
+    import quality_testsets as qt
+
+    checked = _runs_with_metrics(meta, models, labels, baseline_context)
+    if not checked:
+        return []
+    lines: list[str] = []
+    current_sha = qt.refusal_expressions_sha()
+    for name, entry in checked:
+        opinion = entry.get("second_opinion")
+        if not opinion:
+            lines.append(f"· {name}: 받아 둔 2차 의견이 없다")
+            continue
+        head = (f"· {name}: {len(opinion.get('cells') or [])}칸 · 규칙과 일치 — 없다고 밝힘 "
+                f"{_ratio_text(opinion.get('agreement_absent'))} · 물은 값 제시 {_ratio_text(opinion.get('agreement_value'))}"
+                f" · 반말 있음 {_ratio_text(opinion.get('agreement_plain'))}"
+                f" · 어긋난 칸 {len(opinion.get('mismatches') or [])}개")
+        if opinion.get("unread"):
+            head += f" · 못 읽은 판정 {opinion['unread']}개(분모에서 뺐다)"
+        if opinion.get("same_model"):
+            head += " · 측정 대상과 같은 모델이 판정했다(어긋남이 없다는 것이 근거가 되지 못한다)"
+        if opinion.get("refusal_expressions_sha") and opinion["refusal_expressions_sha"] != current_sha:
+            head += " · 판정 뒤 거절 표현 목록이 바뀌었다(다시 물어야 한다)"
+        lines.append(head)
+        for cell in (opinion.get("mismatches") or [])[:6]:
+            axis = cell.get("axis", "absent")
+            name_of = {"absent": "밝힘", "value": "값", "plain": "반말"}.get(axis, axis)
+            lines.append(f"   {cell['metric']} {cell['id']} v{cell['variant']} ({name_of}): "
+                         f"규칙 {cell.get('rule_' + axis)} / 모델 {cell.get('model_' + axis)}")
+    if not lines:
+        return []
+    judge = next((e.get("second_opinion", {}).get("model") for _, e in checked if e.get("second_opinion")), None)
+    version = next((e.get("second_opinion", {}).get("prompt_version") for _, e in checked if e.get("second_opinion")), None)
+    head = ("거절 판정 2차 의견 — 환각·과잉 거절 칸의 답을 다시 읽혀 둘을 묻는다: "
+            "`물은 정보가 문서에 없다고 밝혔는가`(규칙의 거절 판정과 대조) · "
+            "`그럼에도 물은 값에 값·결론을 냈는가`(규칙의 지어냄 정규식과 대조). 긴 컨텍스트 제약에는 "
+            "`반말 문장이 있는가`를 묻는다 — 규칙이 목록 줄에서 일부러 세지 않는 자리다. 점수에는 들지 않는다.")
+    if judge:
+        head += f" 판정 모델 {judge} · 프롬프트 v{version}."
+    return [head, *lines]
+
+
+def _ratio_text(value: float | None) -> str:
+    return "잰 칸 없음" if value is None else f"{value * 100:.1f}%"
+
+
+def _context_pressure_lines(meta: dict[str, Any], models: list[dict[str, Any]], labels: dict[str, str],
+                            baseline_context: dict[str, Any] | None) -> list[str]:
+    """입력이 컨텍스트 상한에 닿은 칸 — `잘림 의심`. **닿지 않았어도 가장 큰 입력을 적는다**:
+    여유가 얼마였는지 모르면 다음에 문서를 늘려도 되는지 알 수 없다."""
+    lines: list[str] = []
+    for name, entry in _runs_with_metrics(meta, models, labels, baseline_context):
+        pressure = entry.get("context_pressure") or rh.context_pressure(entry)
+        if not pressure.get("measured"):
+            continue
+        head = (f"· {name}: 가장 큰 입력 {pressure['max_prompt_tokens']:,}토큰 · 한도 {pressure['num_ctx']:,}"
+                f"(출력 상한 {pressure['output_budget']:,} 제외하면 {pressure['threshold']:,})")
+        if not pressure.get("applies"):
+            lines.append(head + " — 이 경로는 num_ctx를 보내지 않아 세지 않는다(기록)")
+        elif pressure["count"]:
+            where = ", ".join(f"{c['metric']} {c['id']} v{c['variant']}" for c in pressure["cells"][:4])
+            lines.append(f"▲ {head} — 잘림 의심 {pressure['count']}칸: {where}")
+        else:
+            lines.append(head + " — 잘림 의심 없음")
+    return ["입력 크기 — 문서가 컨텍스트에 다 들어갔나. 잘린 문서로 답한 칸은 `문서에 없다`처럼 보이는데, "
+            "그것은 모델의 성질이 아니라 문서를 다 안 보낸 결과다.", *lines] if lines else []
+
+
+def _hand_label_score_lines(meta: dict[str, Any], models: list[dict[str, Any]], labels: dict[str, str],
+                            baseline_context: dict[str, Any] | None) -> list[str]:
+    """확정된 손 판정이 규칙과 다를 때만, 그 판정으로 다시 센 점수를 **공식 점수 옆에** 적는다.
+
+    공식 값은 규칙이 낸 점수다 — 손 판정은 몇 칸뿐이라 지표를 대신할 수 없다. 다만 규칙으로 잡을 수 없는
+    유형(숫자 없이 `따라서 …이다`로 내린 결론)이 있어, 그 차이가 점수로 얼마인지는 보여야 한다.
+
+    손 판정은 **실제 세트의 어느 칸을 사람이 어떻게 읽었나**라서 공개본에는 그 파일이 없다 — 없으면 이 줄도
+    없다(`second_opinion.py`)."""
+    try:
+        import second_opinion as so
+    except ModuleNotFoundError:
+        return []
+
+    lines: list[str] = []
+    for name, entry in _runs_with_metrics(meta, models, labels, baseline_context):
+        for row in so.hand_label_scores(entry.get("metrics") or {}):
+            where = ", ".join(f"{c['id']} v{c['variant']}" for c in row["changed"][:4])
+            lines.append(f"· {name} {row['metric']}: 확정 판정 반영 {_ratio_text(row['with_hand'])}"
+                         f" (공식 {_ratio_text(row['official'])}) — 규칙과 다른 칸 {len(row['changed'])}개: {where}")
+    if not lines:
+        return []
+    return ["사람이 확정한 판정으로 다시 센 점수 — 공식 점수는 규칙이 낸 값 그대로이고, 아래는 그 옆에 두는 값이다.", *lines]
+
+
 def _page_conditions(payload: dict[str, Any], models: list[dict[str, Any]], labels: dict[str, str],
                      gate_evidence: set[str] | frozenset[str] = frozenset(),
                      divergence: dict[str, list[dict[str, Any]]] | None = None,
@@ -2630,6 +2838,19 @@ def _page_conditions(payload: dict[str, Any], models: list[dict[str, Any]], labe
     _, version_footnotes = _scorer_version_lines(meta, models, labels)
     for line in version_footnotes:
         flow.text(line, size=8, color=_MUTED, gap=0.016)
+    for line in _refusal_false_positive_lines(meta, models, labels, baseline_context):
+        flow.text(line, size=8.5, color=_MUTED, gap=0.017)
+    for line in _hallucination_failure_lines(meta, models, labels, baseline_context):
+        flow.text(line, size=8.5, color=_MUTED, gap=0.017)
+    for line in _second_opinion_lines(meta, models, labels, baseline_context):
+        flow.text(line, size=8.5, color=_MUTED, gap=0.017)
+    for line in _hand_label_score_lines(meta, models, labels, baseline_context):
+        flow.text(line, size=8.5, color=_MUTED, gap=0.017)
+    for line in _document_guard_lines(meta, models, labels, baseline_context):
+        flow.text(line, size=8.5, color=_MUTED, gap=0.017)
+    for line in _context_pressure_lines(meta, models, labels, baseline_context):
+        warn = line.startswith("▲")
+        flow.text(line, size=8.5, color=_WARN if warn else _MUTED, weight="bold" if warn else "normal", gap=0.017)
 
     flow.heading("세트 지문")
     fp_lines, footnotes = _fingerprint_lines(meta, models, labels)
