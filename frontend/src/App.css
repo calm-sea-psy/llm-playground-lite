@@ -52,6 +52,12 @@
   color: #1d4ed8;
 }
 
+/* 막힌 탭 — 숨기지 않고 까닭(title)을 달아 비활성으로 둔다. 잠긴 탭만 보이면 할 수 있는 일이 없다 */
+.nav-tab.disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .field {
   display: flex;
   flex-direction: column;
@@ -281,6 +287,35 @@ button.stop {
   background: #dc2626;
 }
 
+/* 측정이 도는 동안은 화면을 덮는다 — 도중에 다른 자리를 건드리면 그 회차가 무엇을 잰 것인지 알 수 없게 된다 */
+.run-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(9, 9, 11, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.run-overlay-panel {
+  min-width: 320px;
+  max-width: 520px;
+  padding: 20px 24px;
+  border-radius: 10px;
+  background: #fff;
+  color: #1a1a1a;
+  box-shadow: 0 10px 40px rgb(0 0 0 / 35%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  text-align: center;
+}
+
+.run-overlay-panel h2 { margin: 0; font-size: 15px; }
+.run-overlay-panel p { margin: 0; font-size: 13px; color: #52525b; }
+
 .chat {
   display: flex;
   flex-direction: column;
@@ -342,7 +377,19 @@ button.stop {
   border: 1px solid #e4e4e7;
 }
 
+/* 내가 쓴 말은 좁게 오른쪽으로 — 줄 모양만 봐도 누가 한 말인지 갈린다 */
+.msg.user {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.msg.user .role {
+  justify-content: flex-end;
+}
+
 .msg.user .content {
+  max-width: 80%;
   background: #eef2ff;
   border-color: #c7d2fe;
 }
@@ -449,6 +496,30 @@ button.stop {
   display: flex;
   flex-direction: column;
   gap: 24px;
+}
+
+/* 모델 카드와 실행 종류는 위에 붙여 둔다 — 아래를 훑는 동안 무엇을 어떤 종류로 재는지 눈에서 사라지면 안 된다 */
+.bench-pinned {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  padding-bottom: 12px;
+  background: #f7f7f8; /* 아래 내용이 비쳐 보이지 않게 — 화면 바탕과 같은 색 */
+  border-bottom: 1px solid #e4e4e7;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 붙어 있는 칸 위의 여백(`.bench-main`의 padding)으로도 글이 지나간다 — 같은 색으로 덮는다 */
+.bench-pinned::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 100%;
+  height: 24px;
+  background: inherit;
 }
 
 .bench-main h2 {
@@ -794,20 +865,30 @@ button.stop {
   margin-right: 4px;
 }
 
+/* 위에 선 시스템 프롬프트 칸과 한 벌로 보이게 — 같은 너비·같은 테두리·같은 여백의 상자로 둔다 */
 .composer {
   display: flex;
-  gap: 10px;
-  padding: 16px 24px 20px;
-  border-top: 1px solid #e4e4e7;
-  background: #fff;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto 16px;
+  padding: 12px;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
 }
 
+/* 고르는 칸과 같은 모양 — 테두리·모서리·안쪽 여백·키를 맞춘다 */
 .composer textarea {
   flex: 1;
   font: inherit;
-  padding: 10px;
+  line-height: 1.5;
+  min-height: calc(1.5em + 20px);
+  padding: 9px 12px;
   border: 1px solid #d4d4d8;
-  border-radius: 8px;
+  border-radius: 6px;
+  background: #fff;
+  color: inherit;
   resize: none;
 }
 
@@ -1092,9 +1173,8 @@ button.stop {
   background: #eff6ff;
 }
 
-/* 실행 전 확인 패널 */
+/* 실행 전 확인 패널 — 위아래 칸과 같은 너비로 둔다(혼자 좁으면 줄이 어긋나 보인다) */
 .run-summary-panel {
-  max-width: 640px;
   width: 100%;
   display: flex;
   flex-direction: column;
@@ -1942,15 +2022,25 @@ button.stop {
 /* 시스템 프롬프트 고르기·편집. 일반 대화에서는 .chat 안의
    고정 높이 자식이라 flex: none — 편집 칸은 높이를 제한하고 그 안에서만 스크롤한다
    (verify-layout 예외 2: 높이가 제한된 작은 스크롤 영역). */
+/* 이름은 `실행 종류`와 같은 모양으로 — 고르는 칸은 그 아래 줄에 둔다 */
 .prompt-picker {
   flex: none;
   max-width: 760px;
   width: 100%;
   margin: 0 auto 8px;
+  padding: 8px 12px 12px;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
+}
+
+.prompt-picker legend {
+  font-size: 12px;
+  color: #52525b;
+  padding: 0 4px;
 }
 
 .prompt-picker-row {
@@ -1960,14 +2050,24 @@ button.stop {
   flex-wrap: wrap;
 }
 
-.prompt-picker-label {
-  font-size: 12px;
-  color: #52525b;
+/* 접었다 폈다 해도 단추 크기가 흔들리지 않게 — 긴 이름(`본문 보기·편집`)에 맞춰 잡아 둔다 */
+.prompt-picker-row button {
+  min-width: 9rem;
+  white-space: nowrap;
 }
 
+/* 고르는 칸은 옆 단추와 같은 높이로 — 한 줄에 선 것들의 키가 다르면 줄이 어긋나 보인다 */
 .prompt-picker select {
   flex: 1;
   min-width: 0;
+  font: inherit;
+  /* 크롬은 `select`의 줄높이를 무시한다 — 옆 단추와 같은 키(줄 1.5 + 위아래 여백·테두리)를 직접 준다 */
+  min-height: calc(1.5em + 20px);
+  padding: 9px 12px;
+  border: 1px solid #d4d4d8;
+  border-radius: 6px;
+  background: #fff;
+  color: inherit;
 }
 
 .prompt-editor {
@@ -2021,6 +2121,13 @@ button.stop {
   font-size: 12px;
   color: #52525b;
   padding: 0 4px;
+}
+
+/* 좁은 왼쪽 칸에서는 세로로 쌓는다 */
+.chat-mode {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
 }
 
 .run-type-note {
@@ -2094,18 +2201,336 @@ button.stop {
   color: #52525b;
 }
 
+/* 세트 준비 화면(개발 기능) — 왼쪽 사이드바에 단계 목록, 오른쪽에 그 단계만. 다른 화면과 같은 좌우 구조다 */
+.testset-steplist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.testset-steplist button {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  background: none;
+  font-size: 12px;
+  color: #52525b;
+  cursor: pointer;
+}
+
+.testset-steplist button.active { background: #eff6ff; color: #1d4ed8; font-weight: 600; }
+.testset-steplist button.done { color: #166534; }
+.testset-steplist button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+.testset-step-no {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 999px;
+  border: 1px solid currentColor;
+  font-size: 11px;
+  flex: none;
+}
+
+.testset-step-mark { margin-left: auto; font-size: 11px; }
+
+/* 고르는 줄과 두 칸은 한 가지 일이다 — 테두리를 바깥에 하나만 두어 한 공간으로 보이게 한다 */
+.testset-uploadbox {
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 12px;
+  max-width: 900px;
+}
+
+.testset-uploadbox .testset-upload,
+.testset-uploadbox .testset-column {
+  border: 0;
+  border-radius: 0; /* 가르는 선이 양끝에서 말려 올라가지 않게 */
+  padding: 0;
+}
+
+/* 고르는 줄과 그 아래를 선 하나로 가른다 — 한 상자 안이라도 하는 일이 다르다 */
+.testset-uploadbox .testset-upload {
+  border-bottom: 1px solid #e4e4e7;
+  padding-bottom: 12px;
+}
+
+/* 올릴 파일과 올라간 문서를 좌우로 나눈다 — 무엇을 올리려는지와 무엇이 이미 있는지는 다른 이야기다 */
+.testset-columns {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto minmax(300px, 1.4fr);
+  gap: 12px;
+  margin-top: 14px; /* 파일 고르는 줄과 붙지 않게 — 고르는 곳과 담기는 곳이 따로 보인다 */
+  align-items: stretch; /* 두 칸의 높이를 맞춘다 — 한쪽만 길면 눈이 자꾸 옮겨 간다 */
+}
+
+/* 올리기 단추는 두 칸 사이에 둔다 — 왼쪽에서 오른쪽으로 옮긴다는 것이 자리로 보인다 */
+.testset-between {
+  align-self: center;
+  display: flex;
+  justify-content: center;
+}
+
+/* 묶음을 바꿔도 단추 크기가 흔들리지 않게 — 가장 긴 이름에 맞춰 잡아 둔다 */
+.testset-between button {
+  min-width: 17rem;
+  white-space: nowrap;
+  text-align: center;
+}
+
+.testset-column-foot {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 8px;
+}
+
+.testset-column {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.testset-column h3 { font-size: 12px; margin: 0 0 8px; }
+
+/* 목록이 길어도 칸 높이가 화면을 밀어내지 않게 — 넘치면 그 칸만 스크롤한다 */
+.testset-column-body {
+  flex: 1;
+  min-height: 160px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+/* 줄이 흘러도 무슨 칸인지 잃지 않게 머리말을 붙여 둔다.
+   테두리는 `border-collapse`에서 함께 흘러가므로 그림자로 긋는다 */
+.testset-column-body thead th,
+.testset-scroll thead th {
+  position: sticky;
+  top: 0;
+  background: #f7f7f8;
+  box-shadow: inset 0 -1px 0 #e4e4e7;
+}
+
+@media (max-width: 1100px) {
+  .testset-columns { grid-template-columns: 1fr; }
+  .testset-between { justify-content: flex-start; }
+}
+
+/* 올릴 파일 목록 — `파일 5개`만 보여 주면 무엇을 고른 건지 알 수 없다 */
+.testset-filelist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.testset-filelist li { display: flex; align-items: center; gap: 8px; }
+.testset-filelist button { font-size: 11px; padding: 2px 8px; }
+.testset-filelist .testset-muted { margin: 0; }
+
+.testset-main,
+.testset-page {
+  min-width: 0;
+  overflow-y: auto;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.testset-main h2,
+.testset-page h2 { font-size: 14px; margin: 0; }
+.testset-main h3,
+.testset-page h3 { font-size: 13px; margin: 0 0 8px; }
+.testset-page section { min-width: 0; }
+
+.testset-note,
+.testset-muted {
+  font-size: 12px;
+  color: #71717a;
+  line-height: 1.6;
+  margin: 0 0 8px;
+  max-width: 900px;
+}
+
+.testset-upload {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  max-width: 900px; /* 안내·카드와 같은 너비로 — `.testset-card`, `.testset-guide`도 900이다 */
+}
+
+/* 고른 파일 이름이 단추에 붙어 한 덩이로 읽히지 않게 */
+.testset-upload input[type="file"]::file-selector-button {
+  margin-right: 10px;
+}
+
+/* 한 줄에서 이것만 오른쪽으로 민다 — `다음`과 `전체 해제`처럼 줄 끝에 놓일 단추에 쓴다 */
+.testset-right { margin-left: auto; }
+
+/* 고를 것이 여럿이면 한 줄에 모은다 — 세로로 늘어서면 카드만 길어지고 한눈에 안 들어온다 */
+.testset-editions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+
+/* 묶음처럼 둘뿐인 고르기는 세로가 낫다 */
+.testset-editions.stacked {
+  flex-direction: column;
+  gap: 4px;
+}
+
+.testset-edition {
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.testset-status,
+.testset-error,
+.testset-warning {
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  white-space: pre-line;
+}
+
+.testset-status { background: #f0fdf4; color: #166534; }
+.testset-error { background: #fef2f2; color: #b91c1c; }
+.testset-warning { background: #fffbeb; color: #92400e; }
+ul.testset-warning,
+ul.testset-error { padding: 8px 10px 8px 28px; }
+
+.testset-scroll { max-height: 360px; overflow: auto; border: 1px solid #e4e4e7; border-radius: 8px; max-width: 900px; }
+
+.testset-table {
+  border-collapse: collapse;
+  font-size: 12px;
+  width: 100%;
+}
+
+.testset-table th,
+.testset-table td {
+  text-align: left;
+  padding: 4px 10px 4px 6px;
+  border-bottom: 1px solid #f4f4f5;
+  vertical-align: top;
+}
+
+.testset-line { color: #52525b; max-width: 420px; }
+.testset-risk { color: #b45309; }
+
+.testset-card {
+  border: 1px solid #e4e4e7;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 900px;
+}
+
+.testset-card-head { font-size: 12px; }
+.testset-card label { font-size: 12px; color: #52525b; display: flex; flex-direction: column; gap: 4px; }
+.testset-quote {
+  font-size: 12px;
+  color: #52525b;
+  background: #fafafa;
+  border-left: 3px solid #e4e4e7;
+  padding: 6px 8px;
+  margin: 0;
+}
+
+.testset-lines {
+  font-family: inherit;
+  font-size: 12px;
+  padding: 6px 8px;
+  border: 1px solid #e4e4e7;
+  border-radius: 6px;
+  resize: vertical;
+}
+
+.testset-guide {
+  font-size: 12px;
+  color: #52525b;
+  line-height: 1.7;
+  margin: 0 0 12px;
+  max-width: 900px;
+}
+
+.testset-guide ul { margin: 0; padding-left: 20px; }
+
+/* 소제목 — 안내가 길어지면 무엇에 대한 줄인지부터 보여야 한다 */
+.testset-guide h4 {
+  font-size: 12px;
+  color: #27272a;
+  margin: 12px 0 4px;
+}
+
+.testset-guide h4:first-child { margin-top: 0; }
+
+/* 안내 속 표 — 두 칸짜리라 칸 너비를 글에 맞춘다 */
+.testset-guide table { width: auto; margin: 2px 0 8px; }
+
+/* 베껴 쓸 모양 — 줄바꿈을 그대로 두고, 길면 그 칸만 가로로 민다 */
+.testset-guide pre {
+  margin: 2px 0 10px;
+  padding: 8px 10px;
+  max-height: 260px;
+  overflow: auto;
+  white-space: pre;
+}
+.testset-guide table td { padding-right: 16px; }
+
+
+.testset-steps { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+
+.testset-step {
+  font-size: 12px;
+  padding: 6px 12px;
+  border: 1px solid #e4e4e7;
+  border-radius: 999px;
+  background: #fff;
+  cursor: pointer;
+}
+
+.testset-step.active { background: #18181b; color: #fafafa; border-color: #18181b; }
+.testset-step.done { border-color: #16a34a; color: #166534; }
+.testset-step:disabled { opacity: 0.4; cursor: not-allowed; }
+
 @media (prefers-color-scheme: dark) {
   .app {
     color: #e4e4e7;
     background: #18181b;
   }
-  .sidebar,
-  .composer {
+  .sidebar {
     background: #1f1f23;
     border-color: #2e2e33;
-  }
-  .sidebar {
     border-right-color: #2e2e33;
+  }
+  .composer {
+    border-color: #3f3f46;
   }
   .field textarea,
   .field select,
@@ -2145,6 +2570,18 @@ button.stop {
   }
   .rating-error {
     color: #fca5a5;
+  }
+  .bench-pinned {
+    background: #18181b;
+    border-color: #3f3f46;
+  }
+  .prompt-picker {
+    border-color: #3f3f46;
+  }
+  .prompt-picker select {
+    background: #27272a;
+    color: #d4d4d8;
+    border-color: #3f3f46;
   }
   button.ghost {
     background: #27272a;
@@ -2575,7 +3012,7 @@ button.stop {
   .report-viewer-frame {
     border-color: #3f3f46;
   }
-  .prompt-picker-label,
+  .prompt-picker legend,
   .prompt-status,
   .run-type-control legend {
     color: #a1a1aa;
@@ -2612,4 +3049,34 @@ button.stop {
     background: #2e1065;
     color: #ddd6fe;
   }
+  .testset-upload,
+  .testset-uploadbox,
+  .testset-card,
+  .testset-scroll,
+  .testset-lines { border-color: #3f3f46; }
+  .testset-note,
+  .testset-muted,
+  .testset-line,
+  .testset-card label { color: #a1a1aa; }
+  .testset-quote { background: #18181b; border-color: #3f3f46; color: #a1a1aa; }
+  .testset-lines { background: #18181b; color: #e4e4e7; }
+  .testset-status { background: #052e16; color: #bbf7d0; }
+  .testset-error { background: #450a0a; color: #fecaca; }
+  .testset-warning { background: #451a03; color: #fde68a; }
+  .testset-risk { color: #fbbf24; }
+  .testset-table th,
+  .testset-table td { border-color: #27272a; }
+  .testset-column-body thead th,
+  .testset-scroll thead th { background: #18181b; box-shadow: inset 0 -1px 0 #3f3f46; }
+  .testset-uploadbox .testset-upload { border-bottom-color: #3f3f46; }
+  .run-overlay-panel { background: #18181b; color: #e4e4e7; }
+  .run-overlay-panel p { color: #a1a1aa; }
+  .testset-guide { color: #a1a1aa; }
+  .testset-guide h4 { color: #e4e4e7; }
+  .testset-steplist button { color: #a1a1aa; }
+  .testset-steplist button.active { background: #1e3a8a; color: #dbeafe; }
+  .testset-steplist button.done { color: #bbf7d0; }
+  .testset-step { background: #18181b; color: #e4e4e7; border-color: #3f3f46; }
+  .testset-step.active { background: #e4e4e7; color: #18181b; border-color: #e4e4e7; }
+  .testset-step.done { border-color: #22c55e; color: #bbf7d0; }
 }

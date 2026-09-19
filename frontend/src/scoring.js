@@ -208,6 +208,23 @@ export function isPromptExperiment(run) {
   return run?.run_type === RUN_TYPE.EXPERIMENT
 }
 
+/** 그 실행이 어떤 프롬프트로 잰 것인가 — 선정용 실행은 프롬프트가 없어 `null`이다. */
+export function promptKey(run) {
+  if (!isPromptExperiment(run)) return null
+  const meta = run.system_prompt_meta ?? {}
+  return meta.sha256 ?? meta.name ?? meta.title ?? '프롬프트'
+}
+
+/** 지금 고른 것들과 **다른 프롬프트로 잰 실험 회차**인가 — 프롬프트가 섞이면 무엇의 점수인지 알 수 없다.
+ * 선정용 실행은 막지 않는다(그 조합은 `프롬프트 실험` 경고가 리포트에 적는다). */
+export function blockedByPrompt(run, selectedRuns) {
+  const key = promptKey(run)
+  if (!key) return null
+  const chosen = new Set(selectedRuns.map(promptKey).filter(Boolean))
+  if (chosen.size === 0 || chosen.has(key)) return null
+  return '다른 프롬프트로 잰 실행이 이미 골라져 있다 — 프롬프트가 섞이면 무엇의 점수인지 알 수 없다'
+}
+
 export const FAILURE_CAUSE_LABEL = {
   our_code: '우리 코드',
   infra: '인프라',

@@ -19,6 +19,7 @@ import {
   comparableRuns,
   gatedWeights,
   formatRawCell,
+  blockedByPrompt,
   isPromptExperiment,
   latestSelectionRun,
   normalize,
@@ -235,6 +236,12 @@ export default function ComparePage() {
   function toggleAllLatest() {
     setSelectedIds(allLatestSelected ? [] : previewRunIds)
   }
+
+  // 프롬프트가 다른 실험 회차끼리는 함께 고르지 못하게 막는다 — 섞이면 무엇의 점수인지 알 수 없다
+  const selectedRuns = useMemo(
+    () => results.filter((r) => selectedIds.includes(r.id)),
+    [results, selectedIds],
+  )
 
   const selectedDetails = selectedIds.map((id) => detailsById[id]).filter(Boolean)
   const demotion = useConsistencyDemotion(selectedIds, judgmentRefresh)
@@ -490,7 +497,7 @@ export default function ComparePage() {
             <h2>저장된 실행 ({modelGroups.length}개 모델)</h2>
             {modelGroups.length > 0 && (
               <button type="button" className="ghost" onClick={toggleAllLatest}>
-                {allLatestSelected ? '전체 해제' : '모델별 최신 전체 선택'}
+                {allLatestSelected ? '전체 해제' : '모델별 기본 테스트 전체 선택'}
               </button>
             )}
           </div>
@@ -540,10 +547,11 @@ export default function ComparePage() {
                       <ul className="compare-run-list">
                         {runs.map((r) => (
                           <li key={r.id} className="compare-run-row">
-                            <label className="result-check">
+                            <label className="result-check" title={blockedByPrompt(r, selectedRuns) ?? undefined}>
                               <input
                                 type="checkbox"
                                 checked={selectedIds.includes(r.id)}
+                                disabled={!selectedIds.includes(r.id) && Boolean(blockedByPrompt(r, selectedRuns))}
                                 onChange={() => toggleRun(r.id)}
                               />
                             </label>

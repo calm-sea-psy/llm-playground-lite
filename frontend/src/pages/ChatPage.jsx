@@ -15,15 +15,51 @@ const TEST_ACTIVE_POLL_MS = 3000
 // 일반 대화 모드 페이지.
 // 대화 이력의 주인은 백엔드다 — 여기서는 conversationId만 들고 다니고,
 // 메시지 배열은 화면에 보여주기 위한 사본일 뿐이다.
+// 이 화면을 다시 열 때도 고른 대화 종류가 그대로여야 한다 — 이 브라우저에만 적어 두는 편의값이다
+const MODE_KEY = 'chat.mode'
+const PLAIN = 'plain'
+const WITH_PROMPT = 'prompt'
+
+const COMPRESS_KEY = 'chat.compress'
+const TOOLS_KEY = 'chat.tools'
+
+function readMode() {
+  try {
+    return localStorage.getItem(MODE_KEY) === WITH_PROMPT ? WITH_PROMPT : PLAIN
+  } catch {
+    return PLAIN // 저장을 못 읽어도 화면은 돈다
+  }
+}
+
+// 켜고 끄는 값도 이 브라우저에 적어 둔다 — 새로 열 때마다 다시 켜는 일이 없게
+function readFlag(key, fallback) {
+  try {
+    const saved = localStorage.getItem(key)
+    return saved === null ? fallback : saved === '1'
+  } catch {
+    return fallback
+  }
+}
+
+function writeFlag(key, on) {
+  try {
+    localStorage.setItem(key, on ? '1' : '0')
+  } catch {
+    /* 저장을 못 해도 이번 화면에서는 고른 대로 쓴다 */
+  }
+}
+
 export default function ChatPage() {
   const { selectedId, error: modelsError } = useModels()
   // 시스템 프롬프트는 이 대화에 걸리는 조건이다 — 기본은 없음, 저장된 것 또는 직접 입력
   const [prompts, setPrompts] = useState([])
   const [promptSelection, setPromptSelection] = useState('')
   const [system, setSystem] = useState('')
+  const [mode, setMode] = useState(readMode)
   const [temperature, setTemperature] = useState(0.7)
-  const [compress, setCompress] = useState(true)
-  const [toolsEnabled, setToolsEnabled] = useState(false)
+  const [compress, setCompress] = useState(() => readFlag(COMPRESS_KEY, true))
+  // 도구를 쓰는 대화가 기본이다 — 끄면 그 선택이 다음에도 남는다
+  const [toolsEnabled, setToolsEnabled] = useState(() => readFlag(TOOLS_KEY, true))
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [busy, setBusy] = useState(false)
@@ -64,7 +100,15 @@ export default function ChatPage() {
   const refreshPrompts = useCallback(
     () =>
       fetchSystemPrompts()
-        .then(setPrompts)
+        .then((list) => {
+          setPrompts(list)
+          // `프롬프트 적용`인데 고른 것이 없으면 첫 프롬프트로 시작한다 — 빈 값은 `일반`과 다를 바가 없다
+          setPromptSelection((chosen) => {
+            if (chosen || readMode() !== WITH_PROMPT || list.length === 0) return chosen
+            setSystem(list[0].content ?? '')
+            return `saved:${list[0].name}`
+          })
+        })
         .catch((e) => setChatError(String(e.message || e))),
     [],
   )
@@ -98,6 +142,23 @@ export default function ChatPage() {
     setMessages((msgs) => msgs.map((m) => (m.id === updatedMsg.id ? { ...m, ...updatedMsg } : m)))
   }
 
+  // 종류를 바꾸면 그 자리에서 조건도 바꾼다 — `일반`인데 프롬프트가 걸려 있으면 무엇을 쓴 대화인지 알 수 없다
+  function chooseMode(next) {
+    setMode(next)
+    try {
+      localStorage.setItem(MODE_KEY, next)
+    } catch {
+      /* 저장을 못 해도 이번 화면에서는 고른 대로 쓴다 */
+    }
+    if (next === PLAIN) {
+      setPromptSelection('')
+      setSystem('')
+    } else if (!promptSelection && prompts.length > 0) {
+      setPromptSelection(`saved:${prompts[0].name}`)
+      setSystem(prompts[0].content ?? '')
+    }
+  }
+
   async function loadConversation(id) {
     stopStream()
     setChatError('')
@@ -110,6 +171,7 @@ export default function ChatPage() {
       setSystem(conv.system || '')
       // 저장된 프롬프트로 시작한 대화면 그 이름으로, 본문만 있으면 직접 입력으로 되살린다
       const savedName = conv.system_prompt?.name
+      if (conv.system) setMode(WITH_PROMPT)
       setPromptSelection(
         savedName && prompts.some((p) => p.name === savedName) ? `saved:${savedName}` : conv.system ? 'custom' : '',
       )
@@ -257,6 +319,26 @@ export default function ChatPage() {
         <h1>LLM Playground</h1>
         <NavTabs />
 
+        {/* 프롬프트를 걸었는지가 대화의 조건이다 — 성능 테스트의 `실행 종류`와 같은 자리·같은 모양으로 둔다 */}
+        <fieldset className="run-type-control chat-mode" disabled={busy}>
+          <legend>대화 종류</legend>
+          {[
+            [PLAIN, '일반'],
+            [WITH_PROMPT, '프롬프트 적용'],
+          ].map(([value, label]) => (
+            <label key={value} className="field-inline">
+              <input
+                type="radio"
+                name="chat-mode"
+                value={value}
+                checked={mode === value}
+                onChange={() => chooseMode(value)}
+              />
+              <span>{label}</span>
+            </label>
+          ))}
+        </fieldset>
+
         <ModelPanel />
 
         <ConversationList
@@ -285,7 +367,10 @@ export default function ChatPage() {
           <input
             type="checkbox"
             checked={compress}
-            onChange={(e) => setCompress(e.target.checked)}
+            onChange={(e) => {
+              setCompress(e.target.checked)
+              writeFlag(COMPRESS_KEY, e.target.checked)
+            }}
           />
           <span>대화 요약 압축 사용</span>
         </label>
@@ -294,7 +379,10 @@ export default function ChatPage() {
           <input
             type="checkbox"
             checked={toolsEnabled}
-            onChange={(e) => setToolsEnabled(e.target.checked)}
+            onChange={(e) => {
+              setToolsEnabled(e.target.checked)
+              writeFlag(TOOLS_KEY, e.target.checked)
+            }}
           />
           <span>도구 호출(tool-calling) 사용</span>
         </label>
@@ -310,20 +398,6 @@ export default function ChatPage() {
             성능 테스트 진행 중이라 지금 대화하면 측정값에 영향을 줍니다
           </div>
         )}
-
-        {/* 사이드바가 아니라 대화 영역 위 — 전역 설정이 아니라 이 대화에 걸리는 조건이다 */}
-        <SystemPromptPicker
-          prompts={prompts}
-          selection={promptSelection}
-          content={system}
-          allowCustom
-          disabled={busy}
-          onPromptsChanged={refreshPrompts}
-          onChange={({ selection, content }) => {
-            setPromptSelection(selection)
-            setSystem(content)
-          }}
-        />
 
         <MessageList
           messages={messages}
@@ -344,6 +418,23 @@ export default function ChatPage() {
 
         {pendingConfirmation && (
           <div className="test-warning">위 도구 호출을 승인/거부해야 다음 메시지를 보낼 수 있습니다</div>
+        )}
+
+        {/* 쓰는 자리 바로 위 — 전역 설정이 아니라 지금 보낼 말에 걸리는 조건이다 */}
+        {mode === WITH_PROMPT && (
+          <SystemPromptPicker
+            prompts={prompts}
+            selection={promptSelection}
+            content={system}
+            allowCustom
+            allowNone={false}
+            disabled={busy}
+            onPromptsChanged={refreshPrompts}
+            onChange={({ selection, content }) => {
+              setPromptSelection(selection)
+              setSystem(content)
+            }}
+          />
         )}
 
         <Composer

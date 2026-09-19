@@ -178,6 +178,15 @@ export default function BenchmarkPage() {
       .catch((e) => setError(String(e.message || e)))
   }, [searchParams, setSearchParams, setSelectedId])
 
+  // 프롬프트 실험은 프롬프트를 거는 것이 목적이다 — 고른 것이 없으면 첫 프롬프트로 시작한다
+  function chooseRunType(next) {
+    setRunType(next)
+    if (next === RUN_TYPE.EXPERIMENT && !promptSelection && prompts.length > 0) {
+      setPromptSelection(`saved:${prompts[0].name}`)
+      setPromptContent(prompts[0].content ?? '')
+    }
+  }
+
   async function handleStart() {
     setError('')
     setDetail(null)
@@ -322,6 +331,8 @@ export default function BenchmarkPage() {
           />
         ) : (
           <>
+            {/* 무엇을 어떤 종류로 재는지는 아래를 훑는 동안에도 보여야 한다 — 이 두 칸만 위에 붙여 둔다 */}
+            <div className="bench-pinned">
             <ModelCard />
 
             {/* 예전 시스템 프롬프트 칸 자리 — 실행 종류를 먼저 고르고, 실험일 때만 프롬프트가 열린다.
@@ -331,7 +342,7 @@ export default function BenchmarkPage() {
               <legend>실행 종류</legend>
               {[RUN_TYPE.SELECTION, RUN_TYPE.EXPERIMENT].map((t) => (
                 <label key={t} className="field-inline">
-                  <input type="radio" name="run-type" value={t} checked={runType === t} onChange={() => setRunType(t)} />
+                  <input type="radio" name="run-type" value={t} checked={runType === t} onChange={() => chooseRunType(t)} />
                   <span>{RUN_TYPE_LABEL[t]}</span>
                 </label>
               ))}
@@ -342,12 +353,14 @@ export default function BenchmarkPage() {
               </p>
             </fieldset>
             )}
+            </div>
 
             {runType === RUN_TYPE.EXPERIMENT && (
               <SystemPromptPicker
                 prompts={prompts}
                 selection={promptSelection}
                 content={promptContent}
+                allowNone={false}
                 disabled={Boolean(modelRunActive)}
                 onPromptsChanged={refreshPrompts}
                 onChange={({ selection, content }) => {
@@ -369,15 +382,9 @@ export default function BenchmarkPage() {
               lastRun={modelHistory[0]}
             />
 
-            {modelRunActive ? (
-              <button className="stop" onClick={handleCancel} disabled={run.status === 'cancelling'}>
-                {run.status === 'cancelling' ? '중단 처리 중…' : '중단'}
-              </button>
-            ) : (
-              <button onClick={handleStart} disabled={!selectedId || Boolean(busy)}>
-                실행{estimate?.total_sec != null ? ` (약 ${Math.max(1, Math.round(estimate.total_sec / 60))}분)` : ''}
-              </button>
-            )}
+            <button onClick={handleStart} disabled={!selectedId || Boolean(busy)}>
+              실행{estimate?.total_sec != null ? ` (약 ${Math.max(1, Math.round(estimate.total_sec / 60))}분)` : ''}
+            </button>
             {baselineRunActive && <p className="bench-busy-note">베이스라인 실행 중이라 잠시 기다려야 합니다.</p>}
 
             {modelRunActive && (
@@ -429,6 +436,21 @@ export default function BenchmarkPage() {
           </>
         )}
       </main>
+
+      {modelRunActive && (
+        <div className="run-overlay" role="dialog" aria-modal="true" aria-label="측정 진행 중">
+          <div className="run-overlay-panel">
+            <h2>{STATUS_LABEL[run.status] ?? run.status}</h2>
+            <p>
+              {run.completed} / {run.total}
+              {run.current_item && ` — 진행 중: ${run.current_item}`}
+            </p>
+            <button className="stop" onClick={handleCancel} disabled={run.status === 'cancelling'}>
+              {run.status === 'cancelling' ? '중단 처리 중…' : '중단하기'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

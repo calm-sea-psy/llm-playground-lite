@@ -74,6 +74,54 @@ export async function deleteSystemPrompt(name) {
 }
 
 // 공개본에 없을 수 있는 기능(프롬프트 실험·지표 다시 재기·유지보수 CLI)이 켜져 있는지.
+// 세트 만들기(개발 기능) — 사실 후보·원천·펼치기. 문항과 정답이 오가므로 전부 로컬 백엔드 안에서만 돈다.
+export async function fetchFactCandidates() {
+  const res = await fetch('/api/testsets/facts')
+  if (!res.ok) throw new Error(`사실 후보 조회 실패 (HTTP ${res.status})`)
+  return res.json()
+}
+
+async function postJson(url, body, method = 'POST') {
+  const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+  if (!res.ok) {
+    const detail = await res.json().catch(() => null)
+    throw new Error(detail?.detail || `요청 실패 (HTTP ${res.status})`)
+  }
+  return res.json()
+}
+
+export async function removeTestsetDocument(name) {
+  const res = await fetch(`/api/testsets/documents/${encodeURIComponent(name)}`, { method: 'DELETE' })
+  if (!res.ok) {
+    const detail = await res.json().catch(() => null)
+    throw new Error(detail?.detail || `문서 삭제 실패 (HTTP ${res.status})`)
+  }
+  return res.json()
+}
+
+export async function fetchTestsetReadiness() {
+  const res = await fetch('/api/testsets/readiness')
+  if (!res.ok) throw new Error(`준비 상태 조회 실패 (HTTP ${res.status})`)
+  return res.json()
+}
+
+export async function uploadTestsetDocuments(edition, documents) {
+  return postJson('/api/testsets/documents/upload', { edition, documents })
+}
+
+export async function buildSourceSkeleton(picked) {
+  // canary는 보내지 않는다 — 심은 문서에서 읽는다
+  return postJson('/api/testsets/facts/skeleton', { picked })
+}
+
+export async function saveTestsetSource(source) {
+  return postJson('/api/testsets/source', { source }, 'PUT')
+}
+
+export async function deriveTestsets(source, write) {
+  return postJson('/api/testsets/derive', { source, write })
+}
+
 export async function fetchFeatures() {
   const res = await fetch('/api/features')
   if (!res.ok) throw new Error(`기능 목록 조회 실패 (HTTP ${res.status})`)

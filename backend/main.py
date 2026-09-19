@@ -676,7 +676,7 @@ def run_types() -> tuple[str, ...]:
 def get_features() -> dict:
     """공개본에 없을 수 있는 기능이 켜져 있는지 — 화면이 없는 기능의 버튼·안내를 숨기는 데 쓴다."""
     return {"prompt_experiment": test_runner.PROMPT_EXPERIMENT in run_types(), "rerun": DEV_ROUTES,
-            "maintenance_cli": MAINTENANCE_CLI}
+            "maintenance_cli": MAINTENANCE_CLI, "testset_tools": DEV_ROUTES}
 
 
 @app.get("/api/tests/runs/{run_id}")

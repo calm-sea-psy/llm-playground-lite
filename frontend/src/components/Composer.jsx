@@ -11,7 +11,7 @@ export default function Composer({ value, onChange, onSend, onStop, busy, canSen
   return (
     <div className="composer">
       <textarea
-        rows={2}
+        rows={1}
         value={value}
         placeholder="메시지 입력 (Enter 전송, Shift+Enter 줄바꿈)"
         onChange={(e) => onChange(e.target.value)}

@@ -15,6 +15,8 @@ export default function SystemPromptPicker({
   onChange,
   onPromptsChanged,
   allowCustom = false,
+  // 프롬프트를 거는 것이 실행의 목적인 자리(프롬프트 실험)에서는 `없음`이 고를 거리가 아니다
+  allowNone = true,
   disabled = false,
   label = '시스템 프롬프트',
 }) {
@@ -81,18 +83,16 @@ export default function SystemPromptPicker({
 
   const showBody = selection !== ''
   return (
-    <section className="prompt-picker">
+    <fieldset className="prompt-picker">
+      <legend>{label}</legend>
       <div className="prompt-picker-row">
-        <label className="prompt-picker-label" htmlFor="prompt-picker-select">
-          {label}
-        </label>
         <select
           id="prompt-picker-select"
           value={selection}
           onChange={(e) => select(e.target.value)}
           disabled={disabled}
         >
-          <option value="">없음 — 시스템 프롬프트 없이 실행됩니다</option>
+          {allowNone && <option value="">없음 — 시스템 프롬프트 없이 실행됩니다</option>}
           {prompts.map((p) => (
             <option key={p.name} value={`saved:${p.name}`}>
               {p.title}
@@ -145,6 +145,6 @@ export default function SystemPromptPicker({
           {status && <p className="prompt-status">{status}</p>}
         </div>
       )}
-    </section>
+    </fieldset>
   )
 }

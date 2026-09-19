@@ -21,10 +21,19 @@ PROBE_PATH = TESTSETS_ROOT / "probe.json"
 SET_FILES = (*cfg.QUALITY_TESTSET_FILES.values(), "refusal_expressions.json", "tool_calling.json")
 
 
+# 세트 준비가 만든 판이 쌓이는 자리 — 폴더 이름이 만든 때라 이름순 마지막이 최신 판이다
+VERSIONS = "versions"
+
+
 def _testsets_dir() -> Path:
     """실제 세트 파일이 하나라도 있으면 `testsets/`, 하나도 없으면 공개 샘플 세트(`testsets/sample/`).
-    파일마다 따로 고르지 않는다 — 두 세트가 한 실행에 섞이면 어느 값이 무엇으로 잰 것인지 알 수 없다."""
-    if not any((TESTSETS_ROOT / name).exists() for name in SET_FILES) and SAMPLE_DIR.is_dir():
+    파일마다 따로 고르지 않는다 — 두 세트가 한 실행에 섞이면 어느 값이 무엇으로 잰 것인지 알 수 없다.
+    판 폴더에만 있는 것도 실제 세트다 — 세트 준비로 처음 만들면 뿌리에는 파일이 없다."""
+    folders = sorted((TESTSETS_ROOT / VERSIONS).glob("*"), reverse=True)
+    real = any((TESTSETS_ROOT / name).exists() for name in SET_FILES) or any(
+        (folder / name).exists() for folder in folders if folder.is_dir() for name in SET_FILES
+    )
+    if not real and SAMPLE_DIR.is_dir():
         return SAMPLE_DIR
     return TESTSETS_ROOT
 
@@ -34,8 +43,26 @@ TESTSETS_DIR = _testsets_dir()
 QUESTION_SET = "공개 샘플 세트(값으로 모델을 가르지 않는다)" if TESTSETS_DIR == SAMPLE_DIR else "전체"
 
 
+def versions(base: Path | None = None) -> list[Path]:
+    """만든 판 폴더 — 최신이 앞이다(폴더 이름이 만든 때다)."""
+    return sorted((p for p in ((base or TESTSETS_DIR) / VERSIONS).glob("*") if p.is_dir()), reverse=True)
+
+
+def set_path(name: str, base: Path | None = None) -> Path:
+    """그 세트 파일을 어디서 읽는가 — **가장 최근 판**이 있으면 그것이고, 없으면 뿌리의 파일이다.
+    세트 준비가 만든 것(문서를 읽는 넷과 긴 컨텍스트)만 판으로 쌓이고, 만들지 않은 세트는 뿌리 것을 그대로 쓴다.
+
+    `base`는 세트 폴더를 달리 볼 때만 준다(지문을 세는 쪽이 자기 폴더를 들고 있다)."""
+    base = base or TESTSETS_DIR
+    for folder in versions(base):
+        candidate = folder / name
+        if candidate.exists():
+            return candidate
+    return base / name
+
+
 def _load(name: str) -> dict[str, Any]:
-    return json.loads((TESTSETS_DIR / name).read_text(encoding="utf-8"))
+    return json.loads(set_path(name).read_text(encoding="utf-8"))
 
 
 def load_quality_testset(metric: str) -> dict[str, Any]:

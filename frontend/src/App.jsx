@@ -4,6 +4,7 @@ import ChatPage from './pages/ChatPage'
 import BenchmarkPage from './pages/BenchmarkPage'
 import ComparePage from './pages/ComparePage'
 import ToolsPage from './pages/ToolsPage'
+import TestsetPage from './pages/TestsetPage'
 import './App.css'
 
 // 일반 대화 / 성능 테스트 / 결과 비교 / 도구 페이지로 나뉜다. 예전의 "병행 비교"
@@ -20,6 +21,7 @@ export default function App() {
           <Route path="/benchmark" element={<BenchmarkPage />} />
           <Route path="/compare" element={<ComparePage />} />
           <Route path="/tools" element={<ToolsPage />} />
+          <Route path="/testset" element={<TestsetPage />} />
           <Route path="*" element={<Navigate to="/chat" replace />} />
         </Routes>
       </ModelProvider>

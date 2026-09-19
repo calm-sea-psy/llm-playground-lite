@@ -199,7 +199,7 @@ def _tool_specs() -> dict[str, dict[str, Any]]:
 
 def _set_path(name: str) -> Path:
     """세트 파일의 자리. 속도 탐침은 세트 폴더에 없으면 저장소에 든 한 벌이다 — 샘플 세트로 돌아도 같은 탐침을 읽는다."""
-    path = TESTSETS_DIR / name
+    path = qt.set_path(name, TESTSETS_DIR)  # 만든 판이 있으면 그 판을 센다 — 실행이 읽는 파일과 같은 것을 해시한다
     return qt.PROBE_PATH if name == "probe.json" and not path.exists() else path
 
 
