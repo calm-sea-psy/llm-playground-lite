@@ -302,6 +302,9 @@ class ToolDefOut(BaseModel):
     status: str
     daily_limit: int | None
     returns: str
+    # 고정값으로 측정에 들어가는 도구 — 키가 없어도 기록된 응답으로 모델에게 간다. 선언하지
+    # 않으면 응답에서 잘려 나가, 화면이 빠진 도구로 세어 있지도 않은 경고를 띄운다
+    fixture_backed: bool = False
 
 
 @app.get("/api/health")
