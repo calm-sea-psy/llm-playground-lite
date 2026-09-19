@@ -362,6 +362,18 @@ n은 채점기가 세는 칸 수(문항 × 변형)다. 아래는 이 프로젝�
 
 - **Windows + NVIDIA GPU 기준으로 만들고 확인했다.** VRAM과 GPU 소비전력은 `nvidia-smi`로, 시스템 메모리는 Windows API로 읽는다. 그 환경이 아니면 그 값들이 비어 나온다.
 - 리포트 PDF의 한글 폰트 기본값도 Windows 경로다([6-2](#6-2-환경-변수--backendenv)).
+- **NVIDIA 드라이버가 Ollama가 싣고 온 CUDA 커널보다 낮으면 모델이 아예 안 올라간다.** Ollama 버전이 아니라 **드라이버**가 조건이다 — 드라이버를 안 올리고 Ollama만 내리는 것으로는 해결되지 않는다(0.34.2 → 0.34.1로 내려도 같은 자리에서 죽는다. 둘 다 `llama-server-cuda_v12` 빌드다).
+
+  증상은 채팅·측정 어느 쪽이든 첫 호출에서 이렇게 끝난다:
+
+  ```
+  llama-server process has terminated: exit status 0xc0000409 ...
+  CUDA error: the provided PTX was compiled with an unsupported toolchain.
+  ```
+
+  **모델이 GPU에 다 올라간 뒤**(`offloaded 29/29 layers to GPU`) 커널을 처음 부르는 지점에서 터지므로, 로그 앞부분만 보면 정상 기동처럼 보인다. `%LOCALAPPDATA%\Ollama\server.log`의 끝을 본다.
+
+  드라이버 버전은 `nvidia-smi`로 확인한다. **드라이버 560.94(CUDA 12.6)에서는 위 오류가 난다 — 확인함.** 이 경우 드라이버를 올리는 것이 유일한 해결이다(Pascal·Maxwell·Volta는 580 계열이 마지막 지원 브랜치다). 드라이버를 못 올리면 GPU로는 못 돌린다 — CPU로 돌릴 수는 있으나 **VRAM·GPU 전력·속도가 전부 의미 없는 값이 되어 모델 선정에는 쓸 수 없다.**
 
 모델 하나(작고 도구 호출을 지원하는 모델이면 된다):
 
@@ -410,7 +422,18 @@ npm run dev
 | `MEASUREMENT_MACHINE` | `main` | 결과에 남는 측정 기계 이름 — 보조 PC에서 잴 때만 적는다 |
 | `REPORT_FONT_PATH` | `C:\Windows\Fonts\malgun.ttf` | 리포트 PDF의 한글 폰트 — 파일이 없으면 리포트 생성이 실패한다(글자가 깨진 PDF를 만들지 않는다) |
 
-`.env.example`의 키 자리는 비어 있다. 받은 키를 `=` 뒤에 그대로 넣는다(예: `OPENAI_API_KEY=sk-...`). **`REPORT_FONT_PATH`는 바꿀 때만 주석을 푼다** — 빈 값으로 두면 기본값이 아니라 빈 경로를 읽는다.
+받은 키를 `=` 뒤에 그대로 넣는다(예: `OPENAI_API_KEY=sk-...`). **`REPORT_FONT_PATH`는 바꿀 때만 주석을 푼다** — 빈 값으로 두면 기본값이 아니라 빈 경로를 읽는다.
+
+> **⚠️ `.env.example`을 복사한 뒤 인라인 주석을 지운다.** 지금 `.env.example`의 키 두 줄은 `DATA_GO_KR_API_KEY=     # 에어코리아 …` 꼴이라 **키 자리가 비어 있지 않다** — python-dotenv가 `#` 뒤 주석 텍스트를 **값으로** 읽는다. 그러면 키가 없는데도 `Tool.status()`(`backend/agent_tools.py`)가 빈 문자열이 아닌 값을 보고 `ready`로 판정해서, **아래 6-3이 "측정 전에 반드시 확인하라"고 한 경고와 `키 없음` 배지가 둘 다 뜨지 않는다.** 키 없이 잰 것을 모르고 남의 값과 비교하게 되는, 6-3이 경고하는 바로 그 상황이 조용히 벌어진다.
+>
+> 복사한 뒤 주석을 **키 윗줄로 옮기거나 지워서** 값 자리를 진짜로 비운다:
+>
+> ```
+> # 에어코리아 + 특일정보 공통 (data.go.kr 활용신청)
+> DATA_GO_KR_API_KEY=
+> ```
+>
+> 확인: `python -c "from dotenv import load_dotenv; load_dotenv(); import os; print(repr(os.getenv('DATA_GO_KR_API_KEY')))"` 가 `''`를 찍어야 한다. 주석 문자열이 찍히면 아직 안 고쳐진 것이다.
 
 ### 6-3. 외부 API 키와 도구
 
@@ -445,6 +468,11 @@ npm run dev
 
 → **측정 전에 이 경고나 `키 없음` 배지를 확인한다.** 확인하지 않고 돌리면 도구 지표를 다른 구성으로 잰 값을 남의 값과 비교하게 된다.
 샘플 세트의 도구 문항은 키가 필요한 도구를 쓰지 않아 `.env` 없이도 돈다 — 경고는 뜨지만 돌려 보는 데는 문제가 없다.
+
+**경고를 읽을 때 걸리는 것 두 가지**
+
+- **경고가 안 뜨면 키가 있다는 뜻이 아니다.** `.env`에 인라인 주석이 남아 있으면 키가 없어도 `ready`로 판정돼 경고가 사라진다([6-2](#6-2-환경-변수--backendenv)의 경고 상자). 경고가 없을 때야말로 `.env` 값이 진짜 비었는지 한 번 확인한다.
+- **고정값 모드에서는 경고가 실제보다 과하게 뜬다(알려진 문제).** 실행 조건의 `도구 응답`이 `고정`이면 `get_current_datetime` · `get_holidays` · `get_air_quality` · `list_models`는 키 없이도 기록된 응답으로 측정에 들어가므로(`backend/tool_calling_runner.py`) 경고에서 빠져야 한다. 그런데 `GET /api/tools`의 응답 모델(`ToolDefOut`, `backend/main.py`)이 그 판단에 쓰이는 `fixture_backed` 필드를 선언하지 않아 응답에서 잘려 나가고, 프런트의 억제 로직(`frontend/src/features.js`)이 동작하지 못한다. **그래서 샘플 세트(`고정`)에서는 두 도구가 실제로는 정상 측정되는데도 `도구 7개 중 5개만 …` 경고가 뜬다.** 안전한 쪽으로 틀린 것이라 측정값에는 영향이 없다 — `도구 응답`이 `고정`이면 이 경고는 무시해도 된다. `live`일 때는 경고가 사실이다.
 
 **키가 없으면 무엇이 빠지나**
 
