@@ -298,15 +298,19 @@ def backend_setup(python: Path) -> str | None:
 
 
 def frontend_setup(root: Path) -> str | None:
+    """프런트를 띄울 수 있는 상태인가 — 받은 그대로는 `node_modules`가 없다."""
     if not (root / "frontend" / "node_modules").is_dir():
-        return "node_modules가 없다 — frontend에서 `npm install`"
+        # PowerShell은 `npm.ps1` 래퍼를 실행 정책으로 막는 기계가 있다 — `.cmd`는 정책과 무관하게 돈다
+        how = "npm.cmd install" if sys.platform == "win32" else "npm install"
+        return f"node_modules가 없다 — frontend에서 `{how}`"
     return None
 
 
 def services(root: Path = ROOT) -> list[Service]:
     """감시 대상 — 실행 방법은 `.claude/launch.json`의 것과 같게 둔다(두 벌이 되면 갈라진다)."""
     python = root / "backend" / ".venv" / "Scripts" / ("python.exe" if sys.platform == "win32" else "python")
-    npm = shutil.which("npm") or "npm"
+    # Windows에서는 `.cmd`를 먼저 찾는다 — 확장자 없는 `npm`은 셸 스크립트라 그대로는 실행되지 않는다
+    npm = (shutil.which("npm.cmd") if sys.platform == "win32" else None) or shutil.which("npm") or "npm"
     return [
         # 건강 확인 자리 — 백엔드는 아무 일도 안 하는 답, 프런트는 개발 서버가 내주는 정적 파일이다
         Service("backend", 8000, [str(python), "-m", "uvicorn", "main:app", "--port", "8000"], root / "backend",
