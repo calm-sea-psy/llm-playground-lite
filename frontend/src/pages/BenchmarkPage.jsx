@@ -374,9 +374,7 @@ export default function BenchmarkPage() {
             <div className="bench-pinned">
             <ModelCard />
 
-            {/* 예전 시스템 프롬프트 칸 자리 — 실행 종류를 먼저 고르고, 실험일 때만 프롬프트가 열린다.
-                프롬프트 실험이 없는 서버에서는 선정만 있으니 고를 것이 없다 */}
-            {features.prompt_experiment && (
+            {/* 예전 시스템 프롬프트 칸 자리 — 실행 종류를 먼저 고르고, 실험일 때만 프롬프트가 열린다 */}
             <fieldset className="run-type-control" disabled={Boolean(modelRunActive)}>
               <legend>실행 종류</legend>
               {[RUN_TYPE.SELECTION, RUN_TYPE.EXPERIMENT].map((t) => (
@@ -391,7 +389,6 @@ export default function BenchmarkPage() {
                   : '프롬프트 효과를 봅니다 — 모든 항목(속도 탐침 포함)에 걸고, 결과는 모델 선정 비교군에서 기본으로 빠집니다.'}
               </p>
             </fieldset>
-            )}
             </div>
 
             {runType === RUN_TYPE.EXPERIMENT && (

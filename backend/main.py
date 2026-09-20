@@ -678,19 +678,23 @@ def start_test_run(req: StartRunRequest) -> RunOut:
 
 
 def run_types() -> tuple[str, ...]:
-    """`POST /api/tests/runs`가 받는 실행 종류 — 선정은 언제나, 나머지는 개발용 라우트가 있을 때만."""
+    """`POST /api/tests/runs`가 받는 실행 종류 — 선정과 프롬프트 실험은 언제나, 과제용은 개발용 라우트가 있을 때만.
+
+    프롬프트 실험은 공개본에도 연다. 같은 모델도 시스템 프롬프트를 걸면 지표가 움직이는데, 그것을 재 보지 못하면
+    받은 사람은 `프롬프트로 될 일`과 `모델을 바꿔야 할 일`을 가를 수 없다."""
+    public = (test_runner.SELECTION, test_runner.PROMPT_EXPERIMENT)
     if not DEV_ROUTES:
-        return (test_runner.SELECTION,)
+        return public
     import dev_routes
 
-    return (test_runner.SELECTION, *dev_routes.RUN_TYPES)
+    return (*public, *dev_routes.RUN_TYPES)
 
 
 @app.get("/api/features")
 def get_features() -> dict:
-    """공개본에 없을 수 있는 기능이 켜져 있는지 — 화면이 없는 기능의 버튼·안내를 숨기는 데 쓴다."""
-    return {"prompt_experiment": test_runner.PROMPT_EXPERIMENT in run_types(), "rerun": DEV_ROUTES,
-            "maintenance_cli": MAINTENANCE_CLI, "testset_tools": TESTSET_ROUTES}
+    """공개본에 없을 수 있는 기능이 켜져 있는지 — 화면이 없는 기능의 버튼·안내를 숨기는 데 쓴다.
+    여기 없는 것은 어느 판에나 있는 기능이다(프롬프트 실험처럼) — 늘 참인 깃발은 두지 않는다."""
+    return {"rerun": DEV_ROUTES, "maintenance_cli": MAINTENANCE_CLI, "testset_tools": TESTSET_ROUTES}
 
 
 @app.get("/api/tests/runs/{run_id}")

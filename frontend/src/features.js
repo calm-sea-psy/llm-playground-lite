@@ -3,7 +3,8 @@ import { fetchFeatures } from './api'
 
 // 공개본에 없을 수 있는 기능 — 서버가 그 파일을 가졌는지로 켜진다(`GET /api/features`).
 // 받기 전이나 받지 못했을 때는 전부 끈다: 없는 기능의 버튼을 보여 주면 누른 뒤에야 404가 난다.
-export const NO_FEATURES = { prompt_experiment: false, rerun: false, maintenance_cli: false }
+// 어느 판에나 있는 기능(선정·프롬프트 실험·세트 준비의 화면 자리 등)은 여기 두지 않는다 — 늘 참인 깃발은 아무것도 가르지 않는다.
+export const NO_FEATURES = { rerun: false, maintenance_cli: false }
 
 let cached = null
 
