@@ -34,6 +34,7 @@ import threading
 import time
 import urllib.error
 import urllib.request
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
@@ -152,6 +153,9 @@ class Service:
     adopted: bool = False  # 우리가 띄우지 않았는데 이미 떠 있던 것
     health_fails: int = 0
     busy: bool = False  # 마지막으로 답했을 때 측정이 돌고 있었나
+    # 띄우기 전에 보는 것 — 받은 그대로는 `.venv`도 `node_modules`도 없다. 없으면 자식이 1초 만에 죽고,
+    # 감시는 `띄웠다`고 말한 뒤 되살리기를 되풀이한다. 까닭은 자식의 출력에 한 번 스쳐 갈 뿐이다
+    setup: Callable[[], str | None] = lambda: None
 
     def child_running(self) -> bool:
         return self.child is not None and self.child.poll() is None
@@ -220,6 +224,17 @@ class Watcher:
     services: list[Service]
     stopped: threading.Event = field(default_factory=threading.Event)
 
+    def blocked_by_setup(self, service: Service) -> bool:
+        """설치가 안 된 것은 다시 띄운다고 풀리지 않는다 — 무엇을 해야 하는지 한 줄로 말하고 물러선다."""
+        problem = service.setup()
+        if not problem:
+            return False
+        if service.last_error != problem:
+            log(service.name, f"띄울 수 없다 — {problem}")
+        service.last_error = problem
+        service.failures = GIVE_UP_AFTER  # 되살리기를 되풀이하지 않는다
+        return True
+
     def tick(self, service: Service) -> str:
         action = decide(is_open=service.alive(), child_running=service.child_running(),
                         since_start=time.monotonic() - service.started_at, failures=service.failures)
@@ -240,9 +255,9 @@ class Watcher:
                                   f" (지금까지 {service.restarts}번)")
                 self.stopped.wait(backoff_sec(service.failures))
             service.adopted = False
-            if not self.stopped.is_set():
+            if not self.stopped.is_set() and not self.blocked_by_setup(service):
                 service.spawn()
-        elif action == GIVE_UP and service.last_action != GIVE_UP:
+        elif action == GIVE_UP and service.last_action != GIVE_UP and not service.last_error:
             log(service.name, f"{service.failures}번 이어서 살리지 못해 그만둔다 — 직접 띄워 까닭을 보라"
                               f" ({' '.join(service.cmd)})")
         service.last_action = action
@@ -266,6 +281,28 @@ class Watcher:
             service.kill()
 
 
+def backend_setup(python: Path) -> str | None:
+    """백엔드를 띄울 수 있는 상태인가 — 가상환경과 그 안의 uvicorn."""
+    if not python.exists():
+        return f"가상환경이 없다({python}) — backend에서 `python -m venv .venv`"
+    try:
+        done = subprocess.run([str(python), "-c", "import uvicorn"], capture_output=True, timeout=60)
+    except (OSError, subprocess.SubprocessError) as exc:
+        return f"가상환경의 python을 부르지 못했다: {exc}"
+    if done.returncode != 0:
+        # 활성화(`Activate.ps1`)는 실행 정책에 막히는 기계가 있다 — 막히면 시스템 파이썬에 설치되고
+        # 가상환경은 그대로 빈 채로 남는다. venv의 python을 직접 부르는 꼴로 적는다
+        return (r"가상환경에 uvicorn이 없다 — backend에서 `.venv\Scripts\python.exe -m pip install -r requirements.txt`"
+                " (활성화 없이 venv의 python을 직접 부른다)")
+    return None
+
+
+def frontend_setup(root: Path) -> str | None:
+    if not (root / "frontend" / "node_modules").is_dir():
+        return "node_modules가 없다 — frontend에서 `npm install`"
+    return None
+
+
 def services(root: Path = ROOT) -> list[Service]:
     """감시 대상 — 실행 방법은 `.claude/launch.json`의 것과 같게 둔다(두 벌이 되면 갈라진다)."""
     python = root / "backend" / ".venv" / "Scripts" / ("python.exe" if sys.platform == "win32" else "python")
@@ -273,9 +310,11 @@ def services(root: Path = ROOT) -> list[Service]:
     return [
         # 건강 확인 자리 — 백엔드는 아무 일도 안 하는 답, 프런트는 개발 서버가 내주는 정적 파일이다
         Service("backend", 8000, [str(python), "-m", "uvicorn", "main:app", "--port", "8000"], root / "backend",
-                health_path="/api/health", health_marker='"status"'),
+                health_path="/api/health", health_marker='"status"',
+                setup=lambda: backend_setup(python)),
         Service("frontend", 5173, [npm, "run", "dev"], root / "frontend",
-                health_path="/health.json", health_marker='"service"'),
+                health_path="/health.json", health_marker='"service"',
+                setup=lambda: frontend_setup(root)),
     ]
 
 

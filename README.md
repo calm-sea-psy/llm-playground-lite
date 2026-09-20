@@ -76,14 +76,25 @@ Windows API로 읽는다. 다른 환경에서는 이 값들이 빈 채로 나온
 ```powershell
 cd backend
 python -m venv .venv
-.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+.venv\Scripts\python.exe -m pip install -r requirements.txt
 
 cd ..\frontend
 npm install
 ```
 
-이 단계를 건너뛰고 [1-2](#1-2-띄우기)의 감시 서버를 띄우면 PowerShell이 이렇게 답한다.
+**가상환경을 활성화(`.venv\Scripts\Activate.ps1`)하지 않는다.** 그 스크립트는 PowerShell 실행 정책에 막히는
+기계가 있다.
+
+```
+이 시스템에서 스크립트를 실행할 수 없으므로 … Activate.ps1 파일을 로드할 수 없습니다.
+```
+
+**이 오류가 나도 뒤따르는 `pip install`은 그냥 돈다 — 시스템 파이썬에.** 화면에는 `Requirement already satisfied`가
+줄줄이 찍혀 잘된 것처럼 보이지만 가상환경은 빈 채로 남고, 나중에 `No module named uvicorn`으로 드러난다.
+위처럼 **venv의 python을 직접 부르면** 활성화가 필요 없다.
+
+설치를 건너뛴 채 [1-2](#1-2-띄우기)의 감시 서버를 띄우면 **감시가 먼저 말한다** — `띄울 수 없다 — 가상환경에 uvicorn이 없다 …`.
+파일 자체가 없으면 PowerShell이 대신 이렇게 답한다.
 
 ```
 backend\.venv\Scripts\python.exe : 'backend' 모듈을 로드할 수 없습니다.
