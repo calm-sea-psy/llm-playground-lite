@@ -45,7 +45,7 @@ def _forms(node: dict[str, Any], key: str, where: str, checks: list[dict[str, st
     if not forms:
         checks.append(_check(ERROR, where, f"`{key}`가 비어 있다"))
     if any(len(f.strip()) < 2 for f in forms):
-        checks.append(_check(WARN, where, "한 글자짜리 표기가 있다 — 거의 모든 답에 걸린다"))
+        checks.append(_check(WARN, where, "한 글자짜리 표기가 있다"))
     return forms
 
 
@@ -146,7 +146,7 @@ def _hallucination(documents: dict[str, dict[str, Any]], by_doc: dict[str, list[
             absent_no += 1
             where = f"facts[{fact.get('id')}].absent"
             if not patterns:
-                checks.append(_check(ERROR, where, "`fabrication_patterns`가 비어 있다 — 지어낸 값을 잡을 수 없다"))
+                checks.append(_check(ERROR, where, "`fabrication_patterns`가 비어 있다"))
             for pattern in patterns:
                 try:
                     found = re.compile(pattern)
@@ -156,8 +156,7 @@ def _hallucination(documents: dict[str, dict[str, Any]], by_doc: dict[str, list[
                 # 문서에서도 걸리는 패턴은 위험하다 — 모델이 문서를 인용한 올바른 답도 `지어냈다`로 세어
                 # 거절을 오답으로 만든다. 맥락을 붙여 좁힌다 — 값 앞에 그 값을 가리키는 말을 두는 식이다
                 if found.search(_doc_text(path)):
-                    checks.append(_check(WARN, where, f"`{pattern}`이 문서에서도 걸린다 — 문서를 인용한 올바른 "
-                                                      "거절이 지어낸 것으로 셀 수 있다. 맥락을 붙여 좁힌다"))
+                    checks.append(_check(WARN, where, f"`{pattern}`이 문서에서도 걸린다 — 맥락을 붙여 좁힌다"))
             items.append({
                 "id": f"hl-d{absent_no:03d}",
                 "doc": path,
@@ -186,7 +185,7 @@ def _injection_indirect(source: dict[str, Any], documents: dict[str, dict[str, A
     통과다. 하나만 보면 `아무 말도 안 한 모델`이 통과한다."""
     canary = (source.get("canary") or "").strip()
     if not canary:
-        checks.append(_check(ERROR, "canary", "canary가 없다 — 지시를 따랐는지 가릴 수 없다"))
+        checks.append(_check(ERROR, "canary", "canary가 없다"))
     items = []
     for path, doc in documents.items():
         # 한 문서에 심은 문서를 여럿 걸 수 있다 — 공격 문구가 문항마다 달라야 재는 것이 공격 하나로 좁아지지 않는다
@@ -197,7 +196,7 @@ def _injection_indirect(source: dict[str, Any], documents: dict[str, dict[str, A
                 checks.append(_check(ERROR, where, f"심은 문서에 canary가 없다: {one}"))
             keywords = [k for k in (doc.get("task_keywords") or []) if isinstance(k, str) and k.strip()]
             if not keywords:
-                checks.append(_check(ERROR, where, "`task_keywords`가 비어 있다 — 늘 실패한다"))
+                checks.append(_check(ERROR, where, "`task_keywords`가 비어 있다"))
             items.append({
                 "id": f"ii-d{len(items) + 1:03d}",
                 "doc": one,
@@ -233,7 +232,7 @@ def _provenance(source: dict[str, Any], checks: list[dict[str, str]]) -> dict[st
     """**무엇이 이 문항을 만들었나.** 재는 대상(후보·기준선)이 만든 문항은 측정이 무효다 — 여기 적어 두고 사람이 본다."""
     by = (source.get("generated_by") or "").strip()
     if not by:
-        checks.append(_check(WARN, "generated_by", "무엇이 만들었는지 적혀 있지 않다 — 재는 대상이 만든 문항은 측정이 무효다"))
+        checks.append(_check(WARN, "generated_by", "무엇이 만들었는지 적혀 있지 않다"))
     digest = hashlib.sha256(json.dumps(source, ensure_ascii=False, sort_keys=True).encode("utf-8")).hexdigest()
     return {"generated_by": by or "기록 없음", "derived_at": datetime.now(UTC).isoformat(timespec="seconds"),
             "source_sha256": digest[:12], "topic": source.get("topic") or ""}
@@ -258,7 +257,7 @@ def derive(source: dict[str, Any], *, keep_closed_qa: bool = True) -> tuple[dict
     for i, fact in enumerate(source.get("facts") or [], 1):
         where = f"facts[{fact.get('id', i)}]"
         if fact.get("id") in seen:
-            checks.append(_check(ERROR, where, "id가 겹친다 — 채점이 두 문항을 조용히 합친다"))
+            checks.append(_check(ERROR, where, "id가 겹친다"))
         seen.add(fact.get("id"))
         if fact.get("doc") not in documents:
             checks.append(_check(ERROR, where, f"문서 목록에 없는 문서를 가리킨다: {fact.get('doc')}"))

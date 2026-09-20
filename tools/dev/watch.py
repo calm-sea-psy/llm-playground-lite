@@ -312,11 +312,12 @@ def status_server(watcher: Watcher, port: int) -> HTTPServer | None:
 
 
 def main(argv: list[str] | None = None) -> int:
+    # 콘솔부터 고쳐 놓는다 — `--help`도 한글과 `—`를 찍는다. 인자를 읽고 나서 고치면 도움말이 먼저 죽는다
+    use_utf8_console()
     parser = argparse.ArgumentParser(description="개발용 감시 서버 — 꺼진 쪽을 다시 띄운다")
     parser.add_argument("--only", choices=["backend", "frontend"], help="한쪽만 감시한다")
     parser.add_argument("--status-port", type=int, default=STATUS_PORT, help="상태 JSON 포트(0이면 안 연다)")
     args = parser.parse_args(argv)
-    use_utf8_console()
 
     picked = [s for s in services() if args.only is None or s.name == args.only]
     watcher = Watcher(picked)

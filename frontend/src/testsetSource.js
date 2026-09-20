@@ -5,7 +5,7 @@
 export function blanks(source) {
   const out = []
   if (!source?.canary?.trim()) out.push('canary — 심은 문서의 값과 글자까지 같아야 한다')
-  if (!source?.generated_by?.trim()) out.push('무엇이 만들었나 — 재는 대상이 만든 문항은 측정이 무효다')
+  if (!source?.generated_by?.trim()) out.push('무엇이 만들었나')
   for (const fact of source?.facts ?? []) {
     const ask = (fact.ask ?? []).filter((v) => v?.trim())
     if (ask.length < 2) out.push(`${fact.id} 질문 — 같은 뜻의 다른 말투 2개가 필요하다`)
@@ -16,7 +16,7 @@ export function blanks(source) {
     // 한쪽만 쓴 칸이 문제다 — 둘 다 비운 칸은 만들지 않기로 한 문항이라 펼치기가 그냥 지나간다
     if (absent.length + patterns.length > 0) {
       if (absent.length !== 2) out.push(`${fact.id} 문서에 없는 사실 — 질문 2개를 다 쓰거나 질문과 정규식을 모두 비운다`)
-      if (patterns.length === 0) out.push(`${fact.id} 지어냄을 잡는 정규식 — 없으면 무엇을 지어냈는지 가릴 수 없다`)
+      if (patterns.length === 0) out.push(`${fact.id} 지어냄을 잡는 정규식`)
     }
   }
   for (const doc of source?.documents ?? []) {
@@ -24,7 +24,7 @@ export function blanks(source) {
     if (ask.length > 0 && ask.length < 2) out.push(`${doc.path} 요약 질문 — 변형 2개가 필요하다`)
     const injected = typeof doc.injected === 'string' ? [doc.injected] : (doc.injected ?? [])
     if (injected.length > 0 && (doc.task_keywords ?? []).filter((v) => v?.trim()).length === 0) {
-      out.push(`${doc.path} task_keywords — 비면 간접 인젝션이 늘 실패한다`)
+      out.push(`${doc.path} task_keywords`)
     }
   }
   return out
@@ -36,19 +36,19 @@ export function blanksByStep(source) {
   const out = { ask: [], forms: [], absent: [], scenario: [], meta: [] }
   if (!source?.canary?.trim()) out.meta.push('canary — 심은 문서의 값과 글자까지 같아야 한다')
   if (!source?.topic?.trim()) out.meta.push('주제 — 이 세트가 무엇을 재는지 한 줄')
-  if (!source?.generated_by?.trim()) out.meta.push('무엇이 만들었나 — 재는 대상이 만든 문항은 측정이 무효다')
+  if (!source?.generated_by?.trim()) out.meta.push('무엇이 만들었나')
   for (const fact of source?.facts ?? []) {
     const ask = (fact.ask ?? []).filter((v) => v?.trim())
     if (ask.length < 2) out.ask.push(`${fact.id} — 같은 뜻의 다른 말투 2줄이 필요하다`)
     else if (ask[0].trim() === ask[1].trim()) out.ask.push(`${fact.id} — 변형 둘이 같은 문장이다`)
     const forms = (fact.answer_forms ?? []).filter((v) => v?.trim())
     if (forms.length === 0) out.forms.push(`${fact.id} — 정답 표기가 비어 있다`)
-    else if (forms.some((v) => v.trim().length < 2)) out.forms.push(`${fact.id} — 한 글자 표기는 거의 모든 답에 걸린다`)
+    else if (forms.some((v) => v.trim().length < 2)) out.forms.push(`${fact.id} — 한 글자짜리 표기가 있다`)
     const absent = (fact.absent?.ask ?? []).filter((v) => v?.trim())
     const patterns = (fact.absent?.fabrication_patterns ?? []).filter((v) => v?.trim())
     if (absent.length + patterns.length > 0) {
       if (absent.length !== 2) out.absent.push(`${fact.id} — 질문 2줄을 다 쓰거나 질문과 정규식을 모두 비운다`)
-      if (patterns.length === 0) out.absent.push(`${fact.id} — 지어냄을 잡는 정규식이 없으면 무엇을 지어냈는지 가릴 수 없다`)
+      if (patterns.length === 0) out.absent.push(`${fact.id} — 지어냄을 잡는 정규식이 비어 있다`)
     }
   }
   for (const doc of source?.documents ?? []) {
@@ -57,7 +57,7 @@ export function blanksByStep(source) {
     if (ask.length > 0 && ask.length < 2) out.scenario.push(`${name} 요약 질문 — 변형 2줄이 필요하다`)
     const injected = typeof doc.injected === 'string' ? [doc.injected] : (doc.injected ?? [])
     if (injected.length > 0 && (doc.task_keywords ?? []).filter((v) => v?.trim()).length === 0) {
-      out.scenario.push(`${name} task_keywords — 비면 간접 인젝션이 늘 실패한다`)
+      out.scenario.push(`${name} task_keywords가 비어 있다`)
     }
   }
   return out

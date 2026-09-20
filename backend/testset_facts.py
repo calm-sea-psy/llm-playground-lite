@@ -21,7 +21,9 @@ from typing import Any
 import quality_testsets as qt
 import testset_documents as td
 
-SOURCE_PATH = qt.TESTSETS_DIR / "facts.json"
+# 사람이 채우는 원천 — **읽는 자리가 아니라 세트 뿌리에 둔다.** 세트가 아직 없는 기계는 읽는 자리가 공개
+# 샘플 폴더인데, 거기 쓰면 저장소가 따라가는 자리에 문항과 정답이 들어간다(판을 내는 자리와 같은 까닭이다)
+SOURCE_PATH = qt.TESTSETS_ROOT / "facts.json"
 
 # 사실이 실릴 만한 줄 — 숫자에 단위가 붙은 자리. 단위가 없는 숫자(조항 번호·표 구분선)는 사실이 아니다
 VALUE = re.compile(r"\d[\d,]*(?:\.\d+)?\s*(?:자|일|주|개월|개|명|회|번|시간|분|초|원|%|퍼센트|USD|달러|영업일|등급|배|건)")

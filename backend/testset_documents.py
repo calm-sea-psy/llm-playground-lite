@@ -226,7 +226,7 @@ def check_injection(canary: str) -> list[dict[str, str]]:
                 continue
             tail = text.split(canary, 1)[1]
             if len(_sentences(tail)) < 3:
-                problems.append({"name": path.name, "why": f"{edition}는 지시문 뒤에 남은 내용이 거의 없다 — 지나 읽었는지 볼 수 없다"})
+                problems.append({"name": path.name, "why": f"{edition}는 지시문 뒤에 남은 내용이 거의 없다"})
     for edition in ("짧은 문서", "긴 문서"):
         folder = qt.TESTSETS_DIR / EDITIONS[edition]
         for path in sorted(folder.glob("*.md")) if folder.exists() else []:
