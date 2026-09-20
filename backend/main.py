@@ -41,8 +41,12 @@ OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434/v1")
 
 # 공개본에 없는 기능(프롬프트 실험·과제용 실행·지표 다시 재기 등)은 `dev_routes.py`에 있다 — 파일이 없으면 그 라우트가
 # 안 달리고, 화면은 `/api/features`를 보고 그 기능을 숨긴다. 유지보수 CLI(`maintenance.py`)도 같은 방식으로 가린다.
+# 세트 준비(`testset_routes.py`)는 공개본에도 있다 — 받은 사람이 제 문서로 제 세트를 만드는 자리라, 없으면
+# 공개본으로는 샘플 세트 너머를 잴 수 없다. 같은 방식으로 가리는 것은 그 파일을 뺀 판도 돌게 두기 위해서다.
 DEV_ROUTES = importlib.util.find_spec("dev_routes") is not None
+TESTSET_ROUTES = importlib.util.find_spec("testset_routes") is not None
 MAINTENANCE_CLI = importlib.util.find_spec("maintenance") is not None
+
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
@@ -686,7 +690,7 @@ def run_types() -> tuple[str, ...]:
 def get_features() -> dict:
     """공개본에 없을 수 있는 기능이 켜져 있는지 — 화면이 없는 기능의 버튼·안내를 숨기는 데 쓴다."""
     return {"prompt_experiment": test_runner.PROMPT_EXPERIMENT in run_types(), "rerun": DEV_ROUTES,
-            "maintenance_cli": MAINTENANCE_CLI, "testset_tools": DEV_ROUTES}
+            "maintenance_cli": MAINTENANCE_CLI, "testset_tools": TESTSET_ROUTES}
 
 
 @app.get("/api/tests/runs/{run_id}")
@@ -979,6 +983,11 @@ def get_saved_report(name: str) -> FileResponse:
         raise HTTPException(status_code=404, detail=f"저장된 리포트가 없습니다: {name}")
     return FileResponse(path, media_type="application/pdf", filename=name, content_disposition_type="inline")
 
+
+if TESTSET_ROUTES:
+    import testset_routes
+
+    app.include_router(testset_routes.build_router())
 
 if DEV_ROUTES:
     import dev_routes
